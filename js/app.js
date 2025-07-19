@@ -40,20 +40,18 @@ class ProcasefDashboard {
     }
 
     async init() {
-        console.log('Initialisation du Dashboard PROCASEF...');
+        this.showLoading();
         try {
-            this.showLoading();
             this.setupEventListeners();
             await this.loadInitialData();
             this.calculateStats();
             this.renderDashboard();
-            this.hideLoading();
-            console.log('Dashboard initialisé avec succès');
         } catch (error) {
-            console.error('Erreur lors de l\'initialisation:', error);
-            this.hideLoading();
+            console.error('Erreur durant l\'init:', error);
         }
+        this.hideLoading();
     }
+
 
     async loadInitialData() {
         console.log('Chargement des données initiales...');
