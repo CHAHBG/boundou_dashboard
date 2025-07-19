@@ -420,8 +420,8 @@
     "lots": "LOT 36"
   },
   {
-    "date_de_debut": NaN,
-    "date_de_fin": NaN,
+    "date_de_debut": null,
+    "date_de_fin": null,
     "commune": "Total",
     "levee": 22148,
     "lots": null

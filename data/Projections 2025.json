@@ -25,31 +25,31 @@
   },
   {
     "mois": "Aout 2025",
-    "inventaires_mensuels_realises": NaN,
+    "inventaires_mensuels_realises": null,
     "objectif_inventaires_mensuels": 8000,
     "objectif_inventaires_total": 50421
   },
   {
     "mois": "Septembre 2025",
-    "inventaires_mensuels_realises": NaN,
+    "inventaires_mensuels_realises": null,
     "objectif_inventaires_mensuels": 8000,
     "objectif_inventaires_total": 58421
   },
   {
     "mois": "Octobre 2025",
-    "inventaires_mensuels_realises": NaN,
+    "inventaires_mensuels_realises": null,
     "objectif_inventaires_mensuels": 8000,
     "objectif_inventaires_total": 66421
   },
   {
     "mois": "Novembre 2025",
-    "inventaires_mensuels_realises": NaN,
+    "inventaires_mensuels_realises": null,
     "objectif_inventaires_mensuels": 8000,
     "objectif_inventaires_total": 74421
   },
   {
     "mois": "Decembre 2025",
-    "inventaires_mensuels_realises": NaN,
+    "inventaires_mensuels_realises": null,
     "objectif_inventaires_mensuels": 8000,
     "objectif_inventaires_total": 82421
   }
