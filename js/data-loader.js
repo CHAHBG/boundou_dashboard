@@ -68,25 +68,25 @@ class DataLoader {
         // Generate appropriate fallback data based on the URL
         if (url.includes('parcelles.json')) {
             return this.generateParcelleFallbackData();
-        } else if (url.includes('Projections-2025.json')) {
+        } else if (url.includes('Projections 2025.json')) {
             return this.generateProjectionsFallbackData();
-        } else if (url.includes('Genre-par-Commune.json')) {
+        } else if (url.includes('Genre par Commune.json')) {
             return this.generateGenreCommuneFallbackData();
-        } else if (url.includes('Genre-par-trimestre.json')) {
+        } else if (url.includes('Genre par trimestre.json')) {
             return this.generateGenreTrimestreFallbackData();
-        } else if (url.includes('Repartition-genre.json')) {
+        } else if (url.includes('Repartition genre.json')) {
             return this.generateRepartitionGenreFallbackData();
         } else if (url.includes('rapport_complet.json')) {
             return this.generateRapportCompletFallbackData();
-        } else if (url.includes('Etat-des-operations-Boundou-2025.json') || url.includes('Etat-des-operations-Boundou-Mai-2025.json')) {
+        } else if (url.includes('Etat des opérations Boundou-Mai 2025.json') || url.includes('Etat-des-operations-Boundou-Mai-2025.json')) {
             return this.generateEtatOperationsFallbackData();
         } else if (url.includes('Parcelles_terrain_periode.json')) {
             return this.generateParcellesTerrainFallbackData();
-        } else if (url.includes('Parcelles-post-traites-par-geom.json')) {
+        } else if (url.includes('Parcelles post traites par geom.json')) {
             return this.generateParcellesPostTraitesFallbackData();
         } else if (url.includes('Urm_Terrain_comparaison.json')) {
             return this.generateUrmTerrainFallbackData();
-        } else if (url.includes('Levee-par-commune-Terrain_URM.json')) {
+        } else if (url.includes('Levee par commune Terrain_URM.json')) {
             return this.generateLeveeCommuneFallbackData();
         }
 
