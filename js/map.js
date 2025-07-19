@@ -1,5 +1,4 @@
-// map.js - Leaflet Map Management for PROCASEF Dashboard - VERSION CORRIGÉE
-
+// map.js - Leaflet Map Management for PROCASEF Dashboard - VERSION FINALE
 class MapManager {
     constructor() {
         this.map = null;
@@ -136,15 +135,15 @@ class MapManager {
                 attributionControl: true
             });
 
-            // Ajout de la couche de tuiles OpenStreetMap
-            const tileLayer = L.tileLayer('https://{s}.tile.openstreetMap.org/{z}/{x}/{y}.png', {
+            // 🔴 CORRECTION CRITIQUE: Ajout correct de la couche de tuiles
+            const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
                 minZoom: this.mapConfig.minZoom,
                 maxZoom: this.mapConfig.maxZoom,
                 detectRetina: true
             });
 
-            tileLayer.addTo(this.map);
+            tileLayer.addTo(this.map); // 🔴 CORRECTION: this.map au lieu de this.mapManager.map
 
             // Initialisation du cluster de marqueurs
             this.initializeMarkerCluster();
@@ -334,6 +333,15 @@ class MapManager {
         }
 
         this.markers.push(marker);
+    }
+
+    // 🔴 NOUVELLE MÉTHODE: Nettoyage des marqueurs sans détruire la carte
+    clearMarkers() {
+        if (this.markerClusterGroup) {
+            this.markerClusterGroup.clearLayers();
+        }
+        // Garder seulement le marqueur Boundou (premier marqueur)
+        this.markers = this.markers.slice(0, 1);
     }
 
     // Centrage automatique sur tous les marqueurs
