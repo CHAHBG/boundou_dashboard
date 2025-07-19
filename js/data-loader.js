@@ -366,8 +366,8 @@ class DataLoader {
     async preloadEssentialData() {
         const essentialFiles = [
             'data/parcelles.json',
-            'data/Repartition-genre.json',
-            'data/Projections-2025.json'
+            'data/Repartition genre.json',
+            'data/Projections 2025.json'
         ];
 
         const loadPromises = essentialFiles.map(file => this.loadData(file));
