@@ -1,0 +1,444 @@
+{
+  "Parcelles_terrain_periode": [
+    {
+      "periode": "Date début",
+      "commune": null,
+      "levee_terrain": null,
+      "lots": null
+    },
+    {
+      "periode": "2024-08-13 00:00:00",
+      "commune": "Ndoga Babacar",
+      "levee_terrain": 1176.0,
+      "lots": "LOT 1 à 23"
+    },
+    {
+      "periode": "2024-08-26 00:00:00",
+      "commune": "Ndoga Babacar",
+      "levee_terrain": 589.0,
+      "lots": null
+    },
+    {
+      "periode": "2024-09-02 00:00:00",
+      "commune": "Ndoga Babacar",
+      "levee_terrain": 1025.0,
+      "lots": null
+    },
+    {
+      "periode": "2024-09-09 00:00:00",
+      "commune": "Ndoga Babacar",
+      "levee_terrain": 428.0,
+      "lots": null
+    },
+    {
+      "periode": "2024-09-17 00:00:00",
+      "commune": "Ndoga Babacar",
+      "levee_terrain": 648.0,
+      "lots": null
+    },
+    {
+      "periode": "2024-09-23 00:00:00",
+      "commune": "Ndoga Babacar",
+      "levee_terrain": 599.0,
+      "lots": null
+    },
+    {
+      "periode": "2024-11-25 00:00:00",
+      "commune": "Netteboulou",
+      "levee_terrain": 75.0,
+      "lots": null
+    },
+    {
+      "periode": "2024-11-29 00:00:00",
+      "commune": "Netteboulou",
+      "levee_terrain": 153.0,
+      "lots": null
+    },
+    {
+      "periode": "2024-11-29 00:00:00",
+      "commune": "Missirah",
+      "levee_terrain": 26.0,
+      "lots": null
+    },
+    {
+      "periode": "2024-11-29 00:00:00",
+      "commune": "Ndoga Babacar",
+      "levee_terrain": 58.0,
+      "lots": null
+    },
+    {
+      "periode": "2024-12-06 00:00:00",
+      "commune": "Netteboulou",
+      "levee_terrain": 57.0,
+      "lots": null
+    },
+    {
+      "periode": "2024-12-06 00:00:00",
+      "commune": "Missirah",
+      "levee_terrain": 127.0,
+      "lots": null
+    },
+    {
+      "periode": "2024-12-06 00:00:00",
+      "commune": "Ndoga Babacar",
+      "levee_terrain": 210.0,
+      "lots": null
+    },
+    {
+      "periode": "2024-12-06 00:00:00",
+      "commune": "Bandafassi",
+      "levee_terrain": 229.0,
+      "lots": null
+    },
+    {
+      "periode": "2024-12-13 00:00:00",
+      "commune": "Netteboulou",
+      "levee_terrain": 231.0,
+      "lots": null
+    },
+    {
+      "periode": "2024-12-13 00:00:00",
+      "commune": "Missirah",
+      "levee_terrain": 210.0,
+      "lots": null
+    },
+    {
+      "periode": "2024-12-13 00:00:00",
+      "commune": "Ndoga Babacar",
+      "levee_terrain": 179.0,
+      "lots": null
+    },
+    {
+      "periode": "2024-12-13 00:00:00",
+      "commune": "Bandafassi",
+      "levee_terrain": 466.0,
+      "lots": null
+    },
+    {
+      "periode": "2024-12-20 00:00:00",
+      "commune": "Netteboulou",
+      "levee_terrain": 106.0,
+      "lots": null
+    },
+    {
+      "periode": "2024-12-20 00:00:00",
+      "commune": "Missirah",
+      "levee_terrain": 202.0,
+      "lots": null
+    },
+    {
+      "periode": "2024-12-20 00:00:00",
+      "commune": "Ndoga Babacar",
+      "levee_terrain": 190.0,
+      "lots": null
+    },
+    {
+      "periode": "2024-12-20 00:00:00",
+      "commune": "Bandafassi",
+      "levee_terrain": 514.0,
+      "lots": null
+    },
+    {
+      "periode": "2025-01-06 00:00:00",
+      "commune": "Netteboulou",
+      "levee_terrain": 214.0,
+      "lots": null
+    },
+    {
+      "periode": "2025-01-06 00:00:00",
+      "commune": "Missirah",
+      "levee_terrain": 295.0,
+      "lots": null
+    },
+    {
+      "periode": "2025-01-06 00:00:00",
+      "commune": "Bandafassi",
+      "levee_terrain": 342.0,
+      "lots": null
+    },
+    {
+      "periode": "2025-01-13 00:00:00",
+      "commune": "Netteboulou",
+      "levee_terrain": 310.0,
+      "lots": null
+    },
+    {
+      "periode": "2025-01-13 00:00:00",
+      "commune": "Missirah",
+      "levee_terrain": 203.0,
+      "lots": null
+    },
+    {
+      "periode": "2025-01-13 00:00:00",
+      "commune": "Bandafassi",
+      "levee_terrain": 519.0,
+      "lots": null
+    },
+    {
+      "periode": "2025-01-20 00:00:00",
+      "commune": "Netteboulou",
+      "levee_terrain": 315.0,
+      "lots": "LOT 24"
+    },
+    {
+      "periode": "2025-01-20 00:00:00",
+      "commune": "Missirah",
+      "levee_terrain": 431.0,
+      "lots": "LOT 24"
+    },
+    {
+      "periode": "2025-01-20 00:00:00",
+      "commune": "Bandafassi",
+      "levee_terrain": 628.0,
+      "lots": "LOT 24"
+    },
+    {
+      "periode": "2025-01-31 00:00:00",
+      "commune": "Netteboulou",
+      "levee_terrain": 283.0,
+      "lots": "LOT 25"
+    },
+    {
+      "periode": "2025-01-31 00:00:00",
+      "commune": "Missirah",
+      "levee_terrain": 262.0,
+      "lots": "LOT 25"
+    },
+    {
+      "periode": "2025-01-31 00:00:00",
+      "commune": "Bandafassi",
+      "levee_terrain": 403.0,
+      "lots": "LOT 25"
+    },
+    {
+      "periode": "2025-02-07 00:00:00",
+      "commune": "Netteboulou",
+      "levee_terrain": 194.0,
+      "lots": "LOT 26"
+    },
+    {
+      "periode": "2025-02-07 00:00:00",
+      "commune": "Missirah",
+      "levee_terrain": 220.0,
+      "lots": "LOT 26"
+    },
+    {
+      "periode": "2025-02-07 00:00:00",
+      "commune": "Bandafassi",
+      "levee_terrain": 294.0,
+      "lots": "LOT 26"
+    },
+    {
+      "periode": "2025-02-14 00:00:00",
+      "commune": "Netteboulou",
+      "levee_terrain": 211.0,
+      "lots": null
+    },
+    {
+      "periode": "2025-02-14 00:00:00",
+      "commune": "Missirah",
+      "levee_terrain": 263.0,
+      "lots": null
+    },
+    {
+      "periode": "2025-02-14 00:00:00",
+      "commune": "Bandafassi",
+      "levee_terrain": 148.0,
+      "lots": null
+    },
+    {
+      "periode": "2025-02-21 00:00:00",
+      "commune": "Netteboulou",
+      "levee_terrain": 88.0,
+      "lots": null
+    },
+    {
+      "periode": "2025-02-21 00:00:00",
+      "commune": "Missirah",
+      "levee_terrain": 161.0,
+      "lots": null
+    },
+    {
+      "periode": "2025-03-04 00:00:00",
+      "commune": "Fongolimbi",
+      "levee_terrain": 236.0,
+      "lots": "LOT 27"
+    },
+    {
+      "periode": "2025-03-10 00:00:00",
+      "commune": "Fongolimbi",
+      "levee_terrain": 367.0,
+      "lots": "LOT 28"
+    },
+    {
+      "periode": "2025-03-10 00:00:00",
+      "commune": "Ballou",
+      "levee_terrain": 201.0,
+      "lots": "LOT 28"
+    },
+    {
+      "periode": "2025-03-17 00:00:00",
+      "commune": "Fongolimbi",
+      "levee_terrain": 671.0,
+      "lots": "LOT 29"
+    },
+    {
+      "periode": "2025-03-17 00:00:00",
+      "commune": "Ballou",
+      "levee_terrain": 415.0,
+      "lots": "LOT 29"
+    },
+    {
+      "periode": "2025-03-24 00:00:00",
+      "commune": "Fongolimbi",
+      "levee_terrain": 126.0,
+      "lots": "LOT 30"
+    },
+    {
+      "periode": "2025-03-24 00:00:00",
+      "commune": "Ballou",
+      "levee_terrain": 302.0,
+      "lots": "LOT 30"
+    },
+    {
+      "periode": "2025-04-07 00:00:00",
+      "commune": "Dimboli",
+      "levee_terrain": 408.0,
+      "lots": "LOT 31"
+    },
+    {
+      "periode": "2025-04-07 00:00:00",
+      "commune": "Ballou",
+      "levee_terrain": 218.0,
+      "lots": "LOT 31"
+    },
+    {
+      "periode": "2025-04-11 00:00:00",
+      "commune": "Dimboli",
+      "levee_terrain": 778.0,
+      "lots": "LOT 32"
+    },
+    {
+      "periode": "2025-04-11 00:00:00",
+      "commune": "Ballou",
+      "levee_terrain": 197.0,
+      "lots": "LOT 32"
+    },
+    {
+      "periode": "2025-04-18 00:00:00",
+      "commune": "Dimboli",
+      "levee_terrain": 1727.0,
+      "lots": "LOT 33"
+    },
+    {
+      "periode": "2025-04-18 00:00:00",
+      "commune": "Ballou",
+      "levee_terrain": 246.0,
+      "lots": "LOT 33"
+    },
+    {
+      "periode": "2025-04-18 00:00:00",
+      "commune": "Gabou",
+      "levee_terrain": 623.0,
+      "lots": "LOT 33"
+    },
+    {
+      "periode": "2025-04-25 00:00:00",
+      "commune": "Dimboli",
+      "levee_terrain": 99.0,
+      "lots": "LOT 34"
+    },
+    {
+      "periode": "2025-04-25 00:00:00",
+      "commune": "Gabou",
+      "levee_terrain": 587.0,
+      "lots": "LOT 34"
+    },
+    {
+      "periode": "2025-05-02 00:00:00",
+      "commune": "Bembou",
+      "levee_terrain": 833.0,
+      "lots": "LOT 35"
+    },
+    {
+      "periode": "2025-05-08 00:00:00",
+      "commune": "Bembou",
+      "levee_terrain": 832.0,
+      "lots": "LOT 36"
+    },
+    {
+      "periode": null,
+      "commune": "Total",
+      "levee_terrain": 22148.0,
+      "lots": null
+    }
+  ],
+  "Levee par commune": [
+    {
+      "region": "TAMBACOUNDA",
+      "communes": "NDOGA BABACAR",
+      "total_parcelles_terrain": 5102.0,
+      "total_parcelles_delimitees_et_enquetees_": 3845.0
+    },
+    {
+      "region": null,
+      "communes": "MISSIRAH",
+      "total_parcelles_terrain": 2400.0,
+      "total_parcelles_delimitees_et_enquetees_": 2712.0
+    },
+    {
+      "region": null,
+      "communes": "NETTEBOULOU",
+      "total_parcelles_terrain": 2237.0,
+      "total_parcelles_delimitees_et_enquetees_": 2492.0
+    },
+    {
+      "region": null,
+      "communes": "BALLOU",
+      "total_parcelles_terrain": 1579.0,
+      "total_parcelles_delimitees_et_enquetees_": 1413.0
+    },
+    {
+      "region": null,
+      "communes": "GABOU",
+      "total_parcelles_terrain": 1210.0,
+      "total_parcelles_delimitees_et_enquetees_": 1474.0
+    },
+    {
+      "region": "KEDOUGOU",
+      "communes": "BANDAFASSI",
+      "total_parcelles_terrain": 3543.0,
+      "total_parcelles_delimitees_et_enquetees_": 3565.0
+    },
+    {
+      "region": null,
+      "communes": "FONGOLIMBI",
+      "total_parcelles_terrain": 1400.0,
+      "total_parcelles_delimitees_et_enquetees_": 1500.0
+    },
+    {
+      "region": null,
+      "communes": "DIMBOLI",
+      "total_parcelles_terrain": 3012.0,
+      "total_parcelles_delimitees_et_enquetees_": 2989.0
+    },
+    {
+      "region": null,
+      "communes": "BEMBOU",
+      "total_parcelles_terrain": 1665.0,
+      "total_parcelles_delimitees_et_enquetees_": 1100.0
+    },
+    {
+      "region": null,
+      "communes": "Total",
+      "total_parcelles_terrain": 22148.0,
+      "total_parcelles_delimitees_et_enquetees_": 21090.0
+    },
+    {
+      "region": null,
+      "communes": "Taux de réalisation en pourcentage",
+      "total_parcelles_terrain": 31.64,
+      "total_parcelles_delimitees_et_enquetees_": 30.12857142857143
+    }
+  ]
+}
