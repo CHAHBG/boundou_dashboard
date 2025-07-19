@@ -58,8 +58,8 @@ class ProcasefDashboard {
         console.log('Chargement des données initiales...');
         // Charger les données essentielles pour l'accueil
         this.data.parcelles = await this.dataLoader.loadData('data/parcelles.json');
-        this.data.projections = await this.dataLoader.loadData('data/Projections-2025.json');
-        this.data.repartitionGenre = await this.dataLoader.loadData('data/Repartition-genre.json');
+        this.data.projections = await this.dataLoader.loadData('data/Projections_2025.json');
+        this.data.repartitionGenre = await this.dataLoader.loadData('data/Repartition_genre.json');
     }
 
     calculateStats() {
@@ -266,23 +266,23 @@ class ProcasefDashboard {
                 break;
             case 'etat-avancement':
                 if (!this.data.etatOperations) {
-                    this.data.etatOperations = await this.dataLoader.loadData('data/Etat-des-operations-Boundou-Mai-2025.json');
+                    this.data.etatOperations = await this.dataLoader.loadData('data/Etat_des_operations_Boundou_Mai_2025.json');
                 }
                 break;
             case 'projections-2025':
                 if (!this.data.projections) {
-                    this.data.projections = await this.dataLoader.loadData('data/Projections-2025.json');
+                    this.data.projections = await this.dataLoader.loadData('data/Projections_2025.json');
                 }
                 break;
             case 'genre':
                 if (!this.data.genreCommune) {
-                    this.data.genreCommune = await this.dataLoader.loadData('data/Genre-par-Commune.json');
+                    this.data.genreCommune = await this.dataLoader.loadData('data/Genre_par_Commune.json');
                 }
                 if (!this.data.genreTrimestre) {
-                    this.data.genreTrimestre = await this.dataLoader.loadData('data/Genre-par-trimestre.json');
+                    this.data.genreTrimestre = await this.dataLoader.loadData('data/Genre_par_trimestre.json');
                 }
                 if (!this.data.repartitionGenre) {
-                    this.data.repartitionGenre = await this.dataLoader.loadData('data/Repartition-genre.json');
+                    this.data.repartitionGenre = await this.dataLoader.loadData('data/Repartition_genre.json');
                 }
                 break;
             case 'post-traitement':
