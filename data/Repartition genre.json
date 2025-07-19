@@ -1,0 +1,24 @@
+[
+  {
+    "genre": "Homme",
+    "individuel_nombre": 12650,
+    "individuel": 82.8,
+    "collectif_nombre": 30926,
+    "collectif": 81.41330855882012,
+    "total_nombre": 43576,
+    "total": 82.4,
+    "mandataires_nombre": 5798,
+    "mandataires": 94.66122448979591
+  },
+  {
+    "genre": "Femme",
+    "individuel_nombre": 2631,
+    "individuel": 17.2,
+    "collectif_nombre": 6701,
+    "collectif": 17.8,
+    "total_nombre": 9332,
+    "total": 17.6,
+    "mandataires_nombre": 327,
+    "mandataires": 5.338775510204082
+  }
+]
