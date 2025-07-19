@@ -57,11 +57,26 @@ class ProcasefDashboard {
 
     async loadInitialData() {
         console.log('Chargement des données initiales...');
-        // Charger les données essentielles pour l'accueil
-        this.data.parcelles = await this.dataLoader.loadData('data/parcelles.json');
-        this.data.projections = await this.dataLoader.loadData('data/Projections_2025.json');
-        this.data.repartitionGenre = await this.dataLoader.loadData('data/Repartition_genre.json');
+        try {
+            this.data.parcelles = await this.dataLoader.loadData('data/parcelles.json');
+        } catch (e) {
+            console.error('Échec chargement parcelles:', e);
+            this.data.parcelles = [];
+        }
+        try {
+            this.data.projections = await this.dataLoader.loadData('data/Projections_2025.json');
+        } catch (e) {
+            console.error('Échec chargement projections:', e);
+            this.data.projections = [];
+        }
+        try {
+            this.data.repartitionGenre = await this.dataLoader.loadData('data/Repartition_genre.json');
+        } catch (e) {
+            console.error('Échec chargement repartitionGenre:', e);
+            this.data.repartitionGenre = [];
+        }
     }
+
 
     calculateStats() {
         if (!this.data.parcelles || !Array.isArray(this.data.parcelles)) return;
