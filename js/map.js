@@ -1,4 +1,5 @@
-// map.js - Leaflet Map Management for PROCASEF Dashboard
+// map.js - Leaflet Map Management for PROCASEF Dashboard - VERSION CORRIGÉE
+
 class MapManager {
     constructor() {
         this.map = null;
@@ -43,36 +44,138 @@ class MapManager {
             'TOMBORONKOTO': [12.2, -12.1]
         };
     }
-    
-    // Initialisation de la carte
+
+    // 🔴 CORRECTION CRITIQUE: Méthode de destruction complète
+    destroyMap() {
+        console.log('🗑️ Destruction complète de la carte...');
+        
+        try {
+            // Nettoyer les marqueurs individuels
+            if (this.markers && this.markers.length > 0) {
+                console.log(`Suppression de ${this.markers.length} marqueurs`);
+                this.markers.forEach(marker => {
+                    if (marker && typeof marker.remove === 'function') {
+                        marker.remove();
+                    }
+                });
+                this.markers = [];
+            }
+
+            // Nettoyer le cluster de marqueurs
+            if (this.markerClusterGroup) {
+                console.log('Nettoyage du cluster de marqueurs');
+                try {
+                    this.markerClusterGroup.clearLayers();
+                    if (this.map && this.map.hasLayer(this.markerClusterGroup)) {
+                        this.map.removeLayer(this.markerClusterGroup);
+                    }
+                } catch (error) {
+                    console.warn('Erreur lors du nettoyage du cluster:', error);
+                }
+                this.markerClusterGroup = null;
+            }
+
+            // Détruire la carte principale
+            if (this.map) {
+                console.log('Destruction de l\'instance de carte Leaflet');
+                try {
+                    // Supprimer tous les event listeners
+                    this.map.off();
+                    
+                    // Détruire la carte
+                    this.map.remove();
+                } catch (error) {
+                    console.warn('Erreur lors de la destruction de la carte:', error);
+                }
+                this.map = null;
+            }
+
+            console.log('✅ Carte détruite avec succès');
+            
+        } catch (error) {
+            console.error('❌ Erreur lors de la destruction de la carte:', error);
+        }
+    }
+
+    // 🔴 CORRECTION CRITIQUE: Initialisation sécurisée de la carte
     initMap(containerId = 'map') {
+        console.log(`🗺️ Initialisation de la carte sur: ${containerId}`);
+        
         const container = document.getElementById(containerId);
         if (!container) {
-            console.error(`Map container not found: ${containerId}`);
+            console.error(`❌ Conteneur de carte non trouvé: ${containerId}`);
             return null;
         }
-        
-        // Destruction de la carte existante si elle existe
+
+        // 🔴 CORRECTION: Détruire l'instance existante en premier
         if (this.map) {
-            this.map.remove();
+            console.log('🧹 Nettoyage de l\'instance existante...');
+            this.destroyMap();
         }
-        
-        // Création de la carte centrée sur Boundou
-        this.map = L.map(containerId).setView(this.mapConfig.center, this.mapConfig.zoom);
-        
-        // Ajout de la couche de tuiles OpenStreetMap
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-            minZoom: this.mapConfig.minZoom,
-            maxZoom: this.mapConfig.maxZoom
-        }).addTo(this.map);
-        
-        // Initialisation du cluster de marqueurs
+
+        // 🔴 CORRECTION: Nettoyer l'ID Leaflet du conteneur DOM
+        const domContainer = L.DomUtil.get(containerId);
+        if (domContainer && domContainer._leaflet_id != null) {
+            console.log('🧹 Nettoyage de l\'ID Leaflet du conteneur DOM');
+            domContainer._leaflet_id = null;
+        }
+
+        // 🔴 CORRECTION: Nettoyer le contenu HTML si nécessaire
+        if (container.hasChildNodes()) {
+            console.log('🧹 Nettoyage du contenu HTML du conteneur');
+            container.innerHTML = '';
+        }
+
+        try {
+            // Création sécurisée de la nouvelle carte
+            console.log('📍 Création de la nouvelle instance de carte...');
+            this.map = L.map(containerId, {
+                center: this.mapConfig.center,
+                zoom: this.mapConfig.zoom,
+                zoomControl: true,
+                attributionControl: true
+            });
+
+            // Ajout de la couche de tuiles OpenStreetMap
+            const tileLayer = L.tileLayer('https://{s}.tile.openstreetMap.org/{z}/{x}/{y}.png', {
+                attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+                minZoom: this.mapConfig.minZoom,
+                maxZoom: this.mapConfig.maxZoom,
+                detectRetina: true
+            });
+
+            tileLayer.addTo(this.map);
+
+            // Initialisation du cluster de marqueurs
+            this.initializeMarkerCluster();
+
+            // Ajout d'un marqueur pour Boundou (centre)
+            this.addBoundouMarker();
+
+            console.log('✅ Carte initialisée avec succès');
+            return this.map;
+
+        } catch (error) {
+            console.error('❌ Erreur lors de l\'initialisation de la carte:', error);
+            return null;
+        }
+    }
+
+    // Initialisation du cluster de marqueurs
+    initializeMarkerCluster() {
+        if (this.markerClusterGroup) {
+            this.markerClusterGroup.clearLayers();
+        }
+
         this.markerClusterGroup = L.markerClusterGroup({
             maxClusterRadius: 50,
+            spiderfyOnMaxZoom: true,
+            showCoverageOnHover: false,
+            zoomToBoundsOnClick: true,
             iconCreateFunction: (cluster) => {
                 const childCount = cluster.getChildCount();
                 let c = ' marker-cluster-';
+                
                 if (childCount < 10) {
                     c += 'small';
                 } else if (childCount < 100) {
@@ -88,220 +191,179 @@ class MapManager {
                 });
             }
         });
-        
-        this.map.addLayer(this.markerClusterGroup);
-        
-        // Ajout du marqueur central pour Boundou
-        const boundouMarker = L.marker(this.boundouCoords, {
-            icon: this.createCustomIcon(this.colors.primary, 'large')
+
+        if (this.map) {
+            this.map.addLayer(this.markerClusterGroup);
+        }
+    }
+
+    // Ajout du marqueur central pour Boundou
+    addBoundouMarker() {
+        if (!this.map) return;
+
+        const boundouIcon = L.divIcon({
+            className: 'boundou-marker',
+            html: `<div style="
+                background-color: ${this.colors.primary};
+                border: 3px solid ${this.colors.secondary};
+                border-radius: 50%;
+                width: 20px;
+                height: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-weight: bold;
+                font-size: 12px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            ">B</div>`,
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+
+        const boundouMarker = L.marker(this.boundouCoords, { 
+            icon: boundouIcon 
         }).addTo(this.map);
-        
+
         boundouMarker.bindPopup(`
-            <div class="map-popup">
-                <h3>Boundou - Centre du Projet PROCASEF</h3>
-                <p>Coordonnées: ${this.boundouCoords[0]}, ${this.boundouCoords[1]}</p>
+            <div style="font-family: Inter, sans-serif; min-width: 200px;">
+                <h4 style="color: ${this.colors.secondary}; margin: 0 0 10px 0;">
+                    🏛️ Région de Boundou
+                </h4>
+                <p style="margin: 5px 0; color: #666;">
+                    <strong>📍 Coordonnées:</strong><br>
+                    ${this.boundouCoords[0]}, ${this.boundouCoords[1]}
+                </p>
+                <p style="margin: 5px 0; color: #666;">
+                    <strong>🗺️ Zone:</strong> Centre administratif
+                </p>
+                <p style="margin: 5px 0; color: #666;">
+                    <strong>📊 Projet:</strong> PROCASEF
+                </p>
             </div>
         `);
-        
-        console.log('Map initialized successfully');
-        return this.map;
+
+        this.markers.push(boundouMarker);
     }
-    
-    // Création d'icônes personnalisées avec les couleurs PROCASEF
-    createCustomIcon(color, size = 'medium') {
-        const sizes = {
-            small: [20, 20],
-            medium: [30, 30],
-            large: [40, 40]
-        };
-        
-        const iconSize = sizes[size] || sizes.medium;
-        
-        return L.divIcon({
-            className: 'custom-marker',
-            html: `
-                <div style="
-                    background-color: ${color};
-                    border: 3px solid white;
-                    border-radius: 50%;
-                    width: ${iconSize[0]}px;
-                    height: ${iconSize[1]}px;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-                "></div>
-            `,
-            iconSize: iconSize,
-            iconAnchor: [iconSize[0]/2, iconSize[1]/2]
-        });
-    }
-    
+
     // Ajout de marqueurs pour les communes
-    addCommuneMarkers(parcellesData) {
-        if (!this.map || !parcellesData) {
-            console.warn('Map or data not available');
+    addCommuneMarker(communeName, stats) {
+        if (!this.map || !this.communeCoords[communeName]) {
+            console.warn(`Coordonnées non trouvées pour la commune: ${communeName}`);
             return;
         }
+
+        const coords = this.communeCoords[communeName];
+        const totalParcelles = stats.total || 0;
+        const parcellesNicad = stats.nicad_oui || 0;
+        const parcellesDeliberees = stats.deliberees_oui || 0;
+        const superficie = stats.superficie || 0;
+
+        // Calcul du taux NICAD pour déterminer la couleur
+        const tauxNicad = totalParcelles > 0 ? (parcellesNicad / totalParcelles) * 100 : 0;
+        let markerColor = this.colors.error; // Rouge par défaut
         
-        // Agrégation des données par commune
-        const communeStats = {};
-        
-        parcellesData.forEach(parcelle => {
-            const commune = parcelle.commune;
-            if (!communeStats[commune]) {
-                communeStats[commune] = {
-                    nom: commune,
-                    totalParcelles: 0,
-                    parcellesNicad: 0,
-                    parcellesDeliberees: 0,
-                    superficie: 0,
-                    coordonnees: this.communeCoords[commune] || null
-                };
-            }
-            
-            communeStats[commune].totalParcelles++;
-            if (parcelle.nicad === 'Oui') communeStats[commune].parcellesNicad++;
-            if (parcelle.deliberee === 'Oui') communeStats[commune].parcellesDeliberees++;
-            if (parcelle.superficie && !isNaN(parcelle.superficie)) {
-                communeStats[commune].superficie += parseFloat(parcelle.superficie);
-            }
+        if (tauxNicad >= 60) {
+            markerColor = this.colors.success; // Vert
+        } else if (tauxNicad >= 40) {
+            markerColor = this.colors.warning; // Orange
+        }
+
+        // Taille du marqueur basée sur le nombre total de parcelles
+        const markerSize = Math.max(15, Math.min(30, totalParcelles / 200));
+
+        const communeIcon = L.divIcon({
+            className: 'commune-marker',
+            html: `<div style="
+                background-color: ${markerColor};
+                border: 2px solid ${this.colors.secondary};
+                border-radius: 50%;
+                width: ${markerSize}px;
+                height: ${markerSize}px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-weight: bold;
+                font-size: ${Math.max(8, markerSize/3)}px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                cursor: pointer;
+            ">${communeName.substring(0, 2)}</div>`,
+            iconSize: [markerSize, markerSize],
+            iconAnchor: [markerSize/2, markerSize/2]
         });
-        
-        // Création des marqueurs pour chaque commune
-        Object.values(communeStats).forEach(commune => {
-            if (!commune.coordonnees) return;
-            
-            // Détermination de la couleur basée sur le taux de NICAD
-            const tauxNicad = commune.totalParcelles > 0 ? 
-                (commune.parcellesNicad / commune.totalParcelles) * 100 : 0;
-            
-            let markerColor;
-            if (tauxNicad >= 70) {
-                markerColor = this.colors.success;
-            } else if (tauxNicad >= 50) {
-                markerColor = this.colors.warning;
-            } else {
-                markerColor = this.colors.error;
-            }
-            
-            const marker = L.marker(commune.coordonnees, {
-                icon: this.createCustomIcon(markerColor, 'medium')
-            });
-            
-            // Popup avec informations détaillées
-            const popupContent = `
-                <div class="commune-popup" style="min-width: 200px;">
-                    <h3 style="color: ${this.colors.secondary}; margin: 0 0 10px 0;">
-                        ${commune.nom}
-                    </h3>
-                    <div style="font-size: 12px; line-height: 1.4;">
-                        <p><strong>📊 Total parcelles:</strong> ${commune.totalParcelles.toLocaleString()}</p>
-                        <p><strong>✅ Parcelles NICAD:</strong> ${commune.parcellesNicad.toLocaleString()} (${tauxNicad.toFixed(1)}%)</p>
-                        <p><strong>📋 Parcelles délibérées:</strong> ${commune.parcellesDeliberees.toLocaleString()}</p>
-                        <p><strong>📏 Superficie totale:</strong> ${commune.superficie.toFixed(2)} ha</p>
-                        <p><strong>📍 Coordonnées:</strong> ${commune.coordonnees[0].toFixed(3)}, ${commune.coordonnees[1].toFixed(3)}</p>
-                    </div>
+
+        const marker = L.marker(coords, { icon: communeIcon });
+
+        // Popup avec les informations détaillées
+        marker.bindPopup(`
+            <div style="font-family: Inter, sans-serif; min-width: 250px;">
+                <h4 style="color: ${this.colors.secondary}; margin: 0 0 10px 0; border-bottom: 2px solid ${this.colors.primary}; padding-bottom: 5px;">
+                    🏘️ ${communeName}
+                </h4>
+                
+                <div style="margin: 10px 0;">
+                    <p style="margin: 5px 0; color: #333;">
+                        <strong>📊 Total parcelles:</strong> ${totalParcelles.toLocaleString()}
+                    </p>
+                    <p style="margin: 5px 0; color: #333;">
+                        <strong>✅ Parcelles NICAD:</strong> ${parcellesNicad.toLocaleString()} 
+                        <span style="color: ${markerColor}; font-weight: bold;">(${tauxNicad.toFixed(1)}%)</span>
+                    </p>
+                    <p style="margin: 5px 0; color: #333;">
+                        <strong>📋 Parcelles délibérées:</strong> ${parcellesDeliberees.toLocaleString()}
+                    </p>
+                    <p style="margin: 5px 0; color: #333;">
+                        <strong>📏 Superficie totale:</strong> ${superficie.toFixed(2)} ha
+                    </p>
                 </div>
-            `;
-            
-            marker.bindPopup(popupContent);
-            
-            // Ajout de propriétés personnalisées pour le filtrage
-            marker.communeData = commune;
-            
-            this.markers.push(marker);
+                
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee;">
+                    <p style="margin: 0; color: #666; font-size: 12px;">
+                        <strong>📍 Coordonnées:</strong> ${coords[0].toFixed(3)}, ${coords[1].toFixed(3)}
+                    </p>
+                </div>
+            </div>
+        `);
+
+        // Ajout du marqueur au cluster
+        if (this.markerClusterGroup) {
             this.markerClusterGroup.addLayer(marker);
-        });
-        
-        console.log(`Added ${this.markers.length} commune markers`);
-    }
-    
-    // Fonction de mise à jour des marqueurs selon le filtre
-    updateMarkers(filterCommune = '') {
-        if (!this.markerClusterGroup) return;
-        
-        this.currentFilter = filterCommune;
-        
-        // Suppression de tous les marqueurs du cluster
-        this.markerClusterGroup.clearLayers();
-        
-        // Ajout sélectif des marqueurs selon le filtre
-        this.markers.forEach(marker => {
-            if (!filterCommune || marker.communeData.nom === filterCommune) {
-                this.markerClusterGroup.addLayer(marker);
-            }
-        });
-        
-        // Ajustement de la vue si un filtre spécifique est appliqué
-        if (filterCommune && this.communeCoords[filterCommune]) {
-            this.map.setView(this.communeCoords[filterCommune], 11);
         } else {
-            // Retour à la vue d'ensemble
-            this.map.setView(this.mapConfig.center, this.mapConfig.zoom);
+            marker.addTo(this.map);
         }
-        
-        console.log(`Updated markers for filter: ${filterCommune || 'all'}`);
+
+        this.markers.push(marker);
     }
-    
-    // Ajout de contrôles personnalisés
-    addCustomControls() {
-        if (!this.map) return;
-        
-        // Contrôle de réinitialisation de la vue
-        const resetControl = L.control({position: 'topleft'});
-        resetControl.onAdd = () => {
-            const div = L.DomUtil.create('div', 'leaflet-control-custom');
-            div.innerHTML = `
-                <button class="reset-view-btn" title="Centrer sur Boundou" style="
-                    background: ${this.colors.primary};
-                    color: white;
-                    border: none;
-                    padding: 8px 12px;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    font-size: 12px;
-                ">🏠 Centrer</button>
-            `;
-            
-            div.onclick = (e) => {
-                e.stopPropagation();
-                this.map.setView(this.mapConfig.center, this.mapConfig.zoom);
-                this.updateMarkers(''); // Reset filter
-            };
-            
-            return div;
-        };
-        resetControl.addTo(this.map);
-        
-        // Légende des couleurs
-        const legendControl = L.control({position: 'bottomright'});
-        legendControl.onAdd = () => {
-            const div = L.DomUtil.create('div', 'leaflet-control-custom legend-control');
-            div.innerHTML = `
-                <div style="background: white; padding: 10px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                    <h4 style="margin: 0 0 8px 0; font-size: 12px;">Taux NICAD</h4>
-                    <div style="font-size: 11px;">
-                        <div><span style="display: inline-block; width: 12px; height: 12px; background: ${this.colors.success}; border-radius: 50%; margin-right: 5px;"></span> ≥ 70%</div>
-                        <div><span style="display: inline-block; width: 12px; height: 12px; background: ${this.colors.warning}; border-radius: 50%; margin-right: 5px;"></span> 50-70%</div>
-                        <div><span style="display: inline-block; width: 12px; height: 12px; background: ${this.colors.error}; border-radius: 50%; margin-right: 5px;"></span> < 50%</div>
-                    </div>
-                </div>
-            `;
-            return div;
-        };
-        legendControl.addTo(this.map);
+
+    // Centrage automatique sur tous les marqueurs
+    fitToMarkers() {
+        if (!this.map || this.markers.length === 0) return;
+
+        const group = new L.featureGroup(this.markers);
+        this.map.fitBounds(group.getBounds().pad(0.1));
     }
-    
-    // Destruction propre de la carte
-    destroy() {
-        if (this.map) {
-            this.map.remove();
-            this.map = null;
+
+    // Filtrage des marqueurs
+    filterMarkers(filterValue) {
+        this.currentFilter = filterValue.toLowerCase();
+        
+        if (this.markerClusterGroup) {
+            this.markerClusterGroup.clearLayers();
+            
+            this.markers.forEach(marker => {
+                const popup = marker.getPopup();
+                if (!popup) return;
+
+                const content = popup.getContent().toLowerCase();
+                if (!filterValue || content.includes(this.currentFilter)) {
+                    this.markerClusterGroup.addLayer(marker);
+                }
+            });
         }
-        this.markers = [];
-        this.markerClusterGroup = null;
-        console.log('Map destroyed');
     }
-    
-    // Redimensionnement de la carte
+
+    // Méthode de redimensionnement
     resize() {
         if (this.map) {
             setTimeout(() => {
@@ -309,73 +371,18 @@ class MapManager {
             }, 100);
         }
     }
-    
-    // Export des données de la carte
-    exportMapData() {
-        const mapData = {
-            center: this.map ? this.map.getCenter() : this.mapConfig.center,
-            zoom: this.map ? this.map.getZoom() : this.mapConfig.zoom,
-            markers: this.markers.length,
-            currentFilter: this.currentFilter
-        };
-        return mapData;
+
+    // Nettoyage complet lors de la destruction
+    cleanup() {
+        this.destroyMap();
+        this.markers = [];
+        this.markerClusterGroup = null;
+        this.currentFilter = '';
+        console.log('✅ MapManager nettoyé complètement');
     }
 }
 
 // Export pour utilisation globale
-window.MapManager = MapManager;
-
-// CSS pour les clusters et popups (injecté dynamiquement)
-const mapStyles = `
-    .marker-cluster-small {
-        background-color: rgba(212, 165, 116, 0.6);
-    }
-    .marker-cluster-small div {
-        background-color: rgba(212, 165, 116, 0.8);
-    }
-    .marker-cluster-medium {
-        background-color: rgba(30, 58, 138, 0.6);
-    }
-    .marker-cluster-medium div {
-        background-color: rgba(30, 58, 138, 0.8);
-    }
-    .marker-cluster-large {
-        background-color: rgba(184, 134, 11, 0.6);
-    }
-    .marker-cluster-large div {
-        background-color: rgba(184, 134, 11, 0.8);
-    }
-    .marker-cluster {
-        background-clip: padding-box;
-        border-radius: 20px;
-    }
-    .marker-cluster div {
-        width: 30px;
-        height: 30px;
-        margin-left: 5px;
-        margin-top: 5px;
-        text-align: center;
-        border-radius: 15px;
-        font: 12px "Helvetica Neue", Arial, Helvetica, sans-serif;
-    }
-    .marker-cluster span {
-        line-height: 30px;
-        color: white;
-        font-weight: bold;
-    }
-    .commune-popup h3 {
-        border-bottom: 2px solid #D4A574;
-        padding-bottom: 5px;
-    }
-    .leaflet-popup-content-wrapper {
-        border-radius: 8px;
-    }
-    .reset-view-btn:hover {
-        opacity: 0.8;
-    }
-`;
-
-// Injection des styles CSS
-const styleSheet = document.createElement('style');
-styleSheet.textContent = mapStyles;
-document.head.appendChild(styleSheet);
+if (typeof window !== 'undefined') {
+    window.MapManager = MapManager;
+}
