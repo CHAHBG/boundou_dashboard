@@ -19,7 +19,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 59.0,
     "nombre_de_parcelle_collective": 36.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Bamba",
@@ -30,7 +30,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 2.0,
     "nombre_de_parcelle_individuelle": 81.0,
     "nombre_de_parcelle_collective": 42.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": null,
@@ -41,7 +41,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 26.0,
     "nombre_de_parcelle_collective": 22.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Dianke",
@@ -52,18 +52,18 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 53.0,
     "nombre_de_parcelle_individuelle": 107.0,
     "nombre_de_parcelle_collective": 36.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": null,
     "commune": "Missirah",
     "total_parcelle_recue": 88.0,
     "parcelle_post_traite_prete_a_etre_valide": 84.0,
-    "nombre_de_parcelle_dont_la_jointure_est_": NaN,
-    "nombre_de_parcelle_dont_la_jointure_n_a_": NaN,
-    "nombre_de_parcelle_individuelle": NaN,
-    "nombre_de_parcelle_collective": NaN,
-    "lot": NaN
+    "nombre_de_parcelle_dont_la_jointure_est_": null,
+    "nombre_de_parcelle_dont_la_jointure_n_a_": null,
+    "nombre_de_parcelle_individuelle": null,
+    "nombre_de_parcelle_collective": null,
+    "lot": null
   },
   {
     "geom": "Badara",
@@ -74,7 +74,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 104.0,
     "nombre_de_parcelle_collective": 28.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": null,
@@ -85,7 +85,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 6.0,
     "nombre_de_parcelle_individuelle": 98.0,
     "nombre_de_parcelle_collective": 98.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Demba",
@@ -93,10 +93,10 @@
     "total_parcelle_recue": 147.0,
     "parcelle_post_traite_prete_a_etre_valide": 123.0,
     "nombre_de_parcelle_dont_la_jointure_est_": 123.0,
-    "nombre_de_parcelle_dont_la_jointure_n_a_": NaN,
+    "nombre_de_parcelle_dont_la_jointure_n_a_": null,
     "nombre_de_parcelle_individuelle": 71.0,
     "nombre_de_parcelle_collective": 52.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": null,
@@ -107,7 +107,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 47.0,
     "nombre_de_parcelle_individuelle": 107.0,
     "nombre_de_parcelle_collective": 53.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Mariama",
@@ -118,18 +118,18 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 2.0,
     "nombre_de_parcelle_individuelle": 86.0,
     "nombre_de_parcelle_collective": 66.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": null,
     "commune": "Missirah",
-    "total_parcelle_recue": NaN,
-    "parcelle_post_traite_prete_a_etre_valide": NaN,
-    "nombre_de_parcelle_dont_la_jointure_est_": NaN,
-    "nombre_de_parcelle_dont_la_jointure_n_a_": NaN,
-    "nombre_de_parcelle_individuelle": NaN,
-    "nombre_de_parcelle_collective": NaN,
-    "lot": NaN
+    "total_parcelle_recue": null,
+    "parcelle_post_traite_prete_a_etre_valide": null,
+    "nombre_de_parcelle_dont_la_jointure_est_": null,
+    "nombre_de_parcelle_dont_la_jointure_n_a_": null,
+    "nombre_de_parcelle_individuelle": null,
+    "nombre_de_parcelle_collective": null,
+    "lot": null
   },
   {
     "geom": "Bamba",
@@ -151,7 +151,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 1.0,
     "nombre_de_parcelle_individuelle": 145.0,
     "nombre_de_parcelle_collective": 46.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Dianke",
@@ -162,18 +162,18 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 59.0,
     "nombre_de_parcelle_individuelle": 70.0,
     "nombre_de_parcelle_collective": 38.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": null,
     "commune": "Missirah",
     "total_parcelle_recue": 76.0,
     "parcelle_post_traite_prete_a_etre_valide": 70.0,
-    "nombre_de_parcelle_dont_la_jointure_est_": NaN,
-    "nombre_de_parcelle_dont_la_jointure_n_a_": NaN,
-    "nombre_de_parcelle_individuelle": NaN,
-    "nombre_de_parcelle_collective": NaN,
-    "lot": NaN
+    "nombre_de_parcelle_dont_la_jointure_est_": null,
+    "nombre_de_parcelle_dont_la_jointure_n_a_": null,
+    "nombre_de_parcelle_individuelle": null,
+    "nombre_de_parcelle_collective": null,
+    "lot": null
   },
   {
     "geom": "Badara",
@@ -184,7 +184,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 6.0,
     "nombre_de_parcelle_individuelle": 108.0,
     "nombre_de_parcelle_collective": 43.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": null,
@@ -195,7 +195,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 2.0,
     "nombre_de_parcelle_individuelle": 87.0,
     "nombre_de_parcelle_collective": 7.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Demba",
@@ -206,7 +206,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 149.0,
     "nombre_de_parcelle_collective": 72.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": null,
@@ -217,7 +217,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 52.0,
     "nombre_de_parcelle_collective": 73.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Mariama",
@@ -228,18 +228,18 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 11.0,
     "nombre_de_parcelle_individuelle": 73.0,
     "nombre_de_parcelle_collective": 34.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": null,
     "commune": "Missirah",
-    "total_parcelle_recue": NaN,
-    "parcelle_post_traite_prete_a_etre_valide": NaN,
-    "nombre_de_parcelle_dont_la_jointure_est_": NaN,
-    "nombre_de_parcelle_dont_la_jointure_n_a_": NaN,
-    "nombre_de_parcelle_individuelle": NaN,
-    "nombre_de_parcelle_collective": NaN,
-    "lot": NaN
+    "total_parcelle_recue": null,
+    "parcelle_post_traite_prete_a_etre_valide": null,
+    "nombre_de_parcelle_dont_la_jointure_est_": null,
+    "nombre_de_parcelle_dont_la_jointure_n_a_": null,
+    "nombre_de_parcelle_individuelle": null,
+    "nombre_de_parcelle_collective": null,
+    "lot": null
   },
   {
     "geom": "Bamba",
@@ -261,7 +261,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 1.0,
     "nombre_de_parcelle_individuelle": 107.0,
     "nombre_de_parcelle_collective": 32.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Dianke",
@@ -272,18 +272,18 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 48.0,
     "nombre_de_parcelle_individuelle": 59.0,
     "nombre_de_parcelle_collective": 35.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": null,
     "commune": "Missirah",
     "total_parcelle_recue": 62.0,
     "parcelle_post_traite_prete_a_etre_valide": 59.0,
-    "nombre_de_parcelle_dont_la_jointure_est_": NaN,
-    "nombre_de_parcelle_dont_la_jointure_n_a_": NaN,
-    "nombre_de_parcelle_individuelle": NaN,
-    "nombre_de_parcelle_collective": NaN,
-    "lot": NaN
+    "nombre_de_parcelle_dont_la_jointure_est_": null,
+    "nombre_de_parcelle_dont_la_jointure_n_a_": null,
+    "nombre_de_parcelle_individuelle": null,
+    "nombre_de_parcelle_collective": null,
+    "lot": null
   },
   {
     "geom": "Badara",
@@ -294,7 +294,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 2.0,
     "nombre_de_parcelle_individuelle": 26.0,
     "nombre_de_parcelle_collective": 2.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": null,
@@ -305,7 +305,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 13.0,
     "nombre_de_parcelle_individuelle": 63.0,
     "nombre_de_parcelle_collective": 26.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Demba",
@@ -316,7 +316,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 74.0,
     "nombre_de_parcelle_collective": 18.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": null,
@@ -327,7 +327,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 43.0,
     "nombre_de_parcelle_collective": 30.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Mariama",
@@ -338,18 +338,18 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 54.0,
     "nombre_de_parcelle_individuelle": 34.0,
     "nombre_de_parcelle_collective": 18.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": null,
     "commune": "Missirah",
-    "total_parcelle_recue": NaN,
-    "parcelle_post_traite_prete_a_etre_valide": NaN,
-    "nombre_de_parcelle_dont_la_jointure_est_": NaN,
-    "nombre_de_parcelle_dont_la_jointure_n_a_": NaN,
-    "nombre_de_parcelle_individuelle": NaN,
-    "nombre_de_parcelle_collective": NaN,
-    "lot": NaN
+    "total_parcelle_recue": null,
+    "parcelle_post_traite_prete_a_etre_valide": null,
+    "nombre_de_parcelle_dont_la_jointure_est_": null,
+    "nombre_de_parcelle_dont_la_jointure_n_a_": null,
+    "nombre_de_parcelle_individuelle": null,
+    "nombre_de_parcelle_collective": null,
+    "lot": null
   },
   {
     "geom": "Demba",
@@ -371,7 +371,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 1.0,
     "nombre_de_parcelle_individuelle": 30.0,
     "nombre_de_parcelle_collective": 30.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Bamba",
@@ -382,7 +382,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 2.0,
     "nombre_de_parcelle_individuelle": 67.0,
     "nombre_de_parcelle_collective": 42.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Badara",
@@ -393,7 +393,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 3.0,
     "nombre_de_parcelle_individuelle": 14.0,
     "nombre_de_parcelle_collective": 6.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Dianke",
@@ -404,7 +404,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 17.0,
     "nombre_de_parcelle_collective": 2.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": null,
@@ -415,7 +415,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 6.0,
     "nombre_de_parcelle_individuelle": 5.0,
     "nombre_de_parcelle_collective": 10.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": null,
@@ -426,7 +426,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 1.0,
     "nombre_de_parcelle_individuelle": 0.0,
     "nombre_de_parcelle_collective": 0.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Demba",
@@ -448,7 +448,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 15.0,
     "nombre_de_parcelle_individuelle": 57.0,
     "nombre_de_parcelle_collective": 54.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Badara",
@@ -459,7 +459,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 4.0,
     "nombre_de_parcelle_individuelle": 33.0,
     "nombre_de_parcelle_collective": 15.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": null,
@@ -481,7 +481,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 128.0,
     "nombre_de_parcelle_collective": 72.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "ID",
@@ -492,7 +492,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 135.0,
     "nombre_de_parcelle_collective": 102.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Dianke",
@@ -503,7 +503,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 46.0,
     "nombre_de_parcelle_collective": 43.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Badara",
@@ -514,7 +514,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 11.0,
     "nombre_de_parcelle_individuelle": 151.0,
     "nombre_de_parcelle_collective": 55.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": null,
@@ -536,7 +536,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 102.0,
     "nombre_de_parcelle_collective": 79.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Bamba",
@@ -547,7 +547,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 59.0,
     "nombre_de_parcelle_collective": 69.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "ID",
@@ -558,7 +558,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 33.0,
     "nombre_de_parcelle_collective": 24.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Mariama",
@@ -569,7 +569,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 3.0,
     "nombre_de_parcelle_individuelle": 22.0,
     "nombre_de_parcelle_collective": 81.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Dianke",
@@ -580,7 +580,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 18.0,
     "nombre_de_parcelle_individuelle": 7.0,
     "nombre_de_parcelle_collective": 32.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Badara",
@@ -591,7 +591,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 6.0,
     "nombre_de_parcelle_individuelle": 32.0,
     "nombre_de_parcelle_collective": 14.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Demba",
@@ -613,7 +613,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 70.0,
     "nombre_de_parcelle_collective": 40.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Bamba",
@@ -624,7 +624,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 77.0,
     "nombre_de_parcelle_collective": 18.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "ID",
@@ -635,7 +635,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 38.0,
     "nombre_de_parcelle_individuelle": 36.0,
     "nombre_de_parcelle_collective": 4.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Dianke",
@@ -646,7 +646,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 25.0,
     "nombre_de_parcelle_collective": 19.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Badara",
@@ -657,7 +657,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 65.0,
     "nombre_de_parcelle_collective": 16.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Demba",
@@ -679,7 +679,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 49.0,
     "nombre_de_parcelle_collective": 30.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "ID",
@@ -690,7 +690,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 2.0,
     "nombre_de_parcelle_individuelle": 181.0,
     "nombre_de_parcelle_collective": 63.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Bamba",
@@ -701,7 +701,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 78.0,
     "nombre_de_parcelle_collective": 35.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Mariama",
@@ -712,7 +712,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 2.0,
     "nombre_de_parcelle_individuelle": 29.0,
     "nombre_de_parcelle_collective": 53.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Dianke",
@@ -723,7 +723,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 19.0,
     "nombre_de_parcelle_collective": 119.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Badara",
@@ -734,7 +734,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 67.0,
     "nombre_de_parcelle_individuelle": 114.0,
     "nombre_de_parcelle_collective": 47.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Demba",
@@ -756,7 +756,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 45.0,
     "nombre_de_parcelle_collective": 31.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": null,
@@ -767,7 +767,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 351.0,
     "nombre_de_parcelle_collective": 51.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Bamba",
@@ -778,7 +778,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 28.0,
     "nombre_de_parcelle_individuelle": 315.0,
     "nombre_de_parcelle_collective": 24.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "ID",
@@ -789,7 +789,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 83.0,
     "nombre_de_parcelle_individuelle": 281.0,
     "nombre_de_parcelle_collective": 61.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Badara",
@@ -800,7 +800,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 107.0,
     "nombre_de_parcelle_individuelle": 494.0,
     "nombre_de_parcelle_collective": 43.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Dianke",
@@ -811,7 +811,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 29.0,
     "nombre_de_parcelle_collective": 29.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Demba",
@@ -833,7 +833,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 45.0,
     "nombre_de_parcelle_collective": 31.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": null,
@@ -844,7 +844,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 351.0,
     "nombre_de_parcelle_collective": 51.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Bamba",
@@ -855,7 +855,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 5.0,
     "nombre_de_parcelle_individuelle": 17.0,
     "nombre_de_parcelle_collective": 3.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "ID",
@@ -866,7 +866,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 157.0,
     "nombre_de_parcelle_collective": 17.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Demba",
@@ -888,7 +888,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 0.0,
     "nombre_de_parcelle_individuelle": 101.0,
     "nombre_de_parcelle_collective": 51.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Bamba",
@@ -899,7 +899,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 35.0,
     "nombre_de_parcelle_individuelle": 94.0,
     "nombre_de_parcelle_collective": 44.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "ID",
@@ -910,7 +910,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 8.0,
     "nombre_de_parcelle_individuelle": 145.0,
     "nombre_de_parcelle_collective": 59.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": "Dianke",
@@ -921,7 +921,7 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 35.0,
     "nombre_de_parcelle_individuelle": 87.0,
     "nombre_de_parcelle_collective": 98.0,
-    "lot": NaN
+    "lot": null
   },
   {
     "geom": null,
@@ -930,9 +930,9 @@
     "parcelle_post_traite_prete_a_etre_valide": 123.0,
     "nombre_de_parcelle_dont_la_jointure_est_": 111.0,
     "nombre_de_parcelle_dont_la_jointure_n_a_": 12.0,
-    "nombre_de_parcelle_individuelle": NaN,
-    "nombre_de_parcelle_collective": NaN,
-    "lot": NaN
+    "nombre_de_parcelle_individuelle": null,
+    "nombre_de_parcelle_collective": null,
+    "lot": null
   },
   {
     "geom": "Badara",
@@ -943,6 +943,6 @@
     "nombre_de_parcelle_dont_la_jointure_n_a_": 112.0,
     "nombre_de_parcelle_individuelle": 120.0,
     "nombre_de_parcelle_collective": 48.0,
-    "lot": NaN
+    "lot": null
   }
 ]

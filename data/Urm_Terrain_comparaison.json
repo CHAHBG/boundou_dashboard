@@ -3,7 +3,7 @@
     {
       "periode": "Date début",
       "commune": null,
-      "levee_terrain": NaN,
+      "levee_terrain": null,
       "lots": null
     },
     {
