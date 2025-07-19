@@ -97,7 +97,7 @@ class MapManager {
     }
 
     // 🔴 CORRECTION CRITIQUE: Initialisation sécurisée de la carte
-    initMap(containerId = 'map') {
+    initMap(containerId = 'mapContainer') {
         console.log(`🗺️ Initialisation de la carte sur: ${containerId}`);
         
         const container = document.getElementById(containerId);

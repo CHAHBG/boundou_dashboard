@@ -414,7 +414,7 @@ class ProcasefDashboard {
         }
         
         // 🔴 CORRECTION: Initialisation seulement si pas de carte existante
-        const mapInstance = this.mapManager.initMap('map');
+        const mapInstance = this.mapManager.initMap('mapContainer');
         
         if (mapInstance && this.communeStats) {
             console.log('📍 Ajout des marqueurs des communes...');
