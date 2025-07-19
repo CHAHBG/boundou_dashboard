@@ -29,18 +29,18 @@ class MapManager {
         
         // Données des communes (coordonnées approximatives de la région de Boundou)
         this.communeCoords = {
-            'NDOGA BABACAR': [13.1, -12.4],
-            'BANDAFASSI': [12.5, -12.2],
-            'DIMBOLI': [12.6, -12.1],
-            'MISSIRAH': [13.3, -12.6],
-            'NETTEBOULOU': [13.4, -12.5],
-            'BALLOU': [13.2, -12.3],
-            'FONGOLIMBI': [12.7, -12.0],
-            'GABOU': [13.5, -12.7],
-            'BEMBOU': [12.4, -12.3],
-            'DINDEFELO': [12.3, -12.4],
-            'MOUDERY': [13.6, -12.8],
-            'TOMBORONKOTO': [12.2, -12.1]
+            'NDOGA BABACAR': [13.730966, -13.966889],
+            'BANDAFASSI': [12.538069, -12.311436],
+            'DIMBOLI': [12.466460, -11.995183],
+            'MISSIRAH': [13.524222, -13.513120],
+            'NETTEBOULOU': [13.599513, -13.759329],
+            'BALLOU': [14.735395, -12.236302],
+            'FONGOLIMBI': [12.423414, -12.008104],
+            'GABOU': [14.713768, -12.414165],
+            'BEMBOU': [12.826605, -11.875561],
+            'DINDEFELO': [12.385165, -12.326742],
+            'MOUDERY': [15.057468, -12.594212],
+            'TOMBORONKOTO': [12.795540, -12.299054]
         };
     }
 
