@@ -1,0 +1,155 @@
+[
+  {
+    "region": "Tambacounda",
+    "commune": "Ballou",
+    "date_debut": "2025-03-10 00:00:00",
+    "etat_d_avancement": "Presque terminé",
+    "date_de_prevision_de_completer_les_inven": "2025-04-07 00:00:00",
+    "csig": "Mariama",
+    "progres_des_etapes": "• Levés topo et enquetes complétés (le Village de Djimbé à compléter)\n• Affichage public ( complétés)\n• Réunion du CTASF (complétés)\n• Délibération (pas encore)"
+  },
+  {
+    "region": "Tambacounda",
+    "commune": "Gabou",
+    "date_debut": "2025-04-22 00:00:00",
+    "etat_d_avancement": "Presque terminé",
+    "date_de_prevision_de_completer_les_inven": "2025-04-07 00:00:00",
+    "csig": "Mariama",
+    "progres_des_etapes": "• Levés topo et enquetes  complétés\n• Affichage public (en cours)\n• Réunion du CTASF (pas encore)\n• Délibération (pas encore)"
+  },
+  {
+    "region": "Tambacounda",
+    "commune": "Moudery",
+    "date_debut": "vendredi 23 Mai 2025",
+    "etat_d_avancement": "Inventaires fonciers à partir du 23 Mai 2025",
+    "date_de_prevision_de_completer_les_inven": "2025-04-07 00:00:00",
+    "csig": "Ibrahima",
+    "progres_des_etapes": "• Levés topo et enquetes en cours"
+  },
+  {
+    "region": "Tambacounda",
+    "commune": "Bala",
+    "date_debut": null,
+    "etat_d_avancement": "pas encore débuté",
+    "date_de_prevision_de_completer_les_inven": "2025-04-07 00:00:00",
+    "csig": "Demba",
+    "progres_des_etapes": "• Levés topo et enquetes en cours"
+  },
+  {
+    "region": "Tambacounda",
+    "commune": "Koar",
+    "date_debut": null,
+    "etat_d_avancement": "pas encore débuté",
+    "date_de_prevision_de_completer_les_inven": "2025-04-07 00:00:00",
+    "csig": "Dianke",
+    "progres_des_etapes": null
+  },
+  {
+    "region": "Tambacounda",
+    "commune": "Sinthiou Maleme",
+    "date_debut": null,
+    "etat_d_avancement": "pas encore débuté",
+    "date_de_prevision_de_completer_les_inven": "2025-04-07 00:00:00",
+    "csig": "Bamba",
+    "progres_des_etapes": null
+  },
+  {
+    "region": "Tambacounda",
+    "commune": "Netteboulou",
+    "date_debut": "2024-12-05 00:00:00",
+    "etat_d_avancement": "En cours ",
+    "date_de_prevision_de_completer_les_inven": "2025-04-07 00:00:00",
+    "csig": "Bamba",
+    "progres_des_etapes": "• Levés topo et enquetes (en cours) à 50%\n• Affichage public/phase2 (complété)\n• Réunion du CTASF/phase2 (complété)\n• Délibération/phase2 terminé"
+  },
+  {
+    "region": "Tambacounda",
+    "commune": "Missirah",
+    "date_debut": "2024-12-08 00:00:00",
+    "etat_d_avancement": "En cours ",
+    "date_de_prevision_de_completer_les_inven": "2025-04-07 00:00:00",
+    "csig": "Demba",
+    "progres_des_etapes": "• Levés topo et enquetes en cours à 50%\n• Affichage public/phase2 (complété)\n• Réunion du CTASF/phase2 (complété)\n• Délibération/phase2 (complété)"
+  },
+  {
+    "region": "Tambacounda",
+    "commune": "Ndoga Babacar",
+    "date_debut": "2024-08-10 00:00:00",
+    "etat_d_avancement": "Terminé",
+    "date_de_prevision_de_completer_les_inven": "2025-04-07 00:00:00",
+    "csig": "Mariama",
+    "progres_des_etapes": "• Levés topo et enquetes en cours\n• Affichage public/phase2 (complété)\n• Réunion du CTASF/phase2 (pas encore)\n• Délibération/phase2 (pas encore)"
+  },
+  {
+    "region": "Kedougou",
+    "commune": "Fongolimbi",
+    "date_debut": "2025-03-04 00:00:00",
+    "etat_d_avancement": "Terminé",
+    "date_de_prevision_de_completer_les_inven": "2025-03-26 00:00:00",
+    "csig": "Badara",
+    "progres_des_etapes": "• Levés topo et enquetes complétés\n• Affichage public (complété)\n• Réunion du CTASF (complété)\n• Délibération (complété)"
+  },
+  {
+    "region": "Kedougou",
+    "commune": "Dimboli",
+    "date_debut": "2025-04-07 00:00:00",
+    "etat_d_avancement": "Terminé",
+    "date_de_prevision_de_completer_les_inven": "2025-04-25 00:00:00",
+    "csig": "Ibrahima",
+    "progres_des_etapes": "• Levés topo et enquetes complétés\n• Affichage public (complété)\n• Réunion du CTASF (complété)\n• Délibération (pas encore)"
+  },
+  {
+    "region": "Kedougou",
+    "commune": "Médina Baffé",
+    "date_debut": null,
+    "etat_d_avancement": null,
+    "date_de_prevision_de_completer_les_inven": "en attente",
+    "csig": "Badara",
+    "progres_des_etapes": null
+  },
+  {
+    "region": "Kedougou",
+    "commune": "Bembou ",
+    "date_debut": "2025-05-02 00:00:00",
+    "etat_d_avancement": "Inventaires fonciers à partir du 02 Mai 2025",
+    "date_de_prevision_de_completer_les_inven": "2025-05-31 00:00:00",
+    "csig": "Badara",
+    "progres_des_etapes": "• Levés topo et enquetes (complété)"
+  },
+  {
+    "region": "Kedougou",
+    "commune": "Sabadola ",
+    "date_debut": null,
+    "etat_d_avancement": null,
+    "date_de_prevision_de_completer_les_inven": "2025-07-14 00:00:00",
+    "csig": "Dianke",
+    "progres_des_etapes": null
+  },
+  {
+    "region": "Kedougou",
+    "commune": "Dindéfello",
+    "date_debut": "lundi 19 mai 2025",
+    "etat_d_avancement": "Inventaires fonciers à partir du 19 Mai 2025",
+    "date_de_prevision_de_completer_les_inven": "2025-08-11 00:00:00",
+    "csig": "Demba",
+    "progres_des_etapes": "• Levés topo et enquetes (complété)"
+  },
+  {
+    "region": "Kedougou",
+    "commune": "Tomboronkoto",
+    "date_debut": null,
+    "etat_d_avancement": null,
+    "date_de_prevision_de_completer_les_inven": "2025-09-02 00:00:00",
+    "csig": "Ibrahima",
+    "progres_des_etapes": "• Levés topo et enquetes en cours"
+  },
+  {
+    "region": "Kedougou",
+    "commune": "Bandafassi",
+    "date_debut": "2024-12-09 00:00:00",
+    "etat_d_avancement": "Terminé",
+    "date_de_prevision_de_completer_les_inven": "2025-02-20 00:00:00",
+    "csig": "Dianke",
+    "progres_des_etapes": "• Levés topo et enquetes complétés\n• Affichage public (complétés)\n• Réunion du CTASF ((complété))-(certaines parcelles pas obtenues les NICAD)\n• Délibération ((complété))"
+  }
+]

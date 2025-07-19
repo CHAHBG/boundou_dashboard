@@ -1,0 +1,86 @@
+[
+  {
+    "commune": "NDOGA BABACAR",
+    "parcelles": 6648,
+    "nicad_oui": 3668,
+    "deliberees": 2332,
+    "superficie": 14513.0
+  },
+  {
+    "commune": "BANDAFASSI",
+    "parcelles": 4611,
+    "nicad_oui": 3016,
+    "deliberees": 2119,
+    "superficie": 9926.75
+  },
+  {
+    "commune": "DIMBOLI",
+    "parcelles": 3920,
+    "nicad_oui": 2544,
+    "deliberees": 1823,
+    "superficie": 8615.74
+  },
+  {
+    "commune": "MISSIRAH",
+    "parcelles": 3102,
+    "nicad_oui": 1701,
+    "deliberees": 1094,
+    "superficie": 6892.33
+  },
+  {
+    "commune": "NETTEBOULOU",
+    "parcelles": 2956,
+    "nicad_oui": 1620,
+    "deliberees": 1043,
+    "superficie": 6428.91
+  },
+  {
+    "commune": "BALLOU",
+    "parcelles": 2408,
+    "nicad_oui": 1319,
+    "deliberees": 850,
+    "superficie": 5235.12
+  },
+  {
+    "commune": "FONGOLIMBI",
+    "parcelles": 2195,
+    "nicad_oui": 1202,
+    "deliberees": 775,
+    "superficie": 4773.89
+  },
+  {
+    "commune": "GABOU",
+    "parcelles": 1889,
+    "nicad_oui": 1035,
+    "deliberees": 667,
+    "superficie": 4108.23
+  },
+  {
+    "commune": "BEMBOU",
+    "parcelles": 1642,
+    "nicad_oui": 900,
+    "deliberees": 580,
+    "superficie": 3570.77
+  },
+  {
+    "commune": "DINDEFELO",
+    "parcelles": 1312,
+    "nicad_oui": 719,
+    "deliberees": 463,
+    "superficie": 2854.12
+  },
+  {
+    "commune": "MOUDERY",
+    "parcelles": 1098,
+    "nicad_oui": 602,
+    "deliberees": 388,
+    "superficie": 2389.66
+  },
+  {
+    "commune": "TOMBORONKOTO",
+    "parcelles": 521,
+    "nicad_oui": 286,
+    "deliberees": 184,
+    "superficie": 1133.48
+  }
+]
