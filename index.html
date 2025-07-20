@@ -275,8 +275,22 @@
                 <section id="etat-avancement-section" class="content-section">
                     <div class="section-header">
                         <h2>📈 État des Opérations</h2>
+                        <div class="filter-panel">
+                            <select id="regionFilterEtat" class="form-control">
+                                <option value="">Toutes les régions</option>
+                            </select>
+                            <select id="etatFilterEtat" class="form-control">
+                                <option value="">Tous les états</option>
+                            </select>
+                            <select id="csigFilterEtat" class="form-control">
+                                <option value="">Tous les CSIG</option>
+                            </select>
+                            <select id="communeFilterEtat" class="form-control">
+                                <option value="">Toutes les communes</option>
+                            </select>
+                        </div>
                     </div>
-
+                
                     <!-- Progress Overview -->
                     <div class="progress-overview">
                         <div class="progress-card">
@@ -289,25 +303,30 @@
                             </div>
                         </div>
                     </div>
-
+                
                     <!-- Charts -->
                     <div class="charts-grid">
                         <div class="chart-card">
                             <div class="chart-header">
-                                <h3>Status des Opérations</h3>
+                                <h3>État par Commune</h3>
                             </div>
                             <div class="chart-content">
-                                <canvas id="statusChart"></canvas>
+                                <canvas id="etatCommuneBarChart"></canvas>
                             </div>
                         </div>
-
                         <div class="chart-card">
                             <div class="chart-header">
-                                <h3>Timeline des Opérations</h3>
+                                <h3>Répartition des États</h3>
                             </div>
-                            <div class="timeline-container" id="timelineContainer">
-                                <!-- Timeline items populated by JavaScript -->
+                            <div class="chart-content">
+                                <canvas id="etatDonutChart"></canvas>
                             </div>
+                        </div>
+                        <div class="chart-card large">
+                            <div class="chart-header">
+                                <h3>Timeline par Commune</h3>
+                            </div>
+                            <div class="timeline-container" id="etatTimeline"></div>
                         </div>
                     </div>
                 </section>
