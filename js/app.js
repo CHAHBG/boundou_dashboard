@@ -380,10 +380,10 @@ class ProcasefDashboard {
             const dataArr = this.getFilteredEtatOperations();
             const communes = dataArr.map(x => x.commune);
             const etats = dataArr.map(x => x.etat_d_avancement || "Non défini");
-    
+            
             // Bar chart horizontal
             window.chartManager.createEtatCommuneBarChart('etatCommuneBarChart', communes, etats);
-    
+            
             // Donut chart
             const etatCounts = dataArr.reduce((acc, op) => {
                 const key = op.etat_d_avancement?.trim() || "Non défini";
