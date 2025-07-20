@@ -501,23 +501,24 @@ class ProcasefDashboard {
     }
 
     updateKPIs() {
-        if (!this.stats) return;
-
-        // Update main KPIs
-        this.updateElement('totalParcelles', this.stats.total.toLocaleString());
-        this.updateElement('parcellesNicad', this.stats.nicad_oui.toLocaleString());
-        this.updateElement('parcellesDeliberees', this.stats.deliberees_oui.toLocaleString());
-        this.updateElement('superficieTotale', this.stats.superficie_totale.toLocaleString(undefined, {maximumFractionDigits: 2}));
-
-        // Update percentages
-        const nicadPct = this.stats.total > 0 ? ((this.stats.nicad_oui / this.stats.total) * 100).toFixed(1) : 0;
-        const delibPct = this.stats.total > 0 ? ((this.stats.deliberees_oui / this.stats.total) * 100).toFixed(1) : 0;
+        const OBJECTIF = 70000;
+        const delimitees = 33457;
+    
+        // Utilise OBJECTIF pour l’affichage, mais ne touche pas à this.stats.total global
+        this.updateElement('totalParcelles', OBJECTIF.toLocaleString());
+        this.updateElement('parcellesNicad', this.stats.nicad_oui?.toLocaleString() ?? '');
+        this.updateElement('parcellesDeliberees', this.stats.deliberees_oui?.toLocaleString() ?? '');
+        this.updateElement('superficieTotale', this.stats.superficie_totale?.toLocaleString(undefined, {maximumFractionDigits: 2}) ?? '');
+    
+        // Pourcentages calculés sur OBJECTIF
+        const nicadPct = OBJECTIF > 0 ? ((this.stats.nicad_oui / OBJECTIF) * 100).toFixed(1) : 0;
+        const delibPct = OBJECTIF > 0 ? ((this.stats.deliberees_oui / OBJECTIF) * 100).toFixed(1) : 0;
         
         this.updateElement('percentageNicad', `${nicadPct}% avec NICAD`);
         this.updateElement('percentageDeliberees', `${delibPct}% délibérées`);
-
-        // Taux de réalisation (33457 délimitées sur 70000 totales)
-        const tauxRealisation = ((33457 / this.stats.total) * 100).toFixed(1);
+    
+        // Taux de réalisation = delimitees / OBJECTIF
+        const tauxRealisation = ((delimitees / OBJECTIF) * 100).toFixed(1);
         this.updateElement('tauxRealisation', `${tauxRealisation}%`);
     }
 
