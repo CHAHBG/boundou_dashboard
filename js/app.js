@@ -371,15 +371,93 @@ class ProcasefDashboard {
         }, 200);
     }
 
+    // Section État d'Avancement avec filtre CSIG et graphes
     renderEtatAvancement() {
-        console.log('Rendu de la section État d\'avancement');
         this.updateProgressBar();
+        this.populateEtatAvancementFilters();
+    
         setTimeout(() => {
-            this.createStatusChart();
-            this.renderTimeline();
+            const dataArr = this.getFilteredEtatOperations();
+            const communes = dataArr.map(x => x.commune);
+            const etats = dataArr.map(x => x.etat_d_avancement || "Non défini");
+    
+            // Bar chart horizontal
+            window.chartManager.createEtatCommuneBarChart('etatCommuneBarChart', communes, etats);
+    
+            // Donut chart
+            const etatCounts = dataArr.reduce((acc, op) => {
+                const key = op.etat_d_avancement?.trim() || "Non défini";
+                acc[key] = (acc[key] || 0) + 1;
+                return acc;
+            }, {});
+            window.chartManager.createEtatDonutChart(
+                'etatDonutChart',
+                Object.keys(etatCounts),
+                Object.values(etatCounts)
+            );
+    
+            this.renderEtatTimeline();
         }, 200);
     }
+    // Filtres dynamiques pour Région, État, CSIG, Commune
+    populateEtatAvancementFilters() {
+        const arr = this.data.etatOperations || [];
+        // Région
+        const regions = [...new Set(arr.map(e => e.region).filter(Boolean))].sort();
+        // État d'avancement
+        const etats = [...new Set(arr.map(e => e.etat_d_avancement).filter(Boolean))].sort();
+        // CSIG
+        const csigs = [...new Set(arr.map(e => e.csig).filter(Boolean))].sort();
+        // Commune
+        const communes = [...new Set(arr.map(e => e.commune).filter(Boolean))].sort();
+    
+        // Remplissage des filtres
+        const rFilter = document.getElementById('regionFilterEtat');
+        const eFilter = document.getElementById('etatFilterEtat');
+        const cFilter = document.getElementById('communeFilterEtat');
+        const csigFilter = document.getElementById('csigFilterEtat');
+    
+        if (rFilter) rFilter.innerHTML = '<option value="">Toutes les régions</option>' + regions.map(r=>`<option value="${r}">${r}</option>`).join('');
+        if (eFilter) eFilter.innerHTML = '<option value="">Tous les états</option>' + etats.map(e=>`<option value="${e}">${e}</option>`).join('');
+        if (cFilter) cFilter.innerHTML = '<option value="">Toutes les communes</option>' + communes.map(c=>`<option value="${c}">${c}</option>`).join('');
+        if (csigFilter) csigFilter.innerHTML = '<option value="">Tous les CSIG</option>' + csigs.map(cs=>`<option value="${cs}">${cs}</option>`).join('');
+    
+        // Listeners pour filtres (rafraichissent la section à chaque changement)
+        [rFilter, eFilter, cFilter, csigFilter].forEach(f => {
+            if (f) f.onchange = () => this.renderEtatAvancement();
+        });
+    }
 
+        // Renvoie les opérations filtrées selon les filtres actifs
+    getFilteredEtatOperations() {
+        const r = document.getElementById('regionFilterEtat')?.value;
+        const e = document.getElementById('etatFilterEtat')?.value;
+        const c = document.getElementById('communeFilterEtat')?.value;
+        const csig = document.getElementById('csigFilterEtat')?.value;
+        let arr = this.data.etatOperations || [];
+        if (r) arr = arr.filter(x => x.region === r);
+        if (e) arr = arr.filter(x => x.etat_d_avancement === e);
+        if (c) arr = arr.filter(x => x.commune === c);
+        if (csig) arr = arr.filter(x => x.csig === csig);
+        return arr;
+    }
+
+        // Timeline interactive
+    renderEtatTimeline() {
+        const container = document.getElementById('etatTimeline');
+        if (!container) return;
+        const dataArr = this.getFilteredEtatOperations();
+        container.innerHTML = dataArr.map(x => `
+            <div class="timeline-item ${x.etat_d_avancement?.toLowerCase().includes('terminé') ? 'completed' : x.etat_d_avancement?.toLowerCase().includes('cours') ? 'in-progress' : 'pending'}">
+                <div class="timeline-content">
+                    <div class="timeline-commune">${x.commune} <span style="color:#888;">(${x.region})</span>  <span style="font-size:12px; color:#B8860B;">CSIG: ${x.csig || '-'}</span></div>
+                    <div class="timeline-status">${x.etat_d_avancement || "Non défini"}</div>
+                    <div class="timeline-steps">${(x.progres_des_etapes || '').replace(/\n/g, '<br>')}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
     renderProjections() {
         console.log('Rendu de la section Projections');
         this.updateProjectionsKPIs();
