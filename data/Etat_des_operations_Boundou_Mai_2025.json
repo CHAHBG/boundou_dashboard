@@ -21,7 +21,7 @@
     "region": "Tambacounda",
     "commune": "Moudery",
     "date_debut": "vendredi 23 Mai 2025",
-    "etat_d_avancement": "Inventaires fonciers à partir du 23 Mai 2025",
+    "etat_d_avancement": "Presque terminé",
     "date_de_prevision_de_completer_les_inven": "2025-04-07 00:00:00",
     "csig": "Ibrahima",
     "progres_des_etapes": "• Levés topo et enquetes en cours"
@@ -29,7 +29,7 @@
   {
     "region": "Tambacounda",
     "commune": "Bala",
-    "date_debut": null,
+    "date_debut": "lundi 07 Juillet 2025",
     "etat_d_avancement": "pas encore débuté",
     "date_de_prevision_de_completer_les_inven": "2025-04-07 00:00:00",
     "csig": "Demba",
@@ -38,16 +38,16 @@
   {
     "region": "Tambacounda",
     "commune": "Koar",
-    "date_debut": null,
+    "date_debut": "lundi 07 Juillet 2025",
     "etat_d_avancement": "pas encore débuté",
     "date_de_prevision_de_completer_les_inven": "2025-04-07 00:00:00",
     "csig": "Dianke",
-    "progres_des_etapes": null
+    "progres_des_etapes": "• Levés topo et enquetes en cours"
   },
   {
     "region": "Tambacounda",
     "commune": "Sinthiou Maleme",
-    "date_debut": null,
+    "date_debut": "lundi 04 Août 2025",
     "etat_d_avancement": "pas encore débuté",
     "date_de_prevision_de_completer_les_inven": "2025-04-07 00:00:00",
     "csig": "Bamba",
@@ -102,7 +102,7 @@
     "region": "Kedougou",
     "commune": "Médina Baffé",
     "date_debut": null,
-    "etat_d_avancement": null,
+    "etat_d_avancement": "pas encore débuté",
     "date_de_prevision_de_completer_les_inven": "en attente",
     "csig": "Badara",
     "progres_des_etapes": null
@@ -111,7 +111,7 @@
     "region": "Kedougou",
     "commune": "Bembou ",
     "date_debut": "2025-05-02 00:00:00",
-    "etat_d_avancement": "Inventaires fonciers à partir du 02 Mai 2025",
+    "etat_d_avancement": "Presque terminé",
     "date_de_prevision_de_completer_les_inven": "2025-05-31 00:00:00",
     "csig": "Badara",
     "progres_des_etapes": "• Levés topo et enquetes (complété)"
@@ -120,7 +120,7 @@
     "region": "Kedougou",
     "commune": "Sabadola ",
     "date_debut": null,
-    "etat_d_avancement": null,
+    "etat_d_avancement": "pas encore débuté",
     "date_de_prevision_de_completer_les_inven": "2025-07-14 00:00:00",
     "csig": "Dianke",
     "progres_des_etapes": null
@@ -129,16 +129,16 @@
     "region": "Kedougou",
     "commune": "Dindéfello",
     "date_debut": "lundi 19 mai 2025",
-    "etat_d_avancement": "Inventaires fonciers à partir du 19 Mai 2025",
+    "etat_d_avancement": "Presque terminé",
     "date_de_prevision_de_completer_les_inven": "2025-08-11 00:00:00",
     "csig": "Demba",
-    "progres_des_etapes": "• Levés topo et enquetes (complété)"
+    "progres_des_etapes": "• Levés topo et enquetes (complété)\n• Affichage public (en cours)"
   },
   {
     "region": "Kedougou",
     "commune": "Tomboronkoto",
     "date_debut": null,
-    "etat_d_avancement": null,
+    "etat_d_avancement":  "En cours ",
     "date_de_prevision_de_completer_les_inven": "2025-09-02 00:00:00",
     "csig": "Ibrahima",
     "progres_des_etapes": "• Levés topo et enquetes en cours"
