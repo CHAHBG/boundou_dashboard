@@ -310,6 +310,9 @@ class ChartManager {
         return this.createBar(canvasId, data, stackedOptions);
     }
 
+    /**
+     * Bar chart horizontal - état d'avancement par commune (avec couleurs par état)
+     */
     createEtatCommuneBarChart(canvasId, communes, etats) {
         const colorMap = {
             "Terminé": this.colors.success,
@@ -331,8 +334,8 @@ class ChartManager {
             data: {
                 labels: communes,
                 datasets: [{
-                    label: 'État d\'avancement',
-                    data: etats.map(() => 1),
+                    label: "État d'avancement",
+                    data: etats.map(() => 1), // chaque barre a la même valeur, couleur dépend de l'état
                     backgroundColor: colors,
                 }]
             },
@@ -343,6 +346,7 @@ class ChartManager {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
+                                // Affiche l'état d'avancement au survol
                                 return etats[context.dataIndex];
                             }
                         }
@@ -356,8 +360,18 @@ class ChartManager {
         });
     }
 
+     /**
+     * Donut chart - répartition des états d'avancement
+     */
     createEtatDonutChart(canvasId, labels, data) {
-        const colors = [this.colors.success, this.colors.warning, this.colors.info, this.colors.error, this.colors.accent, "#6B7280"];
+        const colors = [
+            this.colors.success, 
+            this.colors.warning, 
+            this.colors.info, 
+            this.colors.error, 
+            this.colors.accent, 
+            "#6B7280"
+        ];
         this.destroyChart(canvasId);
         const canvas = document.getElementById(canvasId);
         if (!canvas) return;
