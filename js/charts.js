@@ -309,6 +309,75 @@ class ChartManager {
         
         return this.createBar(canvasId, data, stackedOptions);
     }
+
+    createEtatCommuneBarChart(canvasId, communes, etats) {
+        const colorMap = {
+            "Terminé": this.colors.success,
+            "En cours ": this.colors.warning,
+            "En cours": this.colors.warning,
+            "Presque terminé": this.colors.info,
+            "pas encore débuté": this.colors.error,
+            "Inventaires fonciers à partir du 23 Mai 2025": this.colors.accent,
+            "Inventaires fonciers à partir du 02 Mai 2025": this.colors.accent
+        };
+        const colors = etats.map(e => colorMap[e.trim()] || "#6B7280");
+
+        this.destroyChart(canvasId);
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        this.charts[canvasId] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: communes,
+                datasets: [{
+                    label: 'État d\'avancement',
+                    data: etats.map(() => 1),
+                    backgroundColor: colors,
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return etats[context.dataIndex];
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { display: false },
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    createEtatDonutChart(canvasId, labels, data) {
+        const colors = [this.colors.success, this.colors.warning, this.colors.info, this.colors.error, this.colors.accent, "#6B7280"];
+        this.destroyChart(canvasId);
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        this.charts[canvasId] = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors.slice(0, labels.length)
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
     
     // Wrapper pour créer un graphique en aires
     createArea(canvasId, data, options = {}) {
