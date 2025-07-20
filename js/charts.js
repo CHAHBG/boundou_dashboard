@@ -327,9 +327,13 @@ class ChartManager {
 
         this.destroyChart(canvasId);
         const canvas = document.getElementById(canvasId);
-        if (!canvas) return;
+        if (!canvas) {
+            console.error(`Canvas not found: ${canvasId}`);
+            return null;
+        }
         const ctx = canvas.getContext('2d');
-        this.charts[canvasId] = new Chart(ctx, {
+        
+        const config = {
             type: 'bar',
             data: {
                 labels: communes,
@@ -337,13 +341,18 @@ class ChartManager {
                     label: "État d'avancement",
                     data: etats.map(() => 1), // chaque barre a la même valeur, couleur dépend de l'état
                     backgroundColor: colors,
+                    borderWidth: 0,
+                    borderRadius: 4
                 }]
             },
             options: {
+                ...this.defaultConfig,
                 indexAxis: 'y',
                 plugins: {
+                    ...this.defaultConfig.plugins,
                     legend: { display: false },
                     tooltip: {
+                        ...this.defaultConfig.plugins.tooltip,
                         callbacks: {
                             label: function(context) {
                                 // Affiche l'état d'avancement au survol
@@ -353,44 +362,122 @@ class ChartManager {
                     }
                 },
                 scales: {
-                    x: { display: false },
-                    y: { beginAtZero: true }
+                    x: { 
+                        display: false,
+                        beginAtZero: true
+                    },
+                    y: { 
+                        beginAtZero: true,
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#6B7280'
+                        }
+                    }
                 }
             }
-        });
+        };
+        
+        this.charts[canvasId] = new Chart(ctx, config);
+        return this.charts[canvasId];
     }
 
-     /**
+    /**
      * Donut chart - répartition des états d'avancement
+     * Enhanced version with better error handling, consistent styling, and color mapping
      */
-    createEtatDonutChart(canvasId, labels, data) {
-        const colors = [
-            this.colors.success, 
-            this.colors.warning, 
-            this.colors.info, 
-            this.colors.error, 
-            this.colors.accent, 
-            "#6B7280"
-        ];
+    createEtatDonutChart(canvasId, labels, data, options = {}) {
+        // Color mapping for different progress states
+        const stateColorMap = {
+            "Terminé": this.colors.success,
+            "En cours": this.colors.warning,
+            "En cours ": this.colors.warning,
+            "Presque terminé": this.colors.info,
+            "pas encore débuté": this.colors.error,
+            "Inventaires fonciers à partir du 23 Mai 2025": this.colors.accent,
+            "Inventaires fonciers à partir du 02 Mai 2025": this.colors.accent
+        };
+        
+        // Generate colors based on labels, with fallback to default chart colors
+        const colors = labels.map((label, index) => {
+            return stateColorMap[label.trim()] || this.colors.chartColors[index % this.colors.chartColors.length];
+        });
+        
         this.destroyChart(canvasId);
+        
         const canvas = document.getElementById(canvasId);
-        if (!canvas) return;
+        if (!canvas) {
+            console.error(`Canvas not found: ${canvasId}`);
+            return null;
+        }
+        
         const ctx = canvas.getContext('2d');
-        this.charts[canvasId] = new Chart(ctx, {
+        
+        const config = {
             type: 'doughnut',
             data: {
                 labels: labels,
                 datasets: [{
                     data: data,
-                    backgroundColor: colors.slice(0, labels.length)
+                    backgroundColor: colors,
+                    borderColor: '#FFFFFF',
+                    borderWidth: 2,
+                    hoverBorderWidth: 4
                 }]
             },
             options: {
+                ...this.defaultConfig,
+                cutout: '60%',
                 plugins: {
-                    legend: { position: 'bottom' }
-                }
+                    ...this.defaultConfig.plugins,
+                    legend: {
+                        ...this.defaultConfig.plugins.legend,
+                        position: 'bottom',
+                        labels: {
+                            ...this.defaultConfig.plugins.legend.labels,
+                            generateLabels: function(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    return data.labels.map((label, i) => {
+                                        const dataset = data.datasets[0];
+                                        const value = dataset.data[i];
+                                        const total = dataset.data.reduce((sum, val) => sum + val, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        
+                                        return {
+                                            text: `${label} (${percentage}%)`,
+                                            fillStyle: dataset.backgroundColor[i],
+                                            strokeStyle: dataset.borderColor,
+                                            lineWidth: dataset.borderWidth,
+                                            hidden: isNaN(value) || value === 0,
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    tooltip: {
+                        ...this.defaultConfig.plugins.tooltip,
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw;
+                                const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                ...options
             }
-        });
+        };
+        
+        this.charts[canvasId] = new Chart(ctx, config);
+        return this.charts[canvasId];
     }
     
     // Wrapper pour créer un graphique en aires
