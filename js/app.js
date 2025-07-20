@@ -288,6 +288,7 @@ class ProcasefDashboard {
             case 'etat-avancement':
                 if (!this.data.etatOperations) {
                     this.data.etatOperations = await this.dataLoader.loadData('data/Etat_des_operations_Boundou_Mai_2025.json');
+                    this.populateEtatAvancementFilters();
                 }
                 break;
             case 'projections-2025':
@@ -374,16 +375,18 @@ class ProcasefDashboard {
     // Section État d'Avancement avec filtre CSIG et graphes
     renderEtatAvancement() {
         this.updateProgressBar();
-        this.populateEtatAvancementFilters();
+    
+        // Les filtres ne sont remplis qu'une seule fois au chargement (voir ci-dessous)
+        // On ne les remplit plus à chaque render, pour éviter de perdre la sélection.
     
         setTimeout(() => {
             const dataArr = this.getFilteredEtatOperations();
             const communes = dataArr.map(x => x.commune);
             const etats = dataArr.map(x => x.etat_d_avancement || "Non défini");
-            
+    
             // Bar chart horizontal
             window.chartManager.createEtatCommuneBarChart('etatCommuneBarChart', communes, etats);
-            
+    
             // Donut chart
             const etatCounts = dataArr.reduce((acc, op) => {
                 const key = op.etat_d_avancement?.trim() || "Non défini";
@@ -399,36 +402,32 @@ class ProcasefDashboard {
             this.renderEtatTimeline();
         }, 200);
     }
-    // Filtres dynamiques pour Région, État, CSIG, Commune
+    
+    // À appeler une seule fois après le chargement des données des opérations
     populateEtatAvancementFilters() {
         const arr = this.data.etatOperations || [];
-        // Région
         const regions = [...new Set(arr.map(e => e.region).filter(Boolean))].sort();
-        // État d'avancement
         const etats = [...new Set(arr.map(e => e.etat_d_avancement).filter(Boolean))].sort();
-        // CSIG
         const csigs = [...new Set(arr.map(e => e.csig).filter(Boolean))].sort();
-        // Commune
         const communes = [...new Set(arr.map(e => e.commune).filter(Boolean))].sort();
     
-        // Remplissage des filtres
-        const rFilter = document.getElementById('regionFilterEtat');
-        const eFilter = document.getElementById('etatFilterEtat');
-        const cFilter = document.getElementById('communeFilterEtat');
-        const csigFilter = document.getElementById('csigFilterEtat');
-    
-        if (rFilter) rFilter.innerHTML = '<option value="">Toutes les régions</option>' + regions.map(r=>`<option value="${r}">${r}</option>`).join('');
-        if (eFilter) eFilter.innerHTML = '<option value="">Tous les états</option>' + etats.map(e=>`<option value="${e}">${e}</option>`).join('');
-        if (cFilter) cFilter.innerHTML = '<option value="">Toutes les communes</option>' + communes.map(c=>`<option value="${c}">${c}</option>`).join('');
-        if (csigFilter) csigFilter.innerHTML = '<option value="">Tous les CSIG</option>' + csigs.map(cs=>`<option value="${cs}">${cs}</option>`).join('');
-    
-        // Listeners pour filtres (rafraichissent la section à chaque changement)
-        [rFilter, eFilter, cFilter, csigFilter].forEach(f => {
-            if (f) f.onchange = () => this.renderEtatAvancement();
-        });
+        function updateSelect(selectId, options, allLabel) {
+            const sel = document.getElementById(selectId);
+            if (!sel) return;
+            // Sauvegarde la valeur sélectionnée
+            const prevValue = sel.value;
+            sel.innerHTML = `<option value="">${allLabel}</option>` + options.map(o => `<option value="${o}">${o}</option>`).join('');
+            // Rétablit la valeur sélectionnée
+            sel.value = prevValue;
+            sel.onchange = () => window.procasefApp.renderEtatAvancement();
+        }
+        updateSelect('regionFilterEtat', regions, 'Toutes les régions');
+        updateSelect('etatFilterEtat', etats, 'Tous les états');
+        updateSelect('csigFilterEtat', csigs, 'Tous les CSIG');
+        updateSelect('communeFilterEtat', communes, 'Toutes les communes');
     }
-
-        // Renvoie les opérations filtrées selon les filtres actifs
+    
+    // Renvoie les opérations filtrées selon les filtres actifs
     getFilteredEtatOperations() {
         const r = document.getElementById('regionFilterEtat')?.value;
         const e = document.getElementById('etatFilterEtat')?.value;
@@ -441,8 +440,8 @@ class ProcasefDashboard {
         if (csig) arr = arr.filter(x => x.csig === csig);
         return arr;
     }
-
-        // Timeline interactive
+    
+    // Timeline interactive
     renderEtatTimeline() {
         const container = document.getElementById('etatTimeline');
         if (!container) return;
