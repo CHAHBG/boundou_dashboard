@@ -501,24 +501,21 @@ class ProcasefDashboard {
     }
 
     updateKPIs() {
-        const OBJECTIF = 70000;
-        const delimitees = 33457;
+        if (!this.stats) return;
     
-        // Utilise OBJECTIF pour l’affichage, mais ne touche pas à this.stats.total global
-        this.updateElement('totalParcelles', OBJECTIF.toLocaleString());
-        this.updateElement('parcellesNicad', this.stats.nicad_oui?.toLocaleString() ?? '');
-        this.updateElement('parcellesDeliberees', this.stats.deliberees_oui?.toLocaleString() ?? '');
-        this.updateElement('superficieTotale', this.stats.superficie_totale?.toLocaleString(undefined, {maximumFractionDigits: 2}) ?? '');
+        this.updateElement('totalParcelles', this.stats.total.toLocaleString());
+        this.updateElement('parcellesNicad', this.stats.nicad_oui.toLocaleString());
+        this.updateElement('parcellesDeliberees', this.stats.deliberees_oui.toLocaleString());
+        this.updateElement('superficieTotale', this.stats.superficie_totale.toLocaleString(undefined, {maximumFractionDigits: 2}));
     
-        // Pourcentages calculés sur OBJECTIF
-        const nicadPct = OBJECTIF > 0 ? ((this.stats.nicad_oui / OBJECTIF) * 100).toFixed(1) : 0;
-        const delibPct = OBJECTIF > 0 ? ((this.stats.deliberees_oui / OBJECTIF) * 100).toFixed(1) : 0;
-        
+        const nicadPct = this.stats.total > 0 ? ((this.stats.nicad_oui / this.stats.total) * 100).toFixed(1) : 0;
+        const delibPct = this.stats.total > 0 ? ((this.stats.deliberees_oui / this.stats.total) * 100).toFixed(1) : 0;
+    
         this.updateElement('percentageNicad', `${nicadPct}% avec NICAD`);
         this.updateElement('percentageDeliberees', `${delibPct}% délibérées`);
     
-        // Taux de réalisation = delimitees / OBJECTIF
-        const tauxRealisation = ((delimitees / OBJECTIF) * 100).toFixed(1);
+        const OBJECTIF = 70000;
+        const tauxRealisation = ((this.stats.total / OBJECTIF) * 100).toFixed(1);
         this.updateElement('tauxRealisation', `${tauxRealisation}%`);
     }
 
@@ -537,9 +534,13 @@ class ProcasefDashboard {
     }
 
     updateProjectionsKPIs() {
-        this.updateElement('objectif2025', '82,421');
-        this.updateElement('realise2025', '16,418');
-        this.updateElement('performance2025', '19.9%');
+        const OBJECTIF = 70000;
+        const realise = this.stats?.total ?? 0;
+        const performance = OBJECTIF > 0 ? ((realise / OBJECTIF) * 100).toFixed(1) : 0;
+    
+        this.updateElement('objectif2025', OBJECTIF.toLocaleString());
+        this.updateElement('realise2025', realise.toLocaleString());
+        this.updateElement('performance2025', `${performance}%`);
     }
 
     updateGenreKPIs() {
