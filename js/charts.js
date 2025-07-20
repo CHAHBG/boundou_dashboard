@@ -515,6 +515,10 @@ class ChartManager {
 // Export pour utilisation globale
 window.ChartManager = ChartManager;
 
+// Create global instance for immediate use
+window.chartManager = new ChartManager();
+
+console.log('ChartManager instance created and available globally');
 // Gestion du redimensionnement automatique
 window.addEventListener('resize', () => {
     if (window.chartManager) {
