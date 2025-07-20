@@ -516,8 +516,8 @@ class ProcasefDashboard {
         this.updateElement('percentageNicad', `${nicadPct}% avec NICAD`);
         this.updateElement('percentageDeliberees', `${delibPct}% délibérées`);
 
-        // Taux de réalisation (21,090 délimitées sur 31,302 totales)
-        const tauxRealisation = ((21090 / this.stats.total) * 100).toFixed(1);
+        // Taux de réalisation (33457 délimitées sur 70000 totales)
+        const tauxRealisation = ((33457 / this.stats.total) * 100).toFixed(1);
         this.updateElement('tauxRealisation', `${tauxRealisation}%`);
     }
 
@@ -525,7 +525,7 @@ class ProcasefDashboard {
         const progressFill = document.getElementById('globalProgressFill');
         const progressText = document.getElementById('globalProgressText');
         
-        const taux = 67.4; // Taux de réalisation
+        const taux = 47.80; // Taux de réalisation
         
         if (progressFill) {
             progressFill.style.width = taux + '%';
