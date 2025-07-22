@@ -725,7 +725,7 @@ class ChartManager {
     }
 
 
-// Méthode pour obtenir les statistiques d'un graphique
+ // Méthode pour obtenir les statistiques d'un graphique
     getChartStats(chartId) {
         if (!this.charts[chartId]) return null;
         
@@ -1398,7 +1398,7 @@ class ChartManager {
         this.charts[canvasId] = new Chart(ctx, config);
         return this.charts[canvasId];
     }
-
+}
 
 // Export pour utilisation globale
 window.ChartManager = ChartManager;
