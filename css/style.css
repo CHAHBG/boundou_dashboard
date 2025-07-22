@@ -135,8 +135,8 @@ body {
 
 .logo-icon {
   font-size: calc(var(--font-size-base) * 1.25); /* Réduit */
-  width: 32px; /* Réduit de 40px à 32px */
-  height: 32px; /* Réduit de 40px à 32px */
+  width: 50px; /* Réduit de 40px à 32px */
+  height: 50px; /* Réduit de 40px à 32px */
   display: flex;
   align-items: center;
   justify-content: center;
