@@ -723,31 +723,7 @@ class ChartManager {
         }
         return null;
     }
-    
-    // Méthode pour obtenir les statistiques d'un graphique
-    getChartStats(chartId) {
-        if (!this.charts[chartId]) return null;
-        
-        const chart = this.charts[chartId];
-        const datasets = chart.data.datasets;
-        
-        const stats = {
-            totalDatasets: datasets.length,
-            totalDataPoints: datasets.reduce((sum, dataset) => sum + dataset.data.length, 0),
-            labels: chart.data.labels,
-            datasets: datasets.map(dataset => ({
-                label: dataset.label,
-                dataCount: dataset.data.length,
-                sum: dataset.data.reduce((a, b) => a + (b || 0), 0),
-                average: dataset.data.reduce((a, b) => a + (b || 0), 0) / dataset.data.length,
-                min: Math.min(...dataset.data.filter(v => v !== null && v !== undefined)),
-                max: Math.max(...dataset.data.filter(v => v !== null && v !== undefined))
-            }))
-        };
-        
-        return stats;
-    }
-}
+
 
 // Méthode pour obtenir les statistiques d'un graphique
     getChartStats(chartId) {
