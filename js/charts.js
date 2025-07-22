@@ -854,510 +854,55 @@ class ChartManager {
         this.charts[canvasId] = new Chart(ctx, config);
         return this.charts[canvasId];
     }
-
-    /**
-     * MÉTHODES SUPPLÉMENTAIRES POUR AMÉLIORER L'INTÉGRATION
-     */
-
-    // Graphique en barres horizontales pour les sources (optimisé pour le rapport)
-    createSourceChart(canvasId, sourceData, options = {}) {
-        if (!sourceData || !Array.isArray(sourceData)) {
-            console.error('Données sources invalides');
-            return null;
-        }
-
-        const labels = sourceData.map(item => item.source);
-        const hommesData = sourceData.map(item => item.hommes);
-        const femmesData = sourceData.map(item => item.femmes);
-
-        const data = {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Hommes',
-                    data: hommesData,
-                    backgroundColor: this.colors.secondary,
-                    borderColor: this.colors.secondary,
-                    borderWidth: 0,
-                    borderRadius: 4
-                },
-                {
-                    label: 'Femmes',
-                    data: femmesData,
-                    backgroundColor: this.colors.primary,
-                    borderColor: this.colors.primary,
-                    borderWidth: 0,
-                    borderRadius: 4
-                }
-            ]
-        };
-
-        const finalOptions = {
-            ...options,
-            indexAxis: 'y',
-            plugins: {
-                ...options.plugins,
-                title: {
-                    display: true,
-                    text: options.plugins?.title?.text || 'Participants par source',
-                    font: { size: 14, weight: 'bold' },
-                    color: '#374151'
-                }
-            }
-        };
-
-        return this.createStackedBar(canvasId, data, finalOptions);
+    
+    // Utilitaire pour obtenir une couleur de la palette
+    getColor(index) {
+        return this.colors.chartColors[index % this.colors.chartColors.length];
     }
-
-// Méthode pour créer les KPIs visuels (cartes avec graphiques miniatures)
-    createKPIChart(canvasId, value, label, type = 'simple') {
-        const canvas = document.getElementById(canvasId);
-        if (!canvas) {
-            console.error(`Canvas non trouvé: ${canvasId}`);
-            return null;
-        }
-
-        // Redimensionner le canvas pour les KPIs
-        canvas.width = 120;
-        canvas.height = 60;
-        
-        this.destroyChart(canvasId);
-        const ctx = canvas.getContext('2d');
-
-        let config;
-        
-        switch (type) {
-            case 'gauge':
-                // Graphique en forme de jauge pour les pourcentages
-                config = {
-                    type: 'doughnut',
-                    data: {
-                        datasets: [{
-                            data: [value, 100 - value],
-                            backgroundColor: [this.colors.primary, '#E5E7EB'],
-                            borderWidth: 0,
-                            cutout: '80%'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: { enabled: false }
-                        },
-                        rotation: -90,
-                        circumference: 180
-                    }
-                };
-                break;
-                
-            case 'trend':
-                // Mini graphique de tendance (ligne)
-                const trendData = Array.isArray(value) ? value : [value * 0.8, value * 0.9, value];
-                config = {
-                    type: 'line',
-                    data: {
-                        labels: ['', '', ''],
-                        datasets: [{
-                            data: trendData,
-                            borderColor: this.colors.success,
-                            backgroundColor: this.colors.success + '20',
-                            borderWidth: 2,
-                            pointRadius: 0,
-                            tension: 0.4,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: { enabled: false }
-                        },
-                        scales: {
-                            x: { display: false },
-                            y: { display: false }
-                        },
-                        elements: {
-                            point: { radius: 0 }
-                        }
-                    }
-                };
-                break;
-                
-            default:
-                // Graphique simple (barre unique)
-                config = {
-                    type: 'bar',
-                    data: {
-                        labels: [''],
-                        datasets: [{
-                            data: [value],
-                            backgroundColor: this.colors.primary,
-                            borderRadius: 4,
-                            borderSkipped: false
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: { enabled: false }
-                        },
-                        scales: {
-                            x: { display: false },
-                            y: { display: false }
-                        }
-                    }
-                };
-        }
-        
-        this.charts[canvasId] = new Chart(ctx, config);
-        return this.charts[canvasId];
+    
+    // Utilitaire pour obtenir plusieurs couleurs
+    getColors(count) {
+        return Array.from({length: count}, (_, i) => this.getColor(i));
     }
-
-    // Graphique radar pour les comparaisons multidimensionnelles
-    createRadarChart(canvasId, labels, datasets, options = {}) {
-        if (!labels || !datasets) {
-            console.error('Données radar invalides');
-            return null;
-        }
-
-        this.destroyChart(canvasId);
-        const canvas = document.getElementById(canvasId);
-        if (!canvas) {
-            console.error(`Canvas non trouvé: ${canvasId}`);
-            return null;
-        }
-        
-        const ctx = canvas.getContext('2d');
-
-        const preparedDatasets = datasets.map((dataset, index) => ({
-            ...dataset,
-            borderColor: this.colors.chartColors[index % this.colors.chartColors.length],
-            backgroundColor: (this.colors.chartColors[index % this.colors.chartColors.length] + '20'),
-            borderWidth: 2,
-            pointBackgroundColor: this.colors.chartColors[index % this.colors.chartColors.length],
-            pointBorderColor: '#FFFFFF',
-            pointBorderWidth: 2,
-            pointRadius: 4
-        }));
-        
-        const config = {
-            type: 'radar',
-            data: {
-                labels: labels,
-                datasets: preparedDatasets
-            },
-            options: {
-                ...this.defaultConfig,
-                scales: {
-                    r: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(212, 165, 116, 0.2)'
-                        },
-                        angleLines: {
-                            color: 'rgba(212, 165, 116, 0.3)'
-                        },
-                        pointLabels: {
-                            color: '#374151',
-                            font: {
-                                size: 11,
-                                weight: '500'
-                            }
-                        }
-                    }
-                },
-                ...options
-            }
-        };
-        
-        this.charts[canvasId] = new Chart(ctx, config);
-        return this.charts[canvasId];
+    
+    // Utilitaire pour obtenir les couleurs d'états
+    getStateColor(state) {
+        const stateClean = state?.toString().trim();
+        return this.colors.stateColors[stateClean] || '#6B7280';
     }
-
-    // Graphique en aires empilées pour l'évolution temporelle
-    createStackedAreaChart(canvasId, data, options = {}) {
-        const preparedData = {
-            ...data,
-            datasets: data.datasets.map((dataset, index) => ({
-                ...dataset,
-                backgroundColor: this.colors.chartColors[index % this.colors.chartColors.length] + '60',
-                borderColor: this.colors.chartColors[index % this.colors.chartColors.length],
-                borderWidth: 2,
-                fill: true,
-                tension: 0.4
-            }))
-        };
-
-        const stackedOptions = {
-            ...options,
-            scales: {
-                x: {
-                    stacked: true,
-                    grid: {
-                        color: 'rgba(212, 165, 116, 0.1)'
-                    }
-                },
-                y: {
-                    stacked: true,
-                    beginAtZero: true,
-                    grid: {
-                        color: 'rgba(212, 165, 116, 0.1)'
-                    }
-                }
-            },
-            plugins: {
-                ...this.defaultConfig.plugins,
-                ...options.plugins
-            }
-        };
-
-        return this.createLine(canvasId, preparedData, stackedOptions);
-    }
-
-    // Méthode utilitaire pour créer des graphiques à partir de données CSV/Excel
-    createFromTableData(canvasId, tableData, config) {
-        if (!tableData || !config) {
-            console.error('Données ou configuration manquantes');
-            return null;
-        }
-
-        const { type, labelColumn, dataColumns, options = {} } = config;
-        
-        // Extraction des labels
-        const labels = tableData.map(row => row[labelColumn]);
-        
-        // Création des datasets
-        const datasets = dataColumns.map((column, index) => ({
-            label: column.label || column.key,
-            data: tableData.map(row => parseFloat(row[column.key]) || 0),
-            backgroundColor: column.color || this.colors.chartColors[index % this.colors.chartColors.length],
-            ...column.options
-        }));
-
-        const data = { labels, datasets };
-
-        // Sélection du type de graphique
-        switch (type) {
-            case 'bar':
-                return this.createBar(canvasId, data, options);
-            case 'line':
-                return this.createLine(canvasId, data, options);
-            case 'doughnut':
-                return this.createDoughnut(canvasId, data, options);
-            case 'stackedBar':
-                return this.createStackedBar(canvasId, data, options);
-            case 'radar':
-                return this.createRadarChart(canvasId, labels, datasets, options);
-            case 'mixed':
-                return this.createMixedChart(canvasId, tableData, options.showTop || 10);
-            default:
-                console.error(`Type de graphique non supporté: ${type}`);
-                return null;
-        }
-    }
-
-    // Méthode pour créer des graphiques avec animations personnalisées
-    createAnimatedChart(canvasId, type, data, animationType = 'default') {
-        const animations = {
-            default: {
-                duration: 1000,
-                easing: 'easeInOutCubic'
-            },
-            bounce: {
-                duration: 1500,
-                easing: 'easeOutBounce'
-            },
-            elastic: {
-                duration: 2000,
-                easing: 'easeOutElastic'
-            },
-            slide: {
-                duration: 1200,
-                easing: 'easeInOutQuart',
-                onProgress: function(animation) {
-                    const progress = animation.currentStep / animation.numSteps;
-                    this.chart.data.datasets.forEach((dataset, i) => {
-                        dataset.data = dataset.data.map((value, index) => value * progress);
-                    });
-                }
-            }
-        };
-
-        const options = {
-            animation: animations[animationType] || animations.default,
-            plugins: {
-                ...this.defaultConfig.plugins,
-                tooltip: {
-                    ...this.defaultConfig.plugins.tooltip,
-                    animation: {
-                        duration: 200
-                    }
-                }
-            }
-        };
-
-        switch (type) {
-            case 'bar':
-                return this.createBar(canvasId, data, options);
-            case 'line':
-                return this.createLine(canvasId, data, options);
-            case 'doughnut':
-                return this.createDoughnut(canvasId, data, options);
-            default:
-                return this.createBar(canvasId, data, options);
-        }
-    }
-
-    // Méthode pour exporter un graphique en image
-    exportChart(chartId, format = 'png', quality = 0.9) {
-        const chart = this.charts[chartId];
-        if (!chart) {
-            console.error(`Graphique non trouvé: ${chartId}`);
-            return null;
-        }
-
-        try {
-            const url = chart.toBase64Image(format, quality);
-            
-            // Créer un lien de téléchargement
-            const link = document.createElement('a');
-            link.download = `chart-${chartId}-${Date.now()}.${format}`;
-            link.href = url;
-            
-            // Déclencher le téléchargement
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            return url;
-        } catch (error) {
-            console.error('Erreur lors de l\'export:', error);
-            return null;
-        }
-    }
-
-    // Méthode pour redimensionner tous les graphiques
-    resizeAll() {
+    
+    // Redimensionnement pour responsive
+    resize() {
         Object.values(this.charts).forEach(chart => {
             if (chart && typeof chart.resize === 'function') {
                 chart.resize();
             }
         });
     }
+}
 
-    // Méthode pour mettre à jour les données d'un graphique existant
-    updateChartData(chartId, newData, animate = true) {
-        const chart = this.charts[chartId];
-        if (!chart) {
-            console.error(`Graphique non trouvé: ${chartId}`);
-            return false;
+// Export pour utilisation globale
+window.ChartManager = ChartManager;
+
+// Création d'une instance globale pour utilisation immédiate
+window.chartManager = new ChartManager();
+
+console.log('ChartManager version améliorée créé et disponible globalement');
+
+// Gestion du redimensionnement automatique optimisée
+let resizeTimeout;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+        if (window.chartManager) {
+            window.chartManager.resize();
         }
+    }, 150);
+});
 
-        try {
-            // Mise à jour des labels si fournis
-            if (newData.labels) {
-                chart.data.labels = newData.labels;
-            }
-
-            // Mise à jour des datasets
-            if (newData.datasets) {
-                chart.data.datasets = newData.datasets;
-            }
-
-            // Actualiser le graphique
-            if (animate) {
-                chart.update('active');
-            } else {
-                chart.update('none');
-            }
-
-            return true;
-        } catch (error) {
-            console.error('Erreur lors de la mise à jour:', error);
-            return false;
-        }
+// Gestion de la destruction automatique lors du changement de page
+window.addEventListener('beforeunload', () => {
+    if (window.chartManager) {
+        window.chartManager.destroyAll();
     }
-
-    // Méthode pour obtenir des statistiques sur les graphiques actifs
-    getChartsInfo() {
-        const info = {
-            total: Object.keys(this.charts).length,
-            types: {},
-            canvasIds: Object.keys(this.charts)
-        };
-
-        Object.values(this.charts).forEach(chart => {
-            const type = chart.config.type;
-            info.types[type] = (info.types[type] || 0) + 1;
-        });
-
-        return info;
-    }
-
-    // Méthode de débogage pour afficher l'état de tous les graphiques
-    debugCharts() {
-        console.group('État des graphiques ChartManager');
-        console.log('Nombre total de graphiques:', Object.keys(this.charts).length);
-        
-        Object.entries(this.charts).forEach(([id, chart]) => {
-            console.log(`${id}:`, {
-                type: chart.config.type,
-                datasets: chart.data.datasets.length,
-                labels: chart.data.labels?.length || 0,
-                canvas: chart.canvas.id,
-                visible: chart.canvas.style.display !== 'none'
-            });
-        });
-        
-        console.groupEnd();
-    }
-}
-
-// Instance globale du gestionnaire de graphiques
-const chartManager = new ChartManager();
-
-// Fonction utilitaire pour initialiser Chart.js avec des configurations globales
-function initializeChartJS() {
-    // Configuration globale de Chart.js
-    Chart.defaults.font.family = 'Inter, -apple-system, BlinkMacSystemFont, sans-serif';
-    Chart.defaults.font.size = 12;
-    Chart.defaults.color = '#374151';
-    
-    // Enregistrement des composants Chart.js nécessaires
-    Chart.register(
-        CategoryScale,
-        LinearScale,
-        PointElement,
-        LineElement,
-        BarElement,
-        Title,
-        Tooltip,
-        Legend,
-        ArcElement,
-        RadialLinearScale
-    );
-    
-    console.log('Chart.js initialisé avec la configuration PROCASEF');
-}
-
-// Auto-initialisation si Chart.js est disponible
-if (typeof Chart !== 'undefined') {
-    initializeChartJS();
-}
-
-// Export pour utilisation en module
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { ChartManager, chartManager };
-}
-
-// Export pour utilisation en ES6 modules
-if (typeof window !== 'undefined') {
-    window.ChartManager = ChartManager;
-    window.chartManager = chartManager;
-}
+});
