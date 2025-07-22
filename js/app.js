@@ -696,16 +696,17 @@ class ProcasefDashboard {
         this.updateElement('performance2025', `${performance}%`);
     }
 
-updateGenreKPIs() {
+    updateGenreKPIs() {
         if (!this.data.repartitionGenre || !Array.isArray(this.data.repartitionGenre)) return;
         const hommes = this.data.repartitionGenre.find(r => r.genre === 'Homme')?.total_nombre || 43576;
         const femmes = this.data.repartitionGenre.find(r => r.genre === 'Femme')?.total_nombre || 9332;
         const total = hommes + femmes;
         this.updateElement('hommesTotal', hommes.toLocaleString());
         this.updateElement('femmesTotal', femmes.toLocaleString());
-        this.updateElement('hommesPercentage', ${total > 0 ? ((hommes / total) * 100).toFixed(1) : 0}%);
-        this.updateElement('femmesPercentage', ${total > 0 ? ((femmes / total) * 100).toFixed(1) : 0}%);
+        this.updateElement('hommesPercentage', `${total > 0 ? ((hommes / total) * 100).toFixed(1) : 0}%`);
+        this.updateElement('femmesPercentage', `${total > 0 ? ((femmes / total) * 100).toFixed(1) : 0}%`);
     }
+
 
     updatePostKPIs() {
         this.updateElement('totalRecues', '8,420');
