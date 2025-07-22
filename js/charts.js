@@ -15,22 +15,9 @@ class ChartManager {
             
             // Palette étendue pour graphiques avec nuances
             chartColors: [
-                '#D4A574', // Orange Gold Mat
-                '#1E3A8A', // Bleu Navy
-                '#B8860B', // Dark Goldenrod
-                '#10B981', // Success Green
-                '#F59E0B', // Warning Orange
-                '#EF4444', // Error Red
-                '#3B82F6', // Info Blue
-                '#8B5CF6', // Purple
-                '#EC4899', // Pink
-                '#06B6D4', // Cyan
-                '#84CC16', // Lime
-                '#F97316', // Orange
-                '#6366F1', // Indigo
-                '#14B8A6', // Teal
-                '#F472B6', // Hot Pink
-                '#A855F7'  // Violet
+                '#D4A574', '#1E3A8A', '#B8860B', '#10B981', '#F59E0B', '#EF4444', 
+                '#3B82F6', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16', '#F97316', 
+                '#6366F1', '#14B8A6', '#F472B6', '#A855F7'
             ],
             
             // Couleurs spécifiques pour les états d'avancement
@@ -353,50 +340,6 @@ class ChartManager {
         return this.charts[canvasId];
     }
     
-    // Wrapper pour créer un graphique en barres horizontales
-    createHorizontalBar(canvasId, data, options = {}) {
-        const horizontalOptions = {
-            ...options,
-            indexAxis: 'y',
-            scales: {
-                x: {
-                    beginAtZero: true,
-                    grid: {
-                        color: 'rgba(212, 165, 116, 0.1)',
-                        lineWidth: 1
-                    },
-                    ticks: {
-                        color: '#6B7280',
-                        font: {
-                            size: 11,
-                            weight: '500'
-                        }
-                    },
-                    border: {
-                        display: false
-                    }
-                },
-                y: {
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        color: '#6B7280',
-                        font: {
-                            size: 11,
-                            weight: '500'
-                        }
-                    },
-                    border: {
-                        display: false
-                    }
-                }
-            }
-        };
-        
-        return this.createBar(canvasId, data, horizontalOptions);
-    }
-    
     // Wrapper pour créer un graphique en barres empilées
     createStackedBar(canvasId, data, options = {}) {
         const stackedOptions = {
@@ -442,10 +385,7 @@ class ChartManager {
         return this.createBar(canvasId, data, stackedOptions);
     }
 
-    /**
-     * Graphique en barres horizontal optimisé - état d'avancement par commune
-     * Version améliorée avec gestion d'erreurs et meilleur rendu visuel
-     */
+    // Graphique en barres horizontal optimisé - état d'avancement par commune
     createEtatCommuneBarChart(canvasId, communes, etats) {
         if (!communes || !etats || communes.length !== etats.length) {
             console.error('Données invalides pour createEtatCommuneBarChart');
@@ -540,10 +480,7 @@ class ChartManager {
         return this.charts[canvasId];
     }
 
-    /**
-     * Graphique en donut optimisé - répartition des états d'avancement
-     * Version améliorée avec légendes personnalisées et couleurs mappées
-     */
+    // Graphique en donut optimisé - répartition des états d'avancement
     createEtatDonutChart(canvasId, labels, data, options = {}) {
         if (!labels || !data || labels.length !== data.length) {
             console.error('Données invalides pour createEtatDonutChart');
@@ -577,7 +514,7 @@ class ChartManager {
                     borderColor: '#FFFFFF',
                     borderWidth: 3,
                     hoverBorderWidth: 5,
-                    hoverBackgroundColor: colors.map(color => color + 'DD') // Légère transparence au survol
+                    hoverBackgroundColor: colors.map(color => color + 'DD')
                 }]
             },
             options: {
@@ -645,254 +582,12 @@ class ChartManager {
         this.charts[canvasId] = new Chart(ctx, config);
         return this.charts[canvasId];
     }
-    
-    // Wrapper pour créer un graphique en aires
-    createArea(canvasId, data, options = {}) {
-        // Forcer le fill pour les aires
-        const areaData = {
-            ...data,
-            datasets: data.datasets.map(dataset => ({
-                ...dataset,
-                fill: true
-            }))
-        };
-        
-        return this.createLine(canvasId, areaData, options);
-    }
-    
-    // Utilitaire pour obtenir une couleur de la palette
-    getColor(index) {
-        return this.colors.chartColors[index % this.colors.chartColors.length];
-    }
-    
-    // Utilitaire pour obtenir plusieurs couleurs
-    getColors(count) {
-        return Array.from({length: count}, (_, i) => this.getColor(i));
-    }
-    
-    // Utilitaire pour obtenir les couleurs d'états
-    getStateColor(state) {
-        const stateClean = state?.toString().trim();
-        return this.colors.stateColors[stateClean] || '#6B7280';
-    }
-    
-    // Redimensionnement pour responsive
-    resize() {
-        Object.values(this.charts).forEach(chart => {
-            if (chart && typeof chart.resize === 'function') {
-                chart.resize();
-            }
-        });
-    }
-    
-    // Méthode pour mettre à jour les données d'un graphique existant
-    updateChartData(chartId, newData) {
-        if (this.charts[chartId]) {
-            this.charts[chartId].data = newData;
-            this.charts[chartId].update('active');
-        }
-    }
-    
-    // Méthode pour ajouter des données à un graphique existant
-    addDataPoint(chartId, label, data) {
-        if (this.charts[chartId]) {
-            this.charts[chartId].data.labels.push(label);
-            this.charts[chartId].data.datasets.forEach((dataset, index) => {
-                dataset.data.push(data[index] || 0);
-            });
-            this.charts[chartId].update();
-        }
-    }
-    
-    // Méthode pour supprimer des données d'un graphique
-    removeDataPoint(chartId, index) {
-        if (this.charts[chartId] && this.charts[chartId].data.labels[index] !== undefined) {
-            this.charts[chartId].data.labels.splice(index, 1);
-            this.charts[chartId].data.datasets.forEach(dataset => {
-                dataset.data.splice(index, 1);
-            });
-            this.charts[chartId].update();
-        }
-    }
-    
-    // Méthode pour exporter un graphique en image
-    exportChart(chartId, format = 'png') {
-        if (this.charts[chartId]) {
-            const canvas = this.charts[chartId].canvas;
-            return canvas.toDataURL(`image/${format}`);
-        }
-        return null;
-    }
-
-
- // Méthode pour obtenir les statistiques d'un graphique
-    getChartStats(chartId) {
-        if (!this.charts[chartId]) return null;
-        
-        const chart = this.charts[chartId];
-        const datasets = chart.data.datasets;
-        
-        const stats = {
-            totalDatasets: datasets.length,
-            totalDataPoints: datasets.reduce((sum, dataset) => sum + dataset.data.length, 0),
-            labels: chart.data.labels,
-            datasets: datasets.map(dataset => ({
-                label: dataset.label,
-                dataCount: dataset.data.length,
-                sum: dataset.data.reduce((a, b) => a + (b || 0), 0),
-                average: dataset.data.reduce((a, b) => a + (b || 0), 0) / dataset.data.length,
-                min: Math.min(...dataset.data.filter(v => v !== null && v !== undefined)),
-                max: Math.max(...dataset.data.filter(v => v !== null && v !== undefined))
-            }))
-        };
-        
-        return stats;
-    }
 
     /**
-     * NOUVEAUX GRAPHIQUES SPÉCIALISÉS POUR LES DONNÉES DÉMOGRAPHIQUES
+     * NOUVELLES MÉTHODES POUR LE RAPPORT COMPLET
      */
 
-    /**
-     * Graphique en barres groupées - Comparaison Hommes/Femmes par commune
-     */
-    createGenderComparisonChart(canvasId, communesData) {
-        if (!communesData || !Array.isArray(communesData)) {
-            console.error('Données communes invalides');
-            return null;
-        }
-
-        const labels = communesData.map(item => item.communesenegal);
-        const hommesData = communesData.map(item => item.homme);
-        const femmesData = communesData.map(item => item.femme);
-
-        const data = {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Hommes',
-                    data: hommesData,
-                    backgroundColor: '#1E3A8A', // Bleu navy
-                    borderColor: '#1E3A8A',
-                    borderWidth: 1,
-                    borderRadius: 6
-                },
-                {
-                    label: 'Femmes',
-                    data: femmesData,
-                    backgroundColor: '#D4A574', // Orange gold
-                    borderColor: '#D4A574',
-                    borderWidth: 1,
-                    borderRadius: 6
-                }
-            ]
-        };
-
-        const options = {
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Répartition Hommes/Femmes par Commune',
-                    font: { size: 16, weight: 'bold' },
-                    color: '#374151',
-                    padding: { bottom: 30 }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const commune = communesData[context.dataIndex];
-                            const percentage = context.datasetIndex === 0 
-                                ? commune.homme_pourcentage.toFixed(1) 
-                                : commune.femme_pourcentage.toFixed(1);
-                            return `${context.dataset.label}: ${context.raw.toLocaleString()} (${percentage}%)`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return value.toLocaleString();
-                        }
-                    }
-                }
-            }
-        };
-
-        return this.createBar(canvasId, data, options);
-    }
-
-    /**
-     * Graphique en barres empilées 100% - Pourcentages Hommes/Femmes
-     */
-    createGenderPercentageChart(canvasId, communesData) {
-        if (!communesData || !Array.isArray(communesData)) {
-            console.error('Données communes invalides');
-            return null;
-        }
-
-        const labels = communesData.map(item => item.communesenegal);
-        const hommesPercentage = communesData.map(item => item.homme_pourcentage);
-        const femmesPercentage = communesData.map(item => item.femme_pourcentage);
-
-        const data = {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Hommes (%)',
-                    data: hommesPercentage,
-                    backgroundColor: '#1E3A8A',
-                    borderWidth: 0
-                },
-                {
-                    label: 'Femmes (%)',
-                    data: femmesPercentage,
-                    backgroundColor: '#D4A574',
-                    borderWidth: 0
-                }
-            ]
-        };
-
-        const options = {
-            responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Pourcentage de Répartition par Genre',
-                    font: { size: 16, weight: 'bold' },
-                    color: '#374151'
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `${context.dataset.label}: ${context.raw.toFixed(1)}%`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: { stacked: true },
-                y: { 
-                    stacked: true,
-                    beginAtZero: true,
-                    max: 100,
-                    ticks: {
-                        callback: function(value) {
-                            return value + '%';
-                        }
-                    }
-                }
-            }
-        };
-
-        return this.createBar(canvasId, data, options);
-    }
-
-    /**
-     * Graphique temporel - Évolution par trimestre
-     */
+    // Graphique temporel - Évolution par trimestre
     createTemporalChart(canvasId, temporalData) {
         if (!temporalData || !Array.isArray(temporalData)) {
             console.error('Données temporelles invalides');
@@ -958,166 +653,7 @@ class ChartManager {
         return this.createLine(canvasId, data, options);
     }
 
-    /**
-     * Graphique radar - Profil démographique par commune
-     */
-    createRadarChart(canvasId, communesData, maxCommunes = 6) {
-        if (!communesData || !Array.isArray(communesData)) {
-            console.error('Données communes invalides');
-            return null;
-        }
-
-        // Limiter à maxCommunes pour lisibilité
-        const selectedCommunes = communesData.slice(0, maxCommunes);
-        const labels = selectedCommunes.map(item => item.communesenegal);
-
-        const data = {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Population Totale (normalisée)',
-                    data: selectedCommunes.map(item => {
-                        const max = Math.max(...communesData.map(c => c.total));
-                        return (item.total / max) * 100;
-                    }),
-                    backgroundColor: 'rgba(212, 165, 116, 0.2)',
-                    borderColor: '#D4A574',
-                    pointBackgroundColor: '#D4A574',
-                    pointBorderColor: '#fff',
-                    pointHoverBackgroundColor: '#fff',
-                    pointHoverBorderColor: '#D4A574'
-                },
-                {
-                    label: '% Femmes',
-                    data: selectedCommunes.map(item => item.femme_pourcentage),
-                    backgroundColor: 'rgba(30, 58, 138, 0.2)',
-                    borderColor: '#1E3A8A',
-                    pointBackgroundColor: '#1E3A8A',
-                    pointBorderColor: '#fff',
-                    pointHoverBackgroundColor: '#fff',
-                    pointHoverBorderColor: '#1E3A8A'
-                }
-            ]
-        };
-
-        this.destroyChart(canvasId);
-        const canvas = document.getElementById(canvasId);
-        if (!canvas) {
-            console.error(`Canvas non trouvé: ${canvasId}`);
-            return null;
-        }
-        
-        const ctx = canvas.getContext('2d');
-        
-        const config = {
-            type: 'radar',
-            data: data,
-            options: {
-                ...this.defaultConfig,
-                elements: {
-                    line: {
-                        borderWidth: 3
-                    }
-                },
-                plugins: {
-                    ...this.defaultConfig.plugins,
-                    title: {
-                        display: true,
-                        text: 'Profil Démographique - Top Communes',
-                        font: { size: 16, weight: 'bold' },
-                        color: '#374151'
-                    }
-                },
-                scales: {
-                    r: {
-                        angleLines: {
-                            display: true,
-                            color: 'rgba(212, 165, 116, 0.2)'
-                        },
-                        suggestedMin: 0,
-                        suggestedMax: 100,
-                        ticks: {
-                            display: false
-                        },
-                        grid: {
-                            color: 'rgba(212, 165, 116, 0.3)'
-                        }
-                    }
-                }
-            }
-        };
-        
-        this.charts[canvasId] = new Chart(ctx, config);
-        return this.charts[canvasId];
-    }
-
-    /**
-     * Graphique en aires empilées - Sources Individuel vs Collectif
-     */
-    createSourcesAreaChart(canvasId, sourcesData, temporalData) {
-        if (!sourcesData || !temporalData) {
-            console.error('Données sources ou temporelles manquantes');
-            return null;
-        }
-
-        // Simulation de données temporelles par source (adaptable selon vos données réelles)
-        const labels = temporalData.map(item => item.periode);
-        
-        // Calcul proportionnel basé sur les ratios sources
-        const individualRatio = sourcesData[0].total / (sourcesData[0].total + sourcesData[1].total);
-        const collectiveRatio = sourcesData[1].total / (sourcesData[0].total + sourcesData[1].total);
-
-        const data = {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Source Individuelle',
-                    data: temporalData.map(item => Math.round(item.total * individualRatio)),
-                    backgroundColor: '#D4A574',
-                    borderColor: '#B8860B',
-                    borderWidth: 2,
-                    fill: true
-                },
-                {
-                    label: 'Source Collective',
-                    data: temporalData.map(item => Math.round(item.total * collectiveRatio)),
-                    backgroundColor: '#1E3A8A',
-                    borderColor: '#1E40AF',
-                    borderWidth: 2,
-                    fill: true
-                }
-            ]
-        };
-
-        const options = {
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Évolution des Sources de Données',
-                    font: { size: 16, weight: 'bold' },
-                    color: '#374151'
-                }
-            },
-            scales: {
-                x: { stacked: true },
-                y: { 
-                    stacked: true,
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return value.toLocaleString();
-                        }
-                    }
-                }
-            }
-        };
-
-        return this.createArea(canvasId, data, options);
-    }
-
-    /**
-     * Graphique en barres polaires - Répartition régionale
-     */
+    // Graphique en barres polaires - Répartition régionale
     createPolarChart(canvasId, regionData) {
         if (!regionData || !Array.isArray(regionData)) {
             console.error('Données régionales invalides');
@@ -1198,9 +734,7 @@ class ChartManager {
         return this.charts[canvasId];
     }
 
-    /**
-     * Graphique mixte - Barres + Ligne pour analyse complexe
-     */
+    // Graphique mixte - Barres + Ligne pour analyse complexe
     createMixedChart(canvasId, communesData, showTop = 8) {
         if (!communesData || !Array.isArray(communesData)) {
             console.error('Données communes invalides');
@@ -1320,83 +854,30 @@ class ChartManager {
         this.charts[canvasId] = new Chart(ctx, config);
         return this.charts[canvasId];
     }
-
-    /**
-     * Graphique en gauge/doughnut amélioré avec indicateurs
-     */
-    createGaugeChart(canvasId, percentage, title, target = null) {
-        const data = {
-            labels: ['Complété', 'Restant'],
-            datasets: [{
-                data: [percentage, 100 - percentage],
-                backgroundColor: [
-                    percentage >= 80 ? '#10B981' : 
-                    percentage >= 60 ? '#F59E0B' : 
-                    percentage >= 40 ? '#3B82F6' : '#EF4444',
-                    '#E5E7EB'
-                ],
-                borderWidth: 0,
-                cutout: '80%'
-            }]
-        };
-
-        const centerTextPlugin = {
-            id: 'centerText',
-            beforeDatasetsDraw(chart) {
-                const { ctx, chartArea: { top, width, height } } = chart;
-                ctx.save();
-                
-                const centerX = width / 2;
-                const centerY = top + height / 2;
-                
-                // Percentage principal
-                ctx.font = 'bold 32px Inter';
-                ctx.fillStyle = '#374151';
-                ctx.textAlign = 'center';
-                ctx.fillText(`${percentage}%`, centerX, centerY - 10);
-                
-                // Titre
-                ctx.font = '14px Inter';
-                ctx.fillStyle = '#6B7280';
-                ctx.fillText(title || 'Progression', centerX, centerY + 20);
-                
-                // Target si fourni
-                if (target) {
-                    ctx.font = '12px Inter';
-                    ctx.fillStyle = '#9CA3AF';
-                    ctx.fillText(`Objectif: ${target}%`, centerX, centerY + 40);
-                }
-                
-                ctx.restore();
+    
+    // Utilitaire pour obtenir une couleur de la palette
+    getColor(index) {
+        return this.colors.chartColors[index % this.colors.chartColors.length];
+    }
+    
+    // Utilitaire pour obtenir plusieurs couleurs
+    getColors(count) {
+        return Array.from({length: count}, (_, i) => this.getColor(i));
+    }
+    
+    // Utilitaire pour obtenir les couleurs d'états
+    getStateColor(state) {
+        const stateClean = state?.toString().trim();
+        return this.colors.stateColors[stateClean] || '#6B7280';
+    }
+    
+    // Redimensionnement pour responsive
+    resize() {
+        Object.values(this.charts).forEach(chart => {
+            if (chart && typeof chart.resize === 'function') {
+                chart.resize();
             }
-        };
-
-        this.destroyChart(canvasId);
-        const canvas = document.getElementById(canvasId);
-        if (!canvas) {
-            console.error(`Canvas non trouvé: ${canvasId}`);
-            return null;
-        }
-        
-        const ctx = canvas.getContext('2d');
-        
-        const config = {
-            type: 'doughnut',
-            data: data,
-            options: {
-                ...this.defaultConfig,
-                plugins: {
-                    ...this.defaultConfig.plugins,
-                    legend: { display: false }
-                },
-                rotation: -90,
-                circumference: 180
-            },
-            plugins: [centerTextPlugin]
-        };
-        
-        this.charts[canvasId] = new Chart(ctx, config);
-        return this.charts[canvasId];
+        });
     }
 }
 
@@ -1416,7 +897,7 @@ window.addEventListener('resize', () => {
         if (window.chartManager) {
             window.chartManager.resize();
         }
-    }, 150); // Debounce pour éviter trop d'appels
+    }, 150);
 });
 
 // Gestion de la destruction automatique lors du changement de page
