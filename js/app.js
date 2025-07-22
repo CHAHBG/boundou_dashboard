@@ -364,7 +364,7 @@ class ProcasefDashboard {
         setTimeout(() => {
             this.createTopCommunesChart();
             this.createProjectionsChart();
-            this.createGenreGlobalChart();
+            this.create();
         }, 200);
     }
 
@@ -696,18 +696,54 @@ class ProcasefDashboard {
         this.updateElement('performance2025', `${performance}%`);
     }
 
-    updateGenreKPIs() {
-        if (!this.data.repartitionGenre || !Array.isArray(this.data.repartitionGenre)) return;
-
-        const hommes = this.data.repartitionGenre.find(r => r.genre === 'Homme')?.total_nombre || 43576;
-        const femmes = this.data.repartitionGenre.find(r => r.genre === 'Femme')?.total_nombre || 9332;
-        const total = hommes + femmes;
-
-        this.updateElement('hommesTotal', hommes.toLocaleString());
-        this.updateElement('femmesTotal', femmes.toLocaleString());
-        this.updateElement('hommesPercentage', `${total > 0 ? ((hommes / total) * 100).toFixed(1) : 0}%`);
-        this.updateElement('femmesPercentage', `${total > 0 ? ((femmes / total) * 100).toFixed(1) : 0}%`);
+updateGenreKPIs() {
+    // Récupération automatique des données depuis rapport_complet.json
+    if (!this.data || !this.data["Synthèse Globale"]) return;
+    
+    const syntheseGlobale = this.data["Synthèse Globale"] || [];
+    
+    // Recherche des KPIs de genre dans la synthèse globale
+    const hommeKPI = syntheseGlobale.find(kpi => 
+        kpi.indicateur && kpi.indicateur.toLowerCase().includes('homme')
+    );
+    const femmeKPI = syntheseGlobale.find(kpi => 
+        kpi.indicateur && kpi.indicateur.toLowerCase().includes('femme')
+    );
+    
+    // Extraction des valeurs (avec fallback sur les anciennes valeurs si pas trouvées)
+    let hommes = 43576; // valeur par défaut
+    let femmes = 9332;  // valeur par défaut
+    
+    if (hommeKPI && hommeKPI.valeur) {
+        hommes = typeof hommeKPI.valeur === 'number' ? hommeKPI.valeur : 
+                 parseInt(hommeKPI.valeur.toString().replace(/[^\d]/g, '')) || 43576;
     }
+    
+    if (femmeKPI && femmeKPI.valeur) {
+        femmes = typeof femmeKPI.valeur === 'number' ? femmeKPI.valeur : 
+                 parseInt(femmeKPI.valeur.toString().replace(/[^\d]/g, '')) || 9332;
+    }
+    
+    // Alternative : si les données de genre sont dans une autre section
+    if (this.data["Détail par Source"]) {
+        const detailSources = this.data["Détail par Source"] || [];
+        const totalHommes = detailSources.reduce((sum, source) => sum + (source.hommes || 0), 0);
+        const totalFemmes = detailSources.reduce((sum, source) => sum + (source.femmes || 0), 0);
+        
+        if (totalHommes > 0) hommes = totalHommes;
+        if (totalFemmes > 0) femmes = totalFemmes;
+    }
+    
+    const total = hommes + femmes;
+    
+    // Mise à jour des éléments DOM
+    this.updateElement('hommesTotal', hommes.toLocaleString());
+    this.updateElement('femmesTotal', femmes.toLocaleString());
+    this.updateElement('hommesPercentage', `${total > 0 ? ((hommes / total) * 100).toFixed(1) : 0}%`);
+    this.updateElement('femmesPercentage', `${total > 0 ? ((femmes / total) * 100).toFixed(1) : 0}%`);
+    
+    console.log(`KPIs Genre mis à jour - Hommes: ${hommes}, Femmes: ${femmes}, Total: ${total}`);
+}
 
     updatePostKPIs() {
         this.updateElement('totalRecues', '8,420');
@@ -804,10 +840,10 @@ class ProcasefDashboard {
         });
     }
 
-    createGenreGlobalChart() {
+    create() {
         if (!this.data.repartitionGenre || !Array.isArray(this.data.repartitionGenre)) return;
 
-        const ctx = document.getElementById('genreGlobalChart');
+        const ctx = document.getElementById('');
         if (!ctx) return;
 
         const hommes = this.data.repartitionGenre.find(r => r.genre === 'Homme')?.total_nombre || 43576;
@@ -999,7 +1035,7 @@ class ProcasefDashboard {
     }
 
     createGenreGlobalDonut() {
-        this.createGenreGlobalChart(); // Reuse the same chart
+        this.create(); // Reuse the same chart
     }
 
     createGenreTrimestreChart() {
