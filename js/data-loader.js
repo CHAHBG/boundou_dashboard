@@ -1,5 +1,4 @@
 // data-loader.js - Data Loading and Caching Module for PROCASEF Dashboard
-
 class DataLoader {
     constructor() {
         this.cache = new Map();
@@ -237,6 +236,21 @@ class DataLoader {
             'Détail par Source': [
                 { source: 'Individuel', hommes: 12650, femmes: 2631, total: 15281, hommes_1: 82.8, femmes_1: 17.2 },
                 { source: 'Collectif', hommes: 30926, femmes: 6701, total: 37627, hommes_1: 82.2, femmes_1: 17.8 }
+            ],
+            'Analyse par Commune': [
+                { communesenegal: 'BALLOU', femme: 450, homme: 5060, total: 5510, femme_pourcentage: 8.17, homme_pourcentage: 91.83 },
+                { communesenegal: 'BANDAFASSI', femme: 2381, homme: 5784, total: 8165, femme_pourcentage: 29.16, homme_pourcentage: 70.84 },
+                { communesenegal: 'BEMBOU', femme: 899, homme: 2924, total: 3823, femme_pourcentage: 23.52, homme_pourcentage: 76.48 },
+                { communesenegal: 'DIMBOLI', femme: 1353, homme: 3504, total: 4857, femme_pourcentage: 27.86, homme_pourcentage: 72.14 }
+            ],
+            'Analyse Temporelle': [
+                { periode: '2024-T4', femme: 1607, homme: 6064, total: 7671, homme_pourcentage: 79.05, femme_pourcentage: 20.95 },
+                { periode: '2025-T1', femme: 4039, homme: 18676, total: 22715, homme_pourcentage: 82.22, femme_pourcentage: 17.78 },
+                { periode: '2025-T2', femme: 3686, homme: 18836, total: 22522, homme_pourcentage: 83.63, femme_pourcentage: 16.37 }
+            ],
+            'Tamba-Kédougou': [
+                { nomregion: 'Kédougou', femme: 13898, homme: 37260, total: 51158, homme_pourcentage: 72.83, femme_pourcentage: 27.17 },
+                { nomregion: 'Tambacounda', femme: 4766, homme: 49890, total: 54656, homme_pourcentage: 91.28, femme_pourcentage: 8.72 }
             ]
         };
     }
@@ -362,12 +376,13 @@ class DataLoader {
         return info;
     }
 
-    // Preload commonly used data
+    // Preload commonly used data including rapport complet
     async preloadEssentialData() {
         const essentialFiles = [
             'data/parcelles.json',
             'data/Repartition_genre.json',
-            'data/Projections_2025.json'
+            'data/Projections_2025.json',
+            'data/rapport_complet.json'  // Ajout du rapport complet
         ];
 
         const loadPromises = essentialFiles.map(file => this.loadData(file));
