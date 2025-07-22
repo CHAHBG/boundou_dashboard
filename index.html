@@ -7,7 +7,7 @@
     <meta name="description" content="Dashboard pour le suivi des opérations du projet PROCASEF à Boundou - Palette Orange Gold et Bleu Navy">
     <link rel="stylesheet" href="css/style.css">
     
- <!-- Chart.js via UMD pour compatibilité max (PAS de type="module", PAS d'import/export) -->
+    <!-- Chart.js via UMD pour compatibilité max (PAS de type="module", PAS d'import/export) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <!-- Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -52,6 +52,10 @@
                 <a href="#" class="nav-item" data-section="genre" aria-label="Genre">
                     <span class="nav-icon">👥</span>
                     <span class="nav-text">Genre</span>
+                </a>
+                <a href="#" class="nav-item" data-section="rapport" aria-label="Rapport complet">
+                    <span class="nav-icon">📑</span>
+                    <span class="nav-text">Rapport complet</span>
                 </a>
                 <a href="#" class="nav-item" data-section="post-traitement" aria-label="Post-traitement">
                     <span class="nav-icon">⚙️</span>
@@ -345,7 +349,7 @@
                         </div>
                         <div class="metric-card">
                             <h3>Réalisé</h3>
-                            <div class="metric-value success" id="realise2025">31 302</div>
+                            <div class="metric-value success" id="realise2025">31 302</div>
                         </div>
                         <div class="metric-card">
                             <h3>Performance</h3>
@@ -421,6 +425,58 @@
                             </div>
                             <div class="chart-content">
                                 <canvas id="genreCommuneChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section: Rapport complet -->
+                <section id="rapport-section" class="content-section">
+                    <div class="section-header">
+                        <h2>📑 Rapport Complet</h2>
+                        <p class="section-description">Analyse détaillée des données du projet PROCASEF</p>
+                    </div>
+
+                    <!-- KPIs Synthèse Globale -->
+                    <div id="rapportKpiGrid" class="kpi-grid">
+                        <!-- KPIs populated by JavaScript -->
+                    </div>
+
+                    <!-- Charts Rapport -->
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Détail par Source</h3>
+                            </div>
+                            <div class="chart-content">
+                                <canvas id="rapportSourceChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card large">
+                            <div class="chart-header">
+                                <h3>Analyse par Commune (Top 10)</h3>
+                            </div>
+                            <div class="chart-content">
+                                <canvas id="rapportCommuneMixedChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Analyse Temporelle</h3>
+                            </div>
+                            <div class="chart-content">
+                                <canvas id="rapportTemporalChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Répartition Régionale</h3>
+                            </div>
+                            <div class="chart-content">
+                                <canvas id="rapportRegionPolarChart"></canvas>
                             </div>
                         </div>
                     </div>
