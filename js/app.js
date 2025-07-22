@@ -364,7 +364,7 @@ class ProcasefDashboard {
         setTimeout(() => {
             this.createTopCommunesChart();
             this.createProjectionsChart();
-            this.create();
+            this.createGenreGlobalChart();
         }, 200);
     }
 
@@ -804,10 +804,10 @@ class ProcasefDashboard {
         });
     }
 
-    create() {
+    createGenreGlobalChart() {
         if (!this.data.repartitionGenre || !Array.isArray(this.data.repartitionGenre)) return;
 
-        const ctx = document.getElementById('');
+        const ctx = document.getElementById('genreGlobalChart');
         if (!ctx) return;
 
         const hommes = this.data.repartitionGenre.find(r => r.genre === 'Homme')?.total_nombre || 43576;
