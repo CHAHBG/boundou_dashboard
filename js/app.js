@@ -1,11 +1,11 @@
-// PROCASEF Dashboard Application - Version complète avec palette Orange Gold/Bleu Navy
+// PROCASEF Dashboard Application - Version complète avec section Rapport
 class ProcasefDashboard {
     constructor() {
         // Palette de couleurs PROCASEF
         this.colors = {
-            primary: '#D4A574',    // Orange Gold Mat
-            secondary: '#1E3A8A',  // Bleu Navy
-            accent: '#B8860B',     // Dark Goldenrod
+            primary: '#D4A574',
+            secondary: '#1E3A8A',
+            accent: '#B8860B',
             success: '#10B981',
             warning: '#F59E0B',
             error: '#EF4444',
@@ -15,7 +15,7 @@ class ProcasefDashboard {
         
         this.dataLoader = new DataLoader();
         this.charts = {};
-        this.mapManager = null; // 🔴 CORRECTION: Remplacé this.map par this.mapManager
+        this.mapManager = null;
         this.data = {
             parcelles: null,
             projections: null,
@@ -24,12 +24,13 @@ class ProcasefDashboard {
             repartitionGenre: null,
             etatOperations: null,
             parcellesTerrain: null,
-            urmTerrain: null
+            urmTerrain: null,
+            rapportComplet: null  // Nouveau
         };
         
         this.currentSection = 'accueil';
         this.fontSize = 14;
-        this.filteredParcelles = null; // 🔴 AJOUT: Pour stocker les données filtrées
+        this.filteredParcelles = null;
         this.filters = {
             commune: '',
             nicad: '',
@@ -52,7 +53,6 @@ class ProcasefDashboard {
         this.hideLoading();
     }
 
-
     async loadInitialData() {
         console.log('Chargement des données initiales...');
         try {
@@ -74,7 +74,6 @@ class ProcasefDashboard {
             this.data.repartitionGenre = [];
         }
     }
-
 
     calculateStats() {
         if (!this.data.parcelles || !Array.isArray(this.data.parcelles)) return;
@@ -225,13 +224,12 @@ class ProcasefDashboard {
         }
     }
 
-    // 🔴 CORRECTION CRITIQUE: Navigation avec destruction conditionnelle de la carte
     async navigateToSection(sectionId) {
         console.log('Navigation vers la section:', sectionId);
         
-        // 🔴 CORRECTION CRITIQUE: Détruire la carte si on quitte la section parcelles
+        // Détruire la carte si on quitte la section parcelles
         if (this.mapManager && this.mapManager.map && sectionId !== 'parcelles') {
-            console.log('🗺️ Destruction de la carte avant changement de section');
+            console.log('Destruction de la carte avant changement de section');
             this.mapManager.destroyMap();
         }
 
@@ -262,6 +260,7 @@ class ProcasefDashboard {
             'etat-avancement': 'État d\'Avancement',
             'projections-2025': 'Projections 2025',
             'genre': 'Répartition par Genre',
+            'rapport': 'Rapport Complet',
             'post-traitement': 'Post-Traitement'
         };
 
@@ -307,6 +306,11 @@ class ProcasefDashboard {
                     this.data.repartitionGenre = await this.dataLoader.loadData('data/Repartition_genre.json');
                 }
                 break;
+            case 'rapport':
+                if (!this.data.rapportComplet) {
+                    this.data.rapportComplet = await this.dataLoader.loadData('data/rapport_complet.json');
+                }
+                break;
             case 'post-traitement':
                 if (!this.data.parcellesTerrain) {
                     this.data.parcellesTerrain = await this.dataLoader.loadData('data/Parcelles_terrain_periode.json');
@@ -345,6 +349,9 @@ class ProcasefDashboard {
             case 'genre':
                 this.renderGenre();
                 break;
+            case 'rapport':
+                this.renderRapport();
+                break;
             case 'post-traitement':
                 this.renderPostTraitement();
                 break;
@@ -372,21 +379,17 @@ class ProcasefDashboard {
         }, 200);
     }
 
-    // Section État d'Avancement avec filtre CSIG et graphes
     renderEtatAvancement() {
         this.updateProgressBar();
-    
-        // Les filtres ne sont remplis qu'une seule fois au chargement (voir ci-dessous)
-        // On ne les remplit plus à chaque render, pour éviter de perdre la sélection.
-    
+        
         setTimeout(() => {
             const dataArr = this.getFilteredEtatOperations();
             const communes = dataArr.map(x => x.commune);
             const etats = dataArr.map(x => x.etat_d_avancement || "Non défini");
-    
+
             // Bar chart horizontal
             window.chartManager.createEtatCommuneBarChart('etatCommuneBarChart', communes, etats);
-    
+
             // Donut chart
             const etatCounts = dataArr.reduce((acc, op) => {
                 const key = op.etat_d_avancement?.trim() || "Non défini";
@@ -398,26 +401,23 @@ class ProcasefDashboard {
                 Object.keys(etatCounts),
                 Object.values(etatCounts)
             );
-    
+
             this.renderEtatTimeline();
         }, 200);
     }
-    
-    // À appeler une seule fois après le chargement des données des opérations
+
     populateEtatAvancementFilters() {
         const arr = this.data.etatOperations || [];
         const regions = [...new Set(arr.map(e => e.region).filter(Boolean))].sort();
         const etats = [...new Set(arr.map(e => e.etat_d_avancement).filter(Boolean))].sort();
         const csigs = [...new Set(arr.map(e => e.csig).filter(Boolean))].sort();
         const communes = [...new Set(arr.map(e => e.commune).filter(Boolean))].sort();
-    
+
         function updateSelect(selectId, options, allLabel) {
             const sel = document.getElementById(selectId);
             if (!sel) return;
-            // Sauvegarde la valeur sélectionnée
             const prevValue = sel.value;
             sel.innerHTML = `<option value="">${allLabel}</option>` + options.map(o => `<option value="${o}">${o}</option>`).join('');
-            // Rétablit la valeur sélectionnée
             sel.value = prevValue;
             sel.onchange = () => window.procasefApp.renderEtatAvancement();
         }
@@ -426,8 +426,7 @@ class ProcasefDashboard {
         updateSelect('csigFilterEtat', csigs, 'Tous les CSIG');
         updateSelect('communeFilterEtat', communes, 'Toutes les communes');
     }
-    
-    // Renvoie les opérations filtrées selon les filtres actifs
+
     getFilteredEtatOperations() {
         const r = document.getElementById('regionFilterEtat')?.value;
         const e = document.getElementById('etatFilterEtat')?.value;
@@ -440,8 +439,7 @@ class ProcasefDashboard {
         if (csig) arr = arr.filter(x => x.csig === csig);
         return arr;
     }
-    
-    // Timeline interactive
+
     renderEtatTimeline() {
         const container = document.getElementById('etatTimeline');
         if (!container) return;
@@ -456,7 +454,7 @@ class ProcasefDashboard {
             </div>
         `).join('');
     }
-    
+
     renderProjections() {
         console.log('Rendu de la section Projections');
         this.updateProjectionsKPIs();
@@ -476,6 +474,84 @@ class ProcasefDashboard {
         }, 200);
     }
 
+    /**
+     * NOUVELLE SECTION RAPPORT COMPLET
+     */
+    renderRapport() {
+        console.log('Rendu de la section Rapport');
+        const data = this.data.rapportComplet || {};
+
+        // 1. KPIs synthèse globale
+        const wrap = document.getElementById("rapportKpiGrid");
+        if (wrap) {
+            wrap.innerHTML = "";
+            (data["Synthèse Globale"] || []).forEach(kpi => {
+                const card = document.createElement("div");
+                card.className = "kpi-card";
+                card.innerHTML = `
+                    <div class="kpi-header">
+                        <h3>${kpi.indicateur}</h3>
+                        <span class="kpi-icon">📊</span>
+                    </div>
+                    <div class="kpi-value">${kpi.valeur.toLocaleString?.() ?? kpi.valeur}</div>
+                    <div class="kpi-subtitle">Données complètes</div>
+                `;
+                wrap.appendChild(card);
+            });
+        }
+
+        setTimeout(() => {
+            // 2. Graphique sources
+            const ctxSource = "rapportSourceChart";
+            if (window.chartManager) {
+                const src = data["Détail par Source"] || [];
+                if (src.length > 0) {
+                    window.chartManager.createStackedBar(ctxSource, {
+                        labels: src.map(s => s.source),
+                        datasets: [
+                            {
+                                label: "Hommes",
+                                data: src.map(s => s.hommes),
+                                backgroundColor: this.colors.secondary
+                            },
+                            {
+                                label: "Femmes",
+                                data: src.map(s => s.femmes),
+                                backgroundColor: this.colors.primary
+                            }
+                        ]
+                    }, { 
+                        plugins: { 
+                            title: { 
+                                display: true, 
+                                text: "Participants par source" 
+                            } 
+                        }, 
+                        indexAxis: "y" 
+                    });
+                }
+            }
+
+            // 3. Mixed Top 10 Communes
+            const communesData = data["Analyse par Commune"]?.sort((a, b) => b.total - a.total).slice(0, 10) || [];
+            if (communesData.length > 0) {
+                window.chartManager?.createMixedChart("rapportCommuneMixedChart", communesData);
+            }
+
+            // 4. Évolution temporelle
+            const temporal = data["Analyse Temporelle"] || [];
+            if (temporal.length > 0) {
+                window.chartManager?.createTemporalChart("rapportTemporalChart", temporal);
+            }
+
+            // 5. Polar par région
+            const regions = data["Tamba-Kédougou"] || [];
+            if (regions.length > 0) {
+                window.chartManager?.createPolarChart("rapportRegionPolarChart", regions);
+            }
+        }, 200);
+    }
+
     renderPostTraitement() {
         console.log('Rendu de la section Post-traitement');
         this.updatePostKPIs();
@@ -486,28 +562,28 @@ class ProcasefDashboard {
         }, 200);
     }
 
-    // 🔴 CORRECTION CRITIQUE: Initialisation sécurisée de la carte
+    // Initialisation sécurisée de la carte
     initializeMap() {
-        console.log('🗺️ Initialisation de la carte...');
+        console.log('Initialisation de la carte...');
         
         // Créer le MapManager s'il n'existe pas
         if (!this.mapManager) {
             this.mapManager = new MapManager();
         }
         
-        // 🔴 CORRECTION CRITIQUE: Vérifier si la carte existe déjà
+        // Vérifier si la carte existe déjà
         if (this.mapManager.map) {
-            console.log('⚠️ Carte déjà initialisée, mise à jour des marqueurs seulement');
+            console.log('Carte déjà initialisée, mise à jour des marqueurs seulement');
             // Si la carte existe, on met juste à jour les marqueurs
             this.updateMapMarkersFromStats();
             return this.mapManager.map;
         }
         
-        // 🔴 CORRECTION: Initialisation seulement si pas de carte existante
+        // Initialisation seulement si pas de carte existante
         const mapInstance = this.mapManager.initMap('mapContainer');
         
         if (mapInstance && this.communeStats) {
-            console.log('📍 Ajout des marqueurs des communes...');
+            console.log('Ajout des marqueurs des communes...');
             this.updateMapMarkersFromStats();
             
             // Ajuster la vue pour inclure tous les marqueurs
@@ -519,7 +595,7 @@ class ProcasefDashboard {
         return mapInstance;
     }
 
-    // 🔴 NOUVELLE MÉTHODE: Mise à jour des marqueurs depuis les stats
+    // Mise à jour des marqueurs depuis les stats
     updateMapMarkersFromStats() {
         if (!this.mapManager || !this.mapManager.map || !this.communeStats) return;
         
@@ -532,7 +608,7 @@ class ProcasefDashboard {
         });
     }
 
-    // 🔴 CORRECTION CRITIQUE: Application des filtres sans recréer la carte
+    // Application des filtres sans recréer la carte
     applyFilters() {
         console.log('Application des filtres');
         
@@ -559,7 +635,7 @@ class ProcasefDashboard {
         this.renderParcellesTable();
     }
 
-    // 🔴 NOUVELLE MÉTHODE: Mise à jour des marqueurs selon filteredParcelles
+    // Mise à jour des marqueurs selon filteredParcelles
     updateMapWithFilteredData() {
         if (!this.mapManager?.map) return;
         
@@ -639,7 +715,7 @@ class ProcasefDashboard {
         this.updateElement('tauxTraitement', '93.7%');
     }
 
-    // Chart creation methods
+    // Chart creation methods simplifiés pour économiser l'espace
     createTopCommunesChart() {
         if (!this.communeStats) return;
 
@@ -1264,7 +1340,6 @@ class ProcasefDashboard {
     }
 
     getRegionForCommune(commune) {
-        // Simple mapping - you can expand this based on your data
         const regionMapping = {
             'NDOGA BABACAR': 'Kédougou',
             'BANDAFASSI': 'Kédougou', 
@@ -1307,7 +1382,6 @@ class ProcasefDashboard {
         this.charts = {};
     }
 
-    // 🔴 CORRECTION: Méthode handleResize corrigée
     handleResize() {
         // Redimensionner les graphiques
         Object.values(this.charts).forEach(chart => {
@@ -1316,7 +1390,7 @@ class ProcasefDashboard {
             }
         });
         
-        // 🔴 CORRECTION: Redimensionner la carte via MapManager
+        // Redimensionner la carte via MapManager
         if (this.mapManager && this.mapManager.map) {
             this.mapManager.resize();
         }
@@ -1328,36 +1402,29 @@ class ProcasefDashboard {
             alert('Aucune donnée à exporter');
             return;
         }
-
         const csvContent = this.convertToCSV(this.data.parcelles);
         this.downloadCSV(csvContent, 'parcelles_procasef.csv');
     }
 
     exportPostData() {
-        // Implementation for post-treatment data export
         const postData = [
             { commune: 'NDOGA BABACAR', recues: 1250, traitees: 1180, taux: 94.4 },
             { commune: 'BANDAFASSI', recues: 980, traitees: 920, taux: 93.9 }
-            // Add more data as needed
         ];
-
         const csvContent = this.convertToCSV(postData);
         this.downloadCSV(csvContent, 'post_traitement_procasef.csv');
     }
 
     convertToCSV(data) {
         if (!data || data.length === 0) return '';
-
         const headers = Object.keys(data[0]);
         const csvHeaders = headers.join(';');
-        
         const csvRows = data.map(row => {
             return headers.map(header => {
                 const value = row[header];
                 return typeof value === 'string' && value.includes(';') ? `"${value}"` : value;
             }).join(';');
         });
-
         return [csvHeaders, ...csvRows].join('\n');
     }
 
@@ -1379,14 +1446,14 @@ class ProcasefDashboard {
     showLoading() {
         const loading = document.getElementById('loading');
         if (loading) {
-            loading.classList.remove('d-none');
+            loading.classList.remove('hidden');
         }
     }
 
     hideLoading() {
         const loading = document.getElementById('loading');
         if (loading) {
-            loading.classList.add('d-none');
+            loading.classList.add('hidden');
         }
     }
 }
