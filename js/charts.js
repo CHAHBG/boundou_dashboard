@@ -749,6 +749,681 @@ class ChartManager {
     }
 }
 
+// Méthode pour obtenir les statistiques d'un graphique
+    getChartStats(chartId) {
+        if (!this.charts[chartId]) return null;
+        
+        const chart = this.charts[chartId];
+        const datasets = chart.data.datasets;
+        
+        const stats = {
+            totalDatasets: datasets.length,
+            totalDataPoints: datasets.reduce((sum, dataset) => sum + dataset.data.length, 0),
+            labels: chart.data.labels,
+            datasets: datasets.map(dataset => ({
+                label: dataset.label,
+                dataCount: dataset.data.length,
+                sum: dataset.data.reduce((a, b) => a + (b || 0), 0),
+                average: dataset.data.reduce((a, b) => a + (b || 0), 0) / dataset.data.length,
+                min: Math.min(...dataset.data.filter(v => v !== null && v !== undefined)),
+                max: Math.max(...dataset.data.filter(v => v !== null && v !== undefined))
+            }))
+        };
+        
+        return stats;
+    }
+
+    /**
+     * NOUVEAUX GRAPHIQUES SPÉCIALISÉS POUR LES DONNÉES DÉMOGRAPHIQUES
+     */
+
+    /**
+     * Graphique en barres groupées - Comparaison Hommes/Femmes par commune
+     */
+    createGenderComparisonChart(canvasId, communesData) {
+        if (!communesData || !Array.isArray(communesData)) {
+            console.error('Données communes invalides');
+            return null;
+        }
+
+        const labels = communesData.map(item => item.communesenegal);
+        const hommesData = communesData.map(item => item.homme);
+        const femmesData = communesData.map(item => item.femme);
+
+        const data = {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Hommes',
+                    data: hommesData,
+                    backgroundColor: '#1E3A8A', // Bleu navy
+                    borderColor: '#1E3A8A',
+                    borderWidth: 1,
+                    borderRadius: 6
+                },
+                {
+                    label: 'Femmes',
+                    data: femmesData,
+                    backgroundColor: '#D4A574', // Orange gold
+                    borderColor: '#D4A574',
+                    borderWidth: 1,
+                    borderRadius: 6
+                }
+            ]
+        };
+
+        const options = {
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Répartition Hommes/Femmes par Commune',
+                    font: { size: 16, weight: 'bold' },
+                    color: '#374151',
+                    padding: { bottom: 30 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const commune = communesData[context.dataIndex];
+                            const percentage = context.datasetIndex === 0 
+                                ? commune.homme_pourcentage.toFixed(1) 
+                                : commune.femme_pourcentage.toFixed(1);
+                            return `${context.dataset.label}: ${context.raw.toLocaleString()} (${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        };
+
+        return this.createBar(canvasId, data, options);
+    }
+
+    /**
+     * Graphique en barres empilées 100% - Pourcentages Hommes/Femmes
+     */
+    createGenderPercentageChart(canvasId, communesData) {
+        if (!communesData || !Array.isArray(communesData)) {
+            console.error('Données communes invalides');
+            return null;
+        }
+
+        const labels = communesData.map(item => item.communesenegal);
+        const hommesPercentage = communesData.map(item => item.homme_pourcentage);
+        const femmesPercentage = communesData.map(item => item.femme_pourcentage);
+
+        const data = {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Hommes (%)',
+                    data: hommesPercentage,
+                    backgroundColor: '#1E3A8A',
+                    borderWidth: 0
+                },
+                {
+                    label: 'Femmes (%)',
+                    data: femmesPercentage,
+                    backgroundColor: '#D4A574',
+                    borderWidth: 0
+                }
+            ]
+        };
+
+        const options = {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Pourcentage de Répartition par Genre',
+                    font: { size: 16, weight: 'bold' },
+                    color: '#374151'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${context.raw.toFixed(1)}%`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { stacked: true },
+                y: { 
+                    stacked: true,
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            }
+        };
+
+        return this.createBar(canvasId, data, options);
+    }
+
+    /**
+     * Graphique temporel - Évolution par trimestre
+     */
+    createTemporalChart(canvasId, temporalData) {
+        if (!temporalData || !Array.isArray(temporalData)) {
+            console.error('Données temporelles invalides');
+            return null;
+        }
+
+        const labels = temporalData.map(item => item.periode);
+        const hommesData = temporalData.map(item => item.homme);
+        const femmesData = temporalData.map(item => item.femme);
+        const totalData = temporalData.map(item => item.total);
+
+        const data = {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Hommes',
+                    data: hommesData,
+                    borderColor: '#1E3A8A',
+                    backgroundColor: '#1E3A8A15',
+                    tension: 0.4,
+                    fill: false
+                },
+                {
+                    label: 'Femmes',
+                    data: femmesData,
+                    borderColor: '#D4A574',
+                    backgroundColor: '#D4A57415',
+                    tension: 0.4,
+                    fill: false
+                },
+                {
+                    label: 'Total',
+                    data: totalData,
+                    borderColor: '#10B981',
+                    backgroundColor: '#10B98115',
+                    tension: 0.4,
+                    fill: false
+                }
+            ]
+        };
+
+        const options = {
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Évolution Temporelle par Trimestre',
+                    font: { size: 16, weight: 'bold' },
+                    color: '#374151'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        };
+
+        return this.createLine(canvasId, data, options);
+    }
+
+    /**
+     * Graphique radar - Profil démographique par commune
+     */
+    createRadarChart(canvasId, communesData, maxCommunes = 6) {
+        if (!communesData || !Array.isArray(communesData)) {
+            console.error('Données communes invalides');
+            return null;
+        }
+
+        // Limiter à maxCommunes pour lisibilité
+        const selectedCommunes = communesData.slice(0, maxCommunes);
+        const labels = selectedCommunes.map(item => item.communesenegal);
+
+        const data = {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Population Totale (normalisée)',
+                    data: selectedCommunes.map(item => {
+                        const max = Math.max(...communesData.map(c => c.total));
+                        return (item.total / max) * 100;
+                    }),
+                    backgroundColor: 'rgba(212, 165, 116, 0.2)',
+                    borderColor: '#D4A574',
+                    pointBackgroundColor: '#D4A574',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#D4A574'
+                },
+                {
+                    label: '% Femmes',
+                    data: selectedCommunes.map(item => item.femme_pourcentage),
+                    backgroundColor: 'rgba(30, 58, 138, 0.2)',
+                    borderColor: '#1E3A8A',
+                    pointBackgroundColor: '#1E3A8A',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#1E3A8A'
+                }
+            ]
+        };
+
+        this.destroyChart(canvasId);
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) {
+            console.error(`Canvas non trouvé: ${canvasId}`);
+            return null;
+        }
+        
+        const ctx = canvas.getContext('2d');
+        
+        const config = {
+            type: 'radar',
+            data: data,
+            options: {
+                ...this.defaultConfig,
+                elements: {
+                    line: {
+                        borderWidth: 3
+                    }
+                },
+                plugins: {
+                    ...this.defaultConfig.plugins,
+                    title: {
+                        display: true,
+                        text: 'Profil Démographique - Top Communes',
+                        font: { size: 16, weight: 'bold' },
+                        color: '#374151'
+                    }
+                },
+                scales: {
+                    r: {
+                        angleLines: {
+                            display: true,
+                            color: 'rgba(212, 165, 116, 0.2)'
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 100,
+                        ticks: {
+                            display: false
+                        },
+                        grid: {
+                            color: 'rgba(212, 165, 116, 0.3)'
+                        }
+                    }
+                }
+            }
+        };
+        
+        this.charts[canvasId] = new Chart(ctx, config);
+        return this.charts[canvasId];
+    }
+
+    /**
+     * Graphique en aires empilées - Sources Individuel vs Collectif
+     */
+    createSourcesAreaChart(canvasId, sourcesData, temporalData) {
+        if (!sourcesData || !temporalData) {
+            console.error('Données sources ou temporelles manquantes');
+            return null;
+        }
+
+        // Simulation de données temporelles par source (adaptable selon vos données réelles)
+        const labels = temporalData.map(item => item.periode);
+        
+        // Calcul proportionnel basé sur les ratios sources
+        const individualRatio = sourcesData[0].total / (sourcesData[0].total + sourcesData[1].total);
+        const collectiveRatio = sourcesData[1].total / (sourcesData[0].total + sourcesData[1].total);
+
+        const data = {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Source Individuelle',
+                    data: temporalData.map(item => Math.round(item.total * individualRatio)),
+                    backgroundColor: '#D4A574',
+                    borderColor: '#B8860B',
+                    borderWidth: 2,
+                    fill: true
+                },
+                {
+                    label: 'Source Collective',
+                    data: temporalData.map(item => Math.round(item.total * collectiveRatio)),
+                    backgroundColor: '#1E3A8A',
+                    borderColor: '#1E40AF',
+                    borderWidth: 2,
+                    fill: true
+                }
+            ]
+        };
+
+        const options = {
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Évolution des Sources de Données',
+                    font: { size: 16, weight: 'bold' },
+                    color: '#374151'
+                }
+            },
+            scales: {
+                x: { stacked: true },
+                y: { 
+                    stacked: true,
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        };
+
+        return this.createArea(canvasId, data, options);
+    }
+
+    /**
+     * Graphique en barres polaires - Répartition régionale
+     */
+    createPolarChart(canvasId, regionData) {
+        if (!regionData || !Array.isArray(regionData)) {
+            console.error('Données régionales invalides');
+            return null;
+        }
+
+        const data = {
+            labels: regionData.map(item => item.nomregion),
+            datasets: [{
+                label: 'Population Totale',
+                data: regionData.map(item => item.total),
+                backgroundColor: [
+                    'rgba(212, 165, 116, 0.8)',
+                    'rgba(30, 58, 138, 0.8)',
+                    'rgba(184, 134, 11, 0.8)',
+                    'rgba(16, 185, 129, 0.8)'
+                ],
+                borderColor: [
+                    '#D4A574',
+                    '#1E3A8A',
+                    '#B8860B',
+                    '#10B981'
+                ],
+                borderWidth: 2
+            }]
+        };
+
+        this.destroyChart(canvasId);
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) {
+            console.error(`Canvas non trouvé: ${canvasId}`);
+            return null;
+        }
+        
+        const ctx = canvas.getContext('2d');
+        
+        const config = {
+            type: 'polarArea',
+            data: data,
+            options: {
+                ...this.defaultConfig,
+                plugins: {
+                    ...this.defaultConfig.plugins,
+                    title: {
+                        display: true,
+                        text: 'Répartition par Région',
+                        font: { size: 16, weight: 'bold' },
+                        color: '#374151'
+                    },
+                    tooltip: {
+                        ...this.defaultConfig.plugins.tooltip,
+                        callbacks: {
+                            label: function(context) {
+                                const region = regionData[context.dataIndex];
+                                return [
+                                    `${context.label}: ${context.raw.toLocaleString()}`,
+                                    `Hommes: ${region.homme.toLocaleString()} (${region.homme_pourcentage.toFixed(1)}%)`,
+                                    `Femmes: ${region.femme.toLocaleString()} (${region.femme_pourcentage.toFixed(1)}%)`
+                                ];
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        };
+        
+        this.charts[canvasId] = new Chart(ctx, config);
+        return this.charts[canvasId];
+    }
+
+    /**
+     * Graphique mixte - Barres + Ligne pour analyse complexe
+     */
+    createMixedChart(canvasId, communesData, showTop = 8) {
+        if (!communesData || !Array.isArray(communesData)) {
+            console.error('Données communes invalides');
+            return null;
+        }
+
+        // Trier par population totale et prendre le top
+        const sortedCommunes = communesData
+            .sort((a, b) => b.total - a.total)
+            .slice(0, showTop);
+
+        const labels = sortedCommunes.map(item => item.communesenegal);
+        const totals = sortedCommunes.map(item => item.total);
+        const femmePercentages = sortedCommunes.map(item => item.femme_pourcentage);
+
+        this.destroyChart(canvasId);
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) {
+            console.error(`Canvas non trouvé: ${canvasId}`);
+            return null;
+        }
+        
+        const ctx = canvas.getContext('2d');
+        
+        const config = {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        type: 'bar',
+                        label: 'Population Totale',
+                        data: totals,
+                        backgroundColor: 'rgba(212, 165, 116, 0.7)',
+                        borderColor: '#D4A574',
+                        borderWidth: 1,
+                        yAxisID: 'y'
+                    },
+                    {
+                        type: 'line',
+                        label: '% Femmes',
+                        data: femmePercentages,
+                        borderColor: '#1E3A8A',
+                        backgroundColor: 'rgba(30, 58, 138, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        yAxisID: 'y1',
+                        pointBackgroundColor: '#1E3A8A',
+                        pointBorderColor: '#FFFFFF',
+                        pointBorderWidth: 2,
+                        pointRadius: 6
+                    }
+                ]
+            },
+            options: {
+                ...this.defaultConfig,
+                plugins: {
+                    ...this.defaultConfig.plugins,
+                    title: {
+                        display: true,
+                        text: 'Population vs % Femmes - Top Communes',
+                        font: { size: 16, weight: 'bold' },
+                        color: '#374151'
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(212, 165, 116, 0.1)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString();
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Population Totale',
+                            color: '#D4A574',
+                            font: { weight: 'bold' }
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        min: 0,
+                        max: 35,
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Pourcentage Femmes',
+                            color: '#1E3A8A',
+                            font: { weight: 'bold' }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        };
+        
+        this.charts[canvasId] = new Chart(ctx, config);
+        return this.charts[canvasId];
+    }
+
+    /**
+     * Graphique en gauge/doughnut amélioré avec indicateurs
+     */
+    createGaugeChart(canvasId, percentage, title, target = null) {
+        const data = {
+            labels: ['Complété', 'Restant'],
+            datasets: [{
+                data: [percentage, 100 - percentage],
+                backgroundColor: [
+                    percentage >= 80 ? '#10B981' : 
+                    percentage >= 60 ? '#F59E0B' : 
+                    percentage >= 40 ? '#3B82F6' : '#EF4444',
+                    '#E5E7EB'
+                ],
+                borderWidth: 0,
+                cutout: '80%'
+            }]
+        };
+
+        const centerTextPlugin = {
+            id: 'centerText',
+            beforeDatasetsDraw(chart) {
+                const { ctx, chartArea: { top, width, height } } = chart;
+                ctx.save();
+                
+                const centerX = width / 2;
+                const centerY = top + height / 2;
+                
+                // Percentage principal
+                ctx.font = 'bold 32px Inter';
+                ctx.fillStyle = '#374151';
+                ctx.textAlign = 'center';
+                ctx.fillText(`${percentage}%`, centerX, centerY - 10);
+                
+                // Titre
+                ctx.font = '14px Inter';
+                ctx.fillStyle = '#6B7280';
+                ctx.fillText(title || 'Progression', centerX, centerY + 20);
+                
+                // Target si fourni
+                if (target) {
+                    ctx.font = '12px Inter';
+                    ctx.fillStyle = '#9CA3AF';
+                    ctx.fillText(`Objectif: ${target}%`, centerX, centerY + 40);
+                }
+                
+                ctx.restore();
+            }
+        };
+
+        this.destroyChart(canvasId);
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) {
+            console.error(`Canvas non trouvé: ${canvasId}`);
+            return null;
+        }
+        
+        const ctx = canvas.getContext('2d');
+        
+        const config = {
+            type: 'doughnut',
+            data: data,
+            options: {
+                ...this.defaultConfig,
+                plugins: {
+                    ...this.defaultConfig.plugins,
+                    legend: { display: false }
+                },
+                rotation: -90,
+                circumference: 180
+            },
+            plugins: [centerTextPlugin]
+        };
+        
+        this.charts[canvasId] = new Chart(ctx, config);
+        return this.charts[canvasId];
+    }
+
+
 // Export pour utilisation globale
 window.ChartManager = ChartManager;
 
