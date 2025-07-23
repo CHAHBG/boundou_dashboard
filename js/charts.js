@@ -1226,103 +1226,38 @@ createTopoTimelineChart(canvasId, timelineData) {
     return this.charts[canvasId];
 }
 
-   // Graphique en donut pour la part Champs / Bâtis
 createTopoTypeDonutChart(canvasId, stats) {
-   
-        stats attend un objet de la :
-        {
-            champs: <nombre>,
-            batis : <nombre>
-        }
-    if (!stats || (stats.champs ?? 0) + (stats.batis ?? 0) === 0) {
-        console.warn('Aucune donnée pour le donut Champs / Bâtis');
-        return null;
-    }
+  // stats = { champs: Number, batis: Number }
+  if (!stats || (!stats.champs && !stats.batis)) {
+    console.warn('Aucune donnée pour le donut Champs/Bâtis');
+    return null;
+  }
 
-    this.destroyChart(canvasId);
+  this.destroyChart(canvasId);
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) { console.error(`Canvas non trouvé : ${canvasId}`); return null; }
 
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) {
-        console.error(`Canvas non trouvé : ${canvasId}`);
-        return null;
-    }
+  const ctx = canvas.getContext('2d');
+  const data = {
+    labels: ['Champs', 'Bâtis'],
+    datasets: [{
+      data: [stats.champs, stats.batis],
+      backgroundColor: [this.colors.success, this.colors.primary],
+      borderColor: '#FFFFFF',
+      borderWidth: 3,
+      hoverBorderWidth: 5
+    }]
+  };
 
-    const ctx = canvas.getContext('2d');
+  const config = {
+    type: 'doughnut',
+    data,
+    options: { ...this.defaultConfig, cutout: '65%' }
+  };
 
-    const data = {
-        labels: ['Champs', 'Bâtis'],
-        datasets: [
-            {
-                data: [stats.champs, stats.batis],
-                backgroundColor: [this.colors.success, this.colors.primary],
-                borderColor: '#FFFFFF',
-                borderWidth: 3,
-                hoverBorderWidth: 5,
-                hoverBackgroundColor: [
-                    this.colors.success + 'DD',
-                    this.colors.primary + 'DD'
-                ]
-            }
-        ]
-    };
-
-    const config = {
-        type: 'doughnut',
-        data,
-        options: {
-            ...this.defaultConfig,
-            cutout: '65%',
-            plugins: {
-                ...this.defaultConfig.plugins,
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        usePointStyle: true,
-                        padding: 20,
-                        generateLabels: chart => {
-                            const { data } = chart;
-                            const total =
-                                data.datasets[0].data.reduce(
-                                    (s, v) => s + v,
-                                    0
-                                ) || 1;
-                            return data.labels.map((label, i) => {
-                                const value = data.datasets[0].data[i];
-                                const pct = ((value / total) * 100).toFixed(1);
-                                return {
-                                    text: `${label} – ${value.toLocaleString()} (${pct} %)`,
-                                    fillStyle:
-                                        data.datasets[0].backgroundColor[i],
-                                    strokeStyle: data.datasets[0].borderColor,
-                                    lineWidth: data.datasets[0].borderWidth,
-                                    hidden: value === 0,
-                                    index: i
-                                };
-                            });
-                        }
-                    }
-                },
-                tooltip: {
-                    ...this.defaultConfig.plugins.tooltip,
-                    callbacks: {
-                        label: context => {
-                            const total = context.dataset.data.reduce(
-                                (s, v) => s + v,
-                                0
-                            );
-                            const value = context.parsed;
-                            const pct = ((value / total) * 100).toFixed(1);
-                            return `${context.label}: ${value.toLocaleString()} parcelles (${pct} %)`;
-                        }
-                    }
-                }
-            }
-        }
-    };
-
-    this.charts[canvasId] = new Chart(ctx, config);
-    return this.charts[canvasId];
-} 
+  this.charts[canvasId] = new Chart(ctx, config);
+  return this.charts[canvasId];
+}
     
     // Utilitaire pour obtenir une couleur de la palette
     getColor(index) {
