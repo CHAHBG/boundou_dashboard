@@ -491,7 +491,7 @@ class ProcasefDashboard {
                 card.innerHTML = `
                     <div class="kpi-header">
                         <h3>${kpi.indicateur}</h3>
-                        <span class="kpi-icon">📊</span>
+                        <span class="kpi-icon">📊⚤</span>
                     </div>
                     <div class="kpi-value">${kpi.valeur.toLocaleString?.() ?? kpi.valeur}</div>
                     <div class="kpi-subtitle">Données complètes</div>
