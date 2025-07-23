@@ -1,4 +1,4 @@
-// map.js - Leaflet Map Management for PROCASEF Dashboard - VERSION FINALE
+// map.js - Leaflet Map Management for PROCASEF Dashboard - VERSION FINALE CORRIGÉE
 class MapManager {
     constructor() {
         this.map = null;
@@ -23,8 +23,7 @@ class MapManager {
             secondary: '#1E3A8A',  // Bleu Navy
             accent: '#B8860B',     // Dark Goldenrod
             success: '#10B981',
-            warning: '#F59E0B',
-            error: '#EF4444'
+            warning: '#F59 '#EF4444'
         };
         
         // Données des communes (coordonnées approximatives de la région de Boundou)
@@ -245,7 +244,7 @@ class MapManager {
         this.markers.push(boundouMarker);
     }
 
-    // Ajout de marqueurs pour les communes
+    // 🔴 CORRECTION: Ajout de marqueurs pour les communes - méthode complètement réécrite
     addCommuneMarker(communeName, stats) {
         if (!this.map || !this.communeCoords[communeName]) {
             console.warn(`Coordonnées non trouvées pour la commune: ${communeName}`);
@@ -294,201 +293,6 @@ class MapManager {
 
         const marker = L.marker(coords, { icon: communeIcon });
 
-                // Ajout des marqueurs topographiques
-        addTopoMarkers(topoData) {
-            if (!this.map || !Array.isArray(topoData) || topoData.length === 0) {
-                console.warn('Impossible d\'ajouter les marqueurs topo');
-                return;
-            }
-        
-            // Popup avec informations détaillées
-                const popupContent = this.createTopoPopupContent(commune, {
-                    totalParcelles,
-                    totalChamps,
-                    totalBatis,
-                    uniqueTopographes: uniqueTopographes.length,
-                    recentActivities: data.slice(-5),
-                    coords
-                });
-        
-                marker.bindPopup(popupContent, {
-                    maxWidth: 350,
-                    className: 'topo-popup'
-                });
-        
-                // Ajouter au cluster
-                if (this.markerClusterGroup) {
-                    this.markerClusterGroup.addLayer(marker);
-                } else {
-                    marker.addTo(this.map);
-                }
-        
-                this.markers.push(marker);
-            });
-        
-            // Ajuster la vue si des marqueurs ont été ajoutés
-            if (this.markers.length > 0 && this.markerClusterGroup) {
-                this.map.fitBounds(this.markerClusterGroup.getBounds(), { padding: [20, 20] });
-            }
-        
-            console.log(`${this.markers.length} marqueurs topographiques ajoutés`);
-        }
-        
-        // Grouper les données topo par commune
-        groupTopoDataByCommune(topoData) {
-            return topoData.reduce((groups, item) => {
-                const commune = item.commune;
-                if (commune) {
-                    if (!groups[commune]) {
-                        groups[commune] = [];
-                    }
-                    groups[commune].push(item);
-                }
-                return groups;
-            }, {});
-        }
-        
-        // Calculer la taille de l'icône basée sur le volume
-        calculateTopoIconSize(totalParcelles) {
-            const baseSize = 25;
-            const maxSize = 45;
-            const minSize = 20;
-            
-            if (totalParcelles === 0) return minSize;
-            
-            // Échelle logarithmique pour une meilleure répartition visuelle
-            const scaleFactor = Math.log(totalParcelles + 1) * 3;
-            const size = Math.min(maxSize, Math.max(minSize, baseSize + scaleFactor));
-            
-            return Math.round(size);
-        }
-        
-        // Créer le contenu du popup pour les marqueurs topo
-        createTopoPopupContent(commune, stats) {
-            const recentActivitiesHtml = stats.recentActivities
-                .map(activity => {
-                    const date = activity.date ? new Date(activity.date).toLocaleDateString('fr-FR') : 'N/A';
-                    const topographe = `${activity.prenom || ''} ${activity.nom || ''}`.trim();
-                    return `
-                        <div style="padding: 4px 0; border-bottom: 1px solid #eee; font-size: 12px;">
-                            <strong>${date}</strong> - ${topographe}<br>
-                            <span style="color: #666;">${activity.village || 'N/A'} • ${activity.totale_parcelles || 0} parcelles</span>
-                        </div>
-                    `;
-                })
-                .join('');
-        
-            return `
-                <div style="font-family: Inter, sans-serif;">
-                    <h3 style="color: #1E3A8A; border-bottom: 2px solid #D4A574; padding-bottom: 8px; margin-bottom: 12px; font-size: 16px;">
-                        📏 ${commune}
-                    </h3>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
-                        <div style="background: #f8f9fa; padding: 8px; border-radius: 6px; text-align: center;">
-                            <div style="font-size: 18px; font-weight: bold; color: #10B981;">${stats.totalChamps.toLocaleString()}</div>
-                            <div style="font-size: 12px; color: #666;">Champs</div>
-                        </div>
-                        <div style="background: #f8f9fa; padding: 8px; border-radius: 6px; text-align: center;">
-                            <div style="font-size: 18px; font-weight: bold; color: #D4A574;">${stats.totalBatis.toLocaleString()}</div>
-                            <div style="font-size: 12px; color: #666;">Bâtis</div>
-                        </div>
-                    </div>
-        
-                    <div style="background: #1E3A8A; color: white; padding: 8px; border-radius: 6px; text-align: center; margin-bottom: 12px;">
-                        <div style="font-size: 20px; font-weight: bold;">${stats.totalParcelles.toLocaleString()}</div>
-                        <div style="font-size: 12px;">Total Parcelles Levées</div>
-                    </div>
-        
-                    <div style="margin-bottom: 12px;">
-                        <strong style="color: #1E3A8A;">👥 Topographes actifs:</strong> ${stats.uniqueTopographes}
-                    </div>
-        
-                    <div style="margin-bottom: 12px;">
-                        <strong style="color: #1E3A8A;">📍 Coordonnées:</strong><br>
-                        <span style="font-size: 12px; color: #666;">${stats.coords[0].toFixed(4)}, ${stats.coords[1].toFixed(4)}</span>
-                    </div>
-        
-                    ${stats.recentActivities.length > 0 ? `
-                        <div>
-                            <strong style="color: #1E3A8A;">🕒 Activités récentes:</strong>
-                            <div style="max-height: 120px; overflow-y: auto; margin-top: 8px;">
-                                ${recentActivitiesHtml}
-                            </div>
-                        </div>
-                    ` : ''}
-                </div>
-            `;
-        }
-        
-        // Nettoyer les marqueurs topo (utile pour les filtres)
-        clearTopoMarkers() {
-            if (this.markerClusterGroup) {
-                this.markerClusterGroup.clearLayers();
-            }
-            
-            this.markers.forEach(marker => {
-                if (marker && typeof marker.remove === 'function') {
-                    marker.remove();
-                }
-            });
-            
-            this.markers = [];
-            console.log('Marqueurs topographiques nettoyés');
-        }
-        
-        // Mise à jour des marqueurs topo avec nouvelles données
-        updateTopoMarkers(topoData) {
-            this.clearTopoMarkers();
-            this.addTopoMarkers(topoData);
-        }
-
-    console.log('Ajout des marqueurs topographiques:', topoData.length, 'points');
-
-    // Grouper les données par commune
-    const communeGroups = this.groupTopoDataByCommune(topoData);
-
-    Object.entries(communeGroups).forEach(([commune, data]) => {
-        const coords = this.communeCoords[commune];
-        if (!coords) {
-            console.warn(`Coordonnées non trouvées pour la commune: ${commune}`);
-            return;
-        }
-
-        const totalParcelles = data.reduce((sum, item) => sum + (item.totale_parcelles || 0), 0);
-        const totalChamps = data.reduce((sum, item) => sum + (item.champs || 0), 0);
-        const totalBatis = data.reduce((sum, item) => sum + (item.batis || 0), 0);
-        const uniqueTopographes = [...new Set(data.map(item => `${item.prenom} ${item.nom}`))];
-
-        // Créer l'icône avec taille basée sur le volume
-        const iconSize = this.calculateTopoIconSize(totalParcelles);
-        const icon = L.divIcon({
-            className: 'topo-marker',
-            html: `
-                <div class="topo-marker-content" style="
-                    background: linear-gradient(135deg, #D4A574, #B8860B);
-                    width: ${iconSize}px;
-                    height: ${iconSize}px;
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: white;
-                    font-weight: bold;
-                    font-size: ${Math.max(10, iconSize * 0.3)}px;
-                    border: 3px solid white;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-                ">
-                    <i class="fas fa-ruler-combined"></i>
-                </div>
-            `,
-            iconSize: [iconSize, iconSize],
-            iconAnchor: [iconSize / 2, iconSize / 2]
-        });
-
-        const marker = L.marker(coords, { icon });
-        
-
         // Popup avec les informations détaillées
         marker.bindPopup(`
             <div style="font-family: Inter, sans-serif; min-width: 250px;">
@@ -528,6 +332,200 @@ class MapManager {
         }
 
         this.markers.push(marker);
+    }
+
+    // 🔴 CORRECTION: Ajout des marqueurs topographiques - méthode au niveau racine
+    addTopoMarkers(topoData) {
+        if (!this.map || !Array.isArray(topoData) || topoData.length === 0) {
+            console.warn('Impossible d\'ajouter les marqueurs topo');
+            return;
+        }
+
+        console.log('Ajout des marqueurs topographiques:', topoData.length, 'points');
+
+        // Grouper les données par commune
+        const communeGroups = this.groupTopoDataByCommune(topoData);
+
+        Object.entries(communeGroups).forEach(([commune, data]) => {
+            const coords = this.communeCoords[commune];
+            if (!coords) {
+                console.warn(`Coordonnées non trouvées pour la commune: ${commune}`);
+                return;
+            }
+
+            const totalParcelles = data.reduce((sum, item) => sum + (item.totale_parcelles || 0), 0);
+            const totalChamps = data.reduce((sum, item) => sum + (item.champs || 0), 0);
+            const totalBatis = data.reduce((sum, item) => sum + (item.batis || 0), 0);
+            const uniqueTopographes = [...new Set(data.map(item => `${item.prenom} ${item.nom}`))];
+
+            // Créer l'icône avec taille basée sur le volume
+            const iconSize = this.calculateTopoIconSize(totalParcelles);
+            const icon = L.divIcon({
+                className: 'topo-marker',
+                html: `
+                    <div class="topo-marker-content" style="
+                        background: linear-gradient(135deg, #D4A574, #B8860B);
+                        width: ${iconSize}px;
+                        height: ${iconSize}px;
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        color: white;
+                        font-weight: bold;
+                        font-size: ${Math.max(10, iconSize * 0.3)}px;
+                        border: 3px solid white;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                    ">
+                        <i class="fas fa-ruler-combined"></i>
+                    </div>
+                `,
+                iconSize: [iconSize, iconSize],
+                iconAnchor: [iconSize / 2, iconSize / 2]
+            });
+
+            const marker = L.marker(coords, { icon });
+
+            // Popup avec informations détaillées
+            const popupContent = this.createTopoPopupContent(commune, {
+                totalParcelles,
+                totalChamps,
+                totalBatis,
+                uniqueTopographes: uniqueTopographes.length,
+                recentActivities: data.slice(-5),
+                coords
+            });
+
+            marker.bindPopup(popupContent, {
+                maxWidth: 350,
+                className: 'topo-popup'
+            });
+
+            // Ajouter au cluster
+            if (this.markerClusterGroup) {
+                this.markerClusterGroup.addLayer(marker);
+            } else {
+                marker.addTo(this.map);
+            }
+
+            this.markers.push(marker);
+        });
+
+        // Ajuster la vue si des marqueurs ont été ajoutés
+        if (this.markers.length > 0 && this.markerClusterGroup) {
+            this.map.fitBounds(this.markerClusterGroup.getBounds(), { padding: [20, 20] });
+        }
+
+        console.log(`${this.markers.length} marqueurs topographiques ajoutés`);
+    }
+
+    // 🔴 CORRECTION: Grouper les données topo par commune - méthode au niveau racine
+    groupTopoDataByCommune(topoData) {
+        return topoData.reduce((groups, item) => {
+            const commune = item.commune;
+            if (commune) {
+                if (!groups[commune]) {
+                    groups[commune] = [];
+                }
+                groups[commune].push(item);
+            }
+            return groups;
+        }, {});
+    }
+
+    // 🔴 CORRECTION: Calculer la taille de l'icône basée sur le volume - méthode au niveau racine
+    calculateTopoIconSize(totalParcelles) {
+        const baseSize = 25;
+        const maxSize = 45;
+        const minSize = 20;
+        
+        if (totalParcelles === 0) return minSize;
+        
+        // Échelle logarithmique pour une meilleure répartition visuelle
+        const scaleFactor = Math.log(totalParcelles + 1) * 3;
+        const size = Math.min(maxSize, Math.max(minSize, baseSize + scaleFactor));
+        
+        return Math.round(size);
+    }
+
+    // 🔴 CORRECTION: Créer le contenu du popup pour les marqueurs topo - méthode au niveau racine
+    createTopoPopupContent(commune, stats) {
+        const recentActivitiesHtml = stats.recentActivities
+            .map(activity => {
+                const date = activity.date ? new Date(activity.date).toLocaleDateString('fr-FR') : 'N/A';
+                const topographe = `${activity.prenom || ''} ${activity.nom || ''}`.trim();
+                return `
+                    <div style="padding: 4px 0; border-bottom: 1px solid #eee; font-size: 12px;">
+                        <strong>${date}</strong> - ${topographe}<br>
+                        <span style="color: #666;">${activity.village || 'N/A'} • ${activity.totale_parcelles || 0} parcelles</span>
+                    </div>
+                `;
+            })
+            .join('');
+
+        return `
+            <div style="font-family: Inter, sans-serif;">
+                <h3 style="color: #1E3A8A; border-bottom: 2px solid #D4A574; padding-bottom: 8px; margin-bottom: 12px; font-size: 16px;">
+                    📏 ${commune}
+                </h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+                    <div style="background: #f8f9fa; padding: 8px; border-radius: 6px; text-align: center;">
+                        <div style="font-size: 18px; font-weight: bold; color: #10B981;">${stats.totalChamps.toLocaleString()}</div>
+                        <div style="font-size: 12px; color: #666;">Champs</div>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 8px; border-radius: 6px; text-align: center;">
+                        <div style="font-size: 18px; font-weight: bold; color: #D4A574;">${stats.totalBatis.toLocaleString()}</div>
+                        <div style="font-size: 12px; color: #666;">Bâtis</div>
+                    </div>
+                </div>
+
+                <div style="background: #1E3A8A; color: white; padding: 8px; border-radius: 6px; text-align: center; margin-bottom: 12px;">
+                    <div style="font-size: 20px; font-weight: bold;">${stats.totalParcelles.toLocaleString()}</div>
+                    <div style="font-size: 12px;">Total Parcelles Levées</div>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <strong style="color: #1E3A8A;">👥 Topographes actifs:</strong> ${stats.uniqueTopographes}
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <strong style="color: #1E3A8A;">📍 Coordonnées:</strong><br>
+                    <span style="font-size: 12px; color: #666;">${stats.coords[0].toFixed(4)}, ${stats.coords[1].toFixed(4)}</span>
+                </div>
+
+                ${stats.recentActivities.length > 0 ? `
+                    <div>
+                        <strong style="color: #1E3A8A;">🕒 Activités récentes:</strong>
+                        <div style="max-height: 120px; overflow-y: auto; margin-top: 8px;">
+                            ${recentActivitiesHtml}
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    // 🔴 CORRECTION: Nettoyer les marqueurs topo - méthode au niveau racine
+    clearTopoMarkers() {
+        if (this.markerClusterGroup) {
+            this.markerClusterGroup.clearLayers();
+        }
+        
+        this.markers.forEach(marker => {
+            if (marker && typeof marker.remove === 'function') {
+                marker.remove();
+            }
+        });
+        
+        this.markers = [];
+        console.log('Marqueurs topographiques nettoyés');
+    }
+
+    // 🔴 CORRECTION: Mise à jour des marqueurs topo avec nouvelles données - méthode au niveau racine
+    updateTopoMarkers(topoData) {
+        this.clearTopoMarkers();
+        this.addTopoMarkers(topoData);
     }
 
     // 🔴 NOUVELLE MÉTHODE: Nettoyage des marqueurs sans détruire la carte
