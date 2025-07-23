@@ -87,6 +87,9 @@ class DataLoader {
             return this.generateUrmTerrainFallbackData();
         } else if (url.includes('Levee_par_commune_Terrain_URM.json')) {
             return this.generateLeveeCommuneFallbackData();
+          else if (url.includes('Rapports_Topo_nettoyee.json')) {
+            return this.generateTopoFallbackData();
+            }    
         }
 
         return [];
@@ -394,6 +397,99 @@ class DataLoader {
             console.warn('Some essential data failed to preload:', error);
         }
     }
+    // Chargement des données topographiques
+    async loadTopoData() {
+        console.log('Chargement des données topographiques...');
+        try {
+            const data = await this.loadData('data/Rapports_Topo_nettoyee.json');
+            console.log('Données topo chargées:', data?.length || 0, 'enregistrements');
+            return Array.isArray(data) ? data : [];
+        } catch (error) {
+            console.error('Erreur lors du chargement des données topo:', error);
+            return this.generateTopoFallbackData();
+        }
+    }
+
+    // Génération de données de fallback pour les stats topo
+generateTopoFallbackData() {
+    console.log('Génération de données de fallback pour Stats Topo');
+    
+    const communes = ['NDOGA BABACAR', 'BANDAFASSI', 'DIMBOLI', 'MISSIRAH', 'NETTEBOULOU'];
+    const villages = ['Medina coly', 'Sare souna', 'Soutouba peulh', 'Village Nord', 'Village Sud'];
+    const prenoms = ['Ame', 'Saliou', 'Arona', 'Fatou', 'Moussa', 'Aissatou', 'Ibrahima', 'Mariama'];
+    const noms = ['FAYE', 'NDIAYE', 'FALL', 'DIOP', 'SARR', 'BA', 'SECK', 'GUEYE'];
+    const operations = [
+        'Levés topographiques terminés',
+        'Enquêtes socio-foncières en cours',
+        'Affichage public réalisé',
+        'Difficultés terrain',
+        null
+    ];
+
+    const fallbackData = [];
+    
+    // Générer des données sur 6 mois
+    for (let month = 0; month < 6; month++) {
+        for (let day = 1; day <= 28; day += Math.floor(Math.random() * 3) + 1) {
+            const date = new Date(2024, 7 + month, day); // À partir d'août 2024
+            
+            // Générer plusieurs entrées par jour
+            const entriesPerDay = Math.floor(Math.random() * 5) + 1;
+            
+            for (let entry = 0; entry < entriesPerDay; entry++) {
+                const champsValue = Math.random() > 0.5 ? Math.floor(Math.random() * 30) : null;
+                const batisValue = Math.random() > 0.3 ? Math.floor(Math.random() * 20) : null;
+                const totalParcelles = (champsValue || 0) + (batisValue || 0);
+                
+                if (totalParcelles > 0) {
+                    fallbackData.push({
+                        date: date.toISOString().split('T')[0],
+                        prenom: prenoms[Math.floor(Math.random() * prenoms.length)],
+                        nom: noms[Math.floor(Math.random() * noms.length)],
+                        commune: communes[Math.floor(Math.random() * communes.length)],
+                        village: villages[Math.floor(Math.random() * villages.length)],
+                        champs: champsValue,
+                        batis: batisValue,
+                        totale_parcelles: totalParcelles,
+                        deroulement_des_operations: operations[Math.floor(Math.random() * operations.length)]
+                    });
+                }
+            }
+        }
+    }
+    
+    console.log(`Généré ${fallbackData.length} enregistrements de fallback pour Stats Topo`);
+    return fallbackData;
+}
+
+// Méthode pour obtenir les données topo filtrées
+getTopoFiltered(filters) {
+    const data = this.cache.get('data/Rapports_Topo_nettoyee.json') || [];
+    
+    return data.filter(item => {
+        // Filtre par date
+        if (filters.dateFrom && item.date && item.date < filters.dateFrom) return false;
+        if (filters.dateTo && item.date && item.date > filters.dateTo) return false;
+        
+        // Filtre par commune
+        if (filters.commune && item.commune !== filters.commune) return false;
+        
+        // Filtre par topographe
+        const topographeName = `${item.prenom || ''} ${item.nom || ''}`.trim();
+        if (filters.topographe && topographeName !== filters.topographe) return false;
+        
+        // Filtre par village
+        if (filters.village && item.village !== filters.village) return false;
+        
+        // Filtre par type
+        if (filters.type) {
+            if (filters.type === 'champs' && (!item.champs || item.champs === 0)) return false;
+            if (filters.type === 'batis' && (!item.batis || item.batis === 0)) return false;
+        }
+        
+        return true;
+    });
+}
 }
 
 // Export for use in other modules
