@@ -854,6 +854,475 @@ class ChartManager {
         this.charts[canvasId] = new Chart(ctx, config);
         return this.charts[canvasId];
     }
+
+    // Graphique Top Topographes (barres horizontales)
+createTopoTopographesChart(canvasId, data) {
+    if (!data || data.length === 0) {
+        console.warn('Aucune donnée pour le graphique des topographes');
+        return null;
+    }
+
+    this.destroyChart(canvasId);
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) {
+        console.error(`Canvas non trouvé: ${canvasId}`);
+        return null;
+    }
+
+    const ctx = canvas.getContext('2d');
+    const config = {
+        type: 'bar',
+        data: {
+            labels: data.map(d => d.name),
+            datasets: [{
+                label: 'Total Parcelles Levées',
+                data: data.map(d => d.total),
+                backgroundColor: this.colors.primary,
+                borderColor: this.colors.primary,
+                borderWidth: 0,
+                borderRadius: 8,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            ...this.defaultConfig,
+            indexAxis: 'y',
+            plugins: {
+                ...this.defaultConfig.plugins,
+                legend: { display: false },
+                tooltip: {
+                    ...this.defaultConfig.plugins.tooltip,
+                    callbacks: {
+                        title: function(context) {
+                            return context[0].label;
+                        },
+                        label: function(context) {
+                            const dataPoint = data[context.dataIndex];
+                            return [
+                                `Total: ${context.raw.toLocaleString()} parcelles`,
+                                `Champs: ${dataPoint.champs.toLocaleString()}`,
+                                `Bâtis: ${dataPoint.batis.toLocaleString()}`
+                            ];
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(212, 165, 116, 0.1)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString();
+                        }
+                    }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: {
+                        maxTicksLimit: 10,
+                        font: { size: 11 }
+                    }
+                }
+            }
+        }
+    };
+
+    this.charts[canvasId] = new Chart(ctx, config);
+    return this.charts[canvasId];
+}
+
+// Graphique Communes Topo (barres empilées)
+createTopoCommuneChart(canvasId, data) {
+    if (!data || data.length === 0) {
+        console.warn('Aucune donnée pour le graphique des communes');
+        return null;
+    }
+
+    this.destroyChart(canvasId);
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) {
+        console.error(`Canvas non trouvé: ${canvasId}`);
+        return null;
+    }
+
+    const ctx = canvas.getContext('2d');
+    const config = {
+        type: 'bar',
+        data: {
+            labels: data.map(d => d.name),
+            datasets: [
+                {
+                    label: 'Champs',
+                    data: data.map(d => d.champs),
+                    backgroundColor: this.colors.success,
+                    borderRadius: 6,
+                    borderSkipped: false
+                },
+                {
+                    label: 'Bâtis',
+                    data: data.map(d => d.batis),
+                    backgroundColor: this.colors.primary,
+                    borderRadius: 6,
+                    borderSkipped: false
+                }
+            ]
+        },
+        options: {
+            ...this.defaultConfig,
+            scales: {
+                x: {
+                    stacked: true,
+                    grid: { display: false },
+                    ticks: {
+                        maxRotation: 45,
+                        font: { size: 10 }
+                    }
+                },
+                y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(212, 165, 116, 0.1)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString();
+                        }
+                    }
+                }
+            },
+            plugins: {
+                ...this.defaultConfig.plugins,
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20
+                    }
+                },
+                tooltip: {
+                    ...this.defaultConfig.plugins.tooltip,
+                    callbacks: {
+                        footer: function(context) {
+                            const dataIndex = context[0].dataIndex;
+                            const commune = data[dataIndex];
+                            const total = commune.champs + commune.batis;
+                            return `Total: ${total.toLocaleString()} parcelles`;
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    this.charts[canvasId] = new Chart(ctx, config);
+    return this.charts[canvasId];
+}
+
+// Graphique Évolution Mensuelle (ligne)
+createTopoEvolutionChart(canvasId, data) {
+    if (!data || data.length === 0) {
+        console.warn('Aucune donnée pour le graphique d\'évolution');
+        return null;
+    }
+
+    this.destroyChart(canvasId);
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) {
+        console.error(`Canvas non trouvé: ${canvasId}`);
+        return null;
+    }
+
+    const ctx = canvas.getContext('2d');
+    
+    // Formater les labels des mois
+    const labels = data.map(d => {
+        const [year, month] = d.month.split('-');
+        const monthNames = [
+            'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun',
+            'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'
+        ];
+        return `${monthNames[parseInt(month) - 1]} ${year}`;
+    });
+
+    const config = {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Champs',
+                    data: data.map(d => d.champs),
+                    borderColor: this.colors.success,
+                    backgroundColor: this.colors.success + '15',
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: this.colors.success,
+                    pointBorderColor: '#FFFFFF',
+                    pointBorderWidth: 2,
+                    pointRadius: 6
+                },
+                {
+                    label: 'Bâtis',
+                    data: data.map(d => d.batis),
+                    borderColor: this.colors.primary,
+                    backgroundColor: this.colors.primary + '15',
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: this.colors.primary,
+                    pointBorderColor: '#FFFFFF',
+                    pointBorderWidth: 2,
+                    pointRadius: 6
+                }
+            ]
+        },
+        options: {
+            ...this.defaultConfig,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(212, 165, 116, 0.1)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString();
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(212, 165, 116, 0.05)'
+                    }
+                }
+            },
+            plugins: {
+                ...this.defaultConfig.plugins,
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20
+                    }
+                },
+                tooltip: {
+                    ...this.defaultConfig.plugins.tooltip,
+                    callbacks: {
+                        footer: function(context) {
+                            let total = 0;
+                            context.forEach(function(tooltipItem) {
+                                total += tooltipItem.raw;
+                            });
+                            return `Total mensuel: ${total.toLocaleString()} parcelles`;
+                        }
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            }
+        }
+    };
+
+    this.charts[canvasId] = new Chart(ctx, config);
+    return this.charts[canvasId];
+}
+
+// Timeline graphique pour le déroulement des opérations
+createTopoTimelineChart(canvasId, timelineData) {
+    if (!timelineData || timelineData.length === 0) {
+        console.warn('Aucune donnée pour la timeline');
+        return null;
+    }
+
+    // Pour la timeline, on utilise un graphique en barres avec axe temporel
+    this.destroyChart(canvasId);
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) {
+        console.error(`Canvas non trouvé: ${canvasId}`);
+        return null;
+    }
+
+    const ctx = canvas.getContext('2d');
+    
+    // Regrouper par date et compter les opérations
+    const dateGroups = timelineData.reduce((groups, item) => {
+        const date = item.date;
+        if (date) {
+            if (!groups[date]) {
+                groups[date] = { date, count: 0, operations: [] };
+            }
+            groups[date].count++;
+            groups[date].operations.push(item);
+        }
+        return groups;
+    }, {});
+
+    const sortedData = Object.values(dateGroups)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    const config = {
+        type: 'bar',
+        data: {
+            labels: sortedData.map(d => new Date(d.date).toLocaleDateString('fr-FR')),
+            datasets: [{
+                label: 'Nombre d\'opérations',
+                data: sortedData.map(d => d.count),
+                backgroundColor: this.colors.accent,
+                borderColor: this.colors.accent,
+                borderWidth: 1,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            ...this.defaultConfig,
+            plugins: {
+                ...this.defaultConfig.plugins,
+                legend: { display: false },
+                tooltip: {
+                    ...this.defaultConfig.plugins.tooltip,
+                    callbacks: {
+                        title: function(context) {
+                            return `Date: ${context[0].label}`;
+                        },
+                        label: function(context) {
+                            const dataPoint = sortedData[context.dataIndex];
+                            return `${context.raw} opération(s) enregistrée(s)`;
+                        },
+                        afterLabel: function(context) {
+                            const dataPoint = sortedData[context.dataIndex];
+                            return dataPoint.operations
+                                .slice(0, 3)
+                                .map(op => `• ${op.commune} - ${op.prenom} ${op.nom}`)
+                                .concat(dataPoint.operations.length > 3 ? [`... et ${dataPoint.operations.length - 3} autre(s)`] : []);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        callback: function(value) {
+                            return Number.isInteger(value) ? value : '';
+                        }
+                    }
+                },
+                x: {
+                    ticks: {
+                        maxRotation: 45
+                    }
+                }
+            }
+        }
+    };
+
+    this.charts[canvasId] = new Chart(ctx, config);
+    return this.charts[canvasId];
+}
+
+   // Graphique en donut pour la part Champs / Bâtis
+createTopoTypeDonutChart(canvasId, stats) {
+   
+        stats attend un objet de la :
+        {
+            champs: <nombre>,
+            batis : <nombre>
+        }
+    if (!stats || (stats.champs ?? 0) + (stats.batis ?? 0) === 0) {
+        console.warn('Aucune donnée pour le donut Champs / Bâtis');
+        return null;
+    }
+
+    this.destroyChart(canvasId);
+
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) {
+        console.error(`Canvas non trouvé : ${canvasId}`);
+        return null;
+    }
+
+    const ctx = canvas.getContext('2d');
+
+    const data = {
+        labels: ['Champs', 'Bâtis'],
+        datasets: [
+            {
+                data: [stats.champs, stats.batis],
+                backgroundColor: [this.colors.success, this.colors.primary],
+                borderColor: '#FFFFFF',
+                borderWidth: 3,
+                hoverBorderWidth: 5,
+                hoverBackgroundColor: [
+                    this.colors.success + 'DD',
+                    this.colors.primary + 'DD'
+                ]
+            }
+        ]
+    };
+
+    const config = {
+        type: 'doughnut',
+        data,
+        options: {
+            ...this.defaultConfig,
+            cutout: '65%',
+            plugins: {
+                ...this.defaultConfig.plugins,
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20,
+                        generateLabels: chart => {
+                            const { data } = chart;
+                            const total =
+                                data.datasets[0].data.reduce(
+                                    (s, v) => s + v,
+                                    0
+                                ) || 1;
+                            return data.labels.map((label, i) => {
+                                const value = data.datasets[0].data[i];
+                                const pct = ((value / total) * 100).toFixed(1);
+                                return {
+                                    text: `${label} – ${value.toLocaleString()} (${pct} %)`,
+                                    fillStyle:
+                                        data.datasets[0].backgroundColor[i],
+                                    strokeStyle: data.datasets[0].borderColor,
+                                    lineWidth: data.datasets[0].borderWidth,
+                                    hidden: value === 0,
+                                    index: i
+                                };
+                            });
+                        }
+                    }
+                },
+                tooltip: {
+                    ...this.defaultConfig.plugins.tooltip,
+                    callbacks: {
+                        label: context => {
+                            const total = context.dataset.data.reduce(
+                                (s, v) => s + v,
+                                0
+                            );
+                            const value = context.parsed;
+                            const pct = ((value / total) * 100).toFixed(1);
+                            return `${context.label}: ${value.toLocaleString()} parcelles (${pct} %)`;
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    this.charts[canvasId] = new Chart(ctx, config);
+    return this.charts[canvasId];
+} 
     
     // Utilitaire pour obtenir une couleur de la palette
     getColor(index) {
