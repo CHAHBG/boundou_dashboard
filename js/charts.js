@@ -87,74 +87,54 @@ class ChartManager {
 prepareCanvas(canvasId) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) {
-        console.error(`❌ Canvas non trouvé: ${canvasId}`);
+        console.error(`❌ Canvas '${canvasId}' non trouvé dans le DOM`);
         return null;
     }
-    
-    // CORRECTION: Détruire TOUS les charts liés à ce canvas
-    // Vérifier Chart.js global registry
-    if (window.Chart && window.Chart.getChart) {
-        const existingChart = window.Chart.getChart(canvas);
-        if (existingChart) {
-            console.log(`🧹 Destruction du chart Chart.js existant: ${canvasId}`);
-            existingChart.destroy();
-        }
+
+    // Vérifier si c'est bien un canvas
+    if (canvas.tagName.toLowerCase() !== 'canvas') {
+        console.error(`❌ L'élément '${canvasId}' n'est pas un canvas`);
+        return null;
     }
-    
-    // Détruire le graphique dans notre registre
-    this.destroyChart(canvasId);
-    
-    // Vérifier si le canvas a un chart Chart.js attaché directement
-    if (canvas.chart) {
-        console.log(`🧹 Destruction du chart direct sur canvas: ${canvasId}`);
-        canvas.chart.destroy();
-        delete canvas.chart;
+
+    // Détruire le graphique existant s'il y en a un
+    if (this.charts[canvasId]) {
+        this.destroyChart(canvasId);
     }
-    
-    // Reset du canvas au cas où
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        // NOUVEAU: Reset des transformations
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-    }
-    
+
     console.log(`✅ Canvas préparé: ${canvasId}`);
     return canvas;
 }
     
     // Destruction propre de tous les graphiques
-    destroyAll() {
-        console.log('🗑️ Destruction de tous les graphiques...');
-        Object.keys(this.charts).forEach(chartId => {
-            this.destroyChart(chartId);
-        });
-        this.charts = {};
-        console.log('✅ Tous les graphiques ont été détruits');
-    }
-    
-    // Destruction d'un graphique spécifique AMÉLIORÉE
-    destroyChart(chartId) {
-        try {
-            if (this.charts[chartId]) {
+       destroyChart(chartId) {
+        if (this.charts[chartId]) {
+            try {
                 console.log(`🧹 Destruction du graphique: ${chartId}`);
                 this.charts[chartId].destroy();
                 delete this.charts[chartId];
                 console.log(`✅ Graphique ${chartId} détruit avec succès`);
+            } catch (error) {
+                console.warn(`⚠️ Erreur lors de la destruction de ${chartId}:`, error);
+                // Forcer la suppression même en cas d'erreur
+                delete this.charts[chartId];
             }
-            
-            // Vérification supplémentaire sur le canvas
-            const canvas = document.getElementById(chartId);
-            if (canvas && canvas.chart) {
-                console.log(`🧹 Nettoyage chart direct sur canvas: ${chartId}`);
-                canvas.chart.destroy();
-                delete canvas.chart;
-            }
-        } catch (error) {
-            console.warn(`⚠️ Erreur lors de la destruction du graphique ${chartId}:`, error);
-            // Forcer la suppression même en cas d'erreur
-            delete this.charts[chartId];
         }
+    }
+    
+    destroyAll() {
+        console.log('🗑️ Destruction de tous les graphiques...');
+        
+        // Créer une copie des clés pour éviter les modifications pendant l'itération
+        const chartIds = Object.keys(this.charts);
+        
+        chartIds.forEach(chartId => {
+            this.destroyChart(chartId);
+        });
+        
+        // S'assurer que l'objet est vide
+        this.charts = {};
+        console.log('✅ Tous les graphiques ont été détruits');
     }
     
     // Méthode utilitaire pour préparer les datasets avec couleurs
@@ -811,6 +791,97 @@ prepareCanvas(canvasId) {
             return this.charts[canvasId];
         } catch (error) {
             console.error(`❌ Erreur lors de la création du graphique topo donut ${canvasId}:`, error);
+            return null;
+        }
+    }
+
+    // Méthodes manquantes à ajouter au ChartManager
+    createPolar(canvasId, data, options = {}) {
+        const canvas = this.prepareCanvas(canvasId);
+        if (!canvas) return null;
+        
+        const config = {
+            type: 'polarArea',
+            data: data,
+            options: { ...this.defaultConfig, ...options }
+        };
+        
+        try {
+            this.charts[canvasId] = new Chart(canvas.getContext('2d'), config);
+            console.log(`🌟 Graphique polaire ${canvasId} créé`);
+            return this.charts[canvasId];
+        } catch (error) {
+            console.error(`❌ Erreur graphique polaire ${canvasId}:`, error);
+            return null;
+        }
+    }
+    
+    createMixed(canvasId, data, options = {}) {
+        const canvas = this.prepareCanvas(canvasId);
+        if (!canvas) return null;
+        
+        const config = {
+            type: 'bar', // Type de base
+            data: data,
+            options: { ...this.defaultConfig, ...options }
+        };
+        
+        try {
+            this.charts[canvasId] = new Chart(canvas.getContext('2d'), config);
+            console.log(`📊 Graphique mixte ${canvasId} créé`);
+            return this.charts[canvasId];
+        } catch (error) {
+            console.error(`❌ Erreur graphique mixte ${canvasId}:`, error);
+            return null;
+        }
+    }
+
+    
+    createTemporalChart(canvasId, temporalData) {
+        if (!temporalData || !Array.isArray(temporalData)) {
+            console.warn('Données temporelles invalides');
+            return null;
+        }
+    
+        const canvas = this.prepareCanvas(canvasId);
+        if (!canvas) return null;
+        
+        const ctx = canvas.getContext('2d');
+        
+        const config = {
+            type: 'line',
+            data: {
+                labels: temporalData.map(d => d.periode || d.date || ''),
+                datasets: [{
+                    label: 'Évolution',
+                    data: temporalData.map(d => d.valeur || d.total || 0),
+                    borderColor: '#D4A574',
+                    backgroundColor: '#D4A57420',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                ...this.defaultConfig,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Évolution Temporelle'
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        };
+        
+        try {
+            this.charts[canvasId] = new Chart(ctx, config);
+            console.log(`📈 Graphique temporel ${canvasId} créé avec succès`);
+            return this.charts[canvasId];
+        } catch (error) {
+            console.error(`❌ Erreur création graphique temporel ${canvasId}:`, error);
             return null;
         }
     }
