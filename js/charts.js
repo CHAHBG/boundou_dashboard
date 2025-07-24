@@ -815,6 +815,77 @@ prepareCanvas(canvasId) {
             return null;
         }
     }
+
+        createPolarChart(canvasId, regionData) {
+        const canvas = this.prepareCanvas(canvasId);
+        if (!canvas) return null;
+        
+        const ctx = canvas.getContext('2d');
+        
+        const config = {
+            type: 'polarArea',
+            data: {
+                labels: regionData.map(r => r.nom || r.region || 'N/A'),
+                datasets: [{
+                    data: regionData.map(r => r.total || r.valeur || 0),
+                    backgroundColor: [
+                        '#D4A574', '#1E3A8A', '#B8860B', '#10B981', 
+                        '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#FFFFFF'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#374151',
+                            font: {
+                                size: 12,
+                                weight: '500'
+                            }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Répartition par Région',
+                        font: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        color: '#374151'
+                    }
+                },
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(212, 165, 116, 0.2)'
+                        },
+                        pointLabels: {
+                            color: '#6B7280',
+                            font: {
+                                size: 11
+                            }
+                        }
+                    }
+                }
+            }
+        };
+        
+        try {
+            this.charts[canvasId] = new Chart(ctx, config);
+            console.log(`📊 Graphique polaire ${canvasId} créé avec succès`);
+            return this.charts[canvasId];
+        } catch (error) {
+            console.error(`❌ Erreur création graphique polaire ${canvasId}:`, error);
+            return null;
+        }
+    }
     
     createMixed(canvasId, data, options = {}) {
         const canvas = this.prepareCanvas(canvasId);
