@@ -84,32 +84,44 @@ class ChartManager {
     }
     
     // Méthode de préparation du canvas AMÉLIORÉE
-    prepareCanvas(canvasId) {
-        const canvas = document.getElementById(canvasId);
-        if (!canvas) {
-            console.error(`❌ Canvas non trouvé: ${canvasId}`);
-            return null;
-        }
-        
-        // Détruire le graphique existant si il existe
-        this.destroyChart(canvasId);
-        
-        // Vérifier si le canvas a un chart Chart.js attaché directement
-        if (canvas.chart) {
-            console.log(`🧹 Destruction du chart direct sur canvas: ${canvasId}`);
-            canvas.chart.destroy();
-            delete canvas.chart;
-        }
-        
-        // Reset du canvas au cas où
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
-        
-        console.log(`✅ Canvas préparé: ${canvasId}`);
-        return canvas;
+prepareCanvas(canvasId) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) {
+        console.error(`❌ Canvas non trouvé: ${canvasId}`);
+        return null;
     }
+    
+    // CORRECTION: Détruire TOUS les charts liés à ce canvas
+    // Vérifier Chart.js global registry
+    if (window.Chart && window.Chart.getChart) {
+        const existingChart = window.Chart.getChart(canvas);
+        if (existingChart) {
+            console.log(`🧹 Destruction du chart Chart.js existant: ${canvasId}`);
+            existingChart.destroy();
+        }
+    }
+    
+    // Détruire le graphique dans notre registre
+    this.destroyChart(canvasId);
+    
+    // Vérifier si le canvas a un chart Chart.js attaché directement
+    if (canvas.chart) {
+        console.log(`🧹 Destruction du chart direct sur canvas: ${canvasId}`);
+        canvas.chart.destroy();
+        delete canvas.chart;
+    }
+    
+    // Reset du canvas au cas où
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // NOUVEAU: Reset des transformations
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
+    
+    console.log(`✅ Canvas préparé: ${canvasId}`);
+    return canvas;
+}
     
     // Destruction propre de tous les graphiques
     destroyAll() {
