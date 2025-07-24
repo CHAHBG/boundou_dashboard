@@ -1740,21 +1740,22 @@ class ProcasefDashboard {
         }
     }
 
-  destroyAllCharts() {
-    // Utiliser le ChartManager pour la destruction
-    if (window.chartManager) {
-        window.chartManager.destroyAll();
-    }
-    
-    // Nettoyer notre registre local aussi
-    Object.values(this.charts).forEach(chart => {
-        try {
-            if (chart && typeof chart.destroy === 'function') {
-                chart.destroy();
-            }
-        } catch (e) {
-            console.warn('Erreur destruction chart local:', e);
+destroyAllCharts() {
+        // Utiliser le ChartManager pour la destruction
+        if (window.chartManager) {
+            window.chartManager.destroyAll();
         }
-    });
-    this.charts = {};
-}
+        
+        // Nettoyer notre registre local aussi
+        Object.values(this.charts).forEach(chart => {
+            try {
+                if (chart && typeof chart.destroy === 'function') {
+                    chart.destroy();
+                }
+            } catch (e) {
+                console.warn('Erreur destruction chart local:', e);
+            }
+        });
+        this.charts = {};
+    }
+} 
