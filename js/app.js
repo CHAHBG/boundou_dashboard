@@ -439,33 +439,36 @@ class ProcasefDashboard {
     }
 
     renderSection(sec) {
-        // Détruire tous les charts avant de rendre une nouvelle section
+        // IMPORTANT: Détruire tous les charts AVANT de rendre une nouvelle section
         this.destroyAllCharts();
         
-        try {
-            const renderMethods = {
-                'accueil': () => this.renderAccueil(),
-                'parcelles': () => this.renderParcelles(),
-                'etat-avancement': () => this.renderEtatAvancement(),
-                'projections-2025': () => this.renderProjections(),
-                'genre': () => this.renderGenre(),
-                'rapport': () => this.renderRapport(),
-                'stats-topo': () => this.renderStatsTopo(),
-                'post-traitement': () => this.renderPostTraitement()
-            };
-
-            const renderMethod = renderMethods[sec];
-            if (renderMethod) {
-                renderMethod();
-            } else {
-                console.warn(`Section inconnue: ${sec}`);
+        // Petit délai pour s'assurer que la destruction est complète
+        setTimeout(() => {
+            try {
+                const renderMethods = {
+                    'accueil': () => this.renderAccueil(),
+                    'parcelles': () => this.renderParcelles(),
+                    'etat-avancement': () => this.renderEtatAvancement(),
+                    'projections-2025': () => this.renderProjections(),
+                    'genre': () => this.renderGenre(),
+                    'rapport': () => this.renderRapport(),
+                    'stats-topo': () => this.renderStatsTopo(),
+                    'post-traitement': () => this.renderPostTraitement()
+                };
+    
+                const renderMethod = renderMethods[sec];
+                if (renderMethod) {
+                    renderMethod();
+                } else {
+                    console.warn(`Section inconnue: ${sec}`);
+                    this.renderAccueil();
+                }
+            } catch (error) {
+                console.error(`Erreur lors du rendu de la section ${sec}:`, error);
+                this.showError(`Erreur lors de l'affichage de la section ${sec}`);
                 this.renderAccueil();
             }
-        } catch (error) {
-            console.error(`Erreur lors du rendu de la section ${sec}:`, error);
-            this.showError(`Erreur lors de l'affichage de la section ${sec}`);
-            this.renderAccueil();
-        }
+        }, 100); // Délai de 100ms pour la destruction
     }
 
     renderAccueil() {
@@ -1016,45 +1019,51 @@ class ProcasefDashboard {
     // Méthodes de création de graphiques
     createTopCommunesChart() {
         if (!this.communeStats) return;
-
-        const ctx = document.getElementById('topCommunesChart');
-        if (!ctx) return;
-
+    
+        // CORRECTION: Utiliser ChartManager au lieu de Chart.js directement
+        if (!window.chartManager) {
+            console.error('ChartManager non disponible');
+            return;
+        }
+    
         const topCommunes = Object.entries(this.communeStats)
             .sort(([, a], [, b]) => b.total - a.total)
             .slice(0, 8);
-
-        this.charts.topCommunes = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: topCommunes.map(([commune]) => commune.substring(0, 15)),
-                datasets: [{
-                    label: 'Total Parcelles',
-                    data: topCommunes.map(([, stats]) => stats.total),
-                    backgroundColor: this.colors.primary,
-                    borderRadius: 4
-                }, {
-                    label: 'Avec NICAD',
-                    data: topCommunes.map(([, stats]) => stats.nicad_oui),
-                    backgroundColor: this.colors.secondary,
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top'
-                    }
+    
+        const chartData = {
+            labels: topCommunes.map(([commune]) => commune.substring(0, 15)),
+            datasets: [{
+                label: 'Total Parcelles',
+                data: topCommunes.map(([, stats]) => stats.total),
+                backgroundColor: this.colors.primary,
+                borderRadius: 4
+            }, {
+                label: 'Avec NICAD',
+                data: topCommunes.map(([, stats]) => stats.nicad_oui),
+                backgroundColor: this.colors.secondary,
+                borderRadius: 4
+            }]
+        };
+    
+        const options = {
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Top 8 des Communes par Nombre de Parcelles'
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
+                legend: {
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
                 }
             }
-        });
+        };
+    
+        // Utiliser le ChartManager
+        window.chartManager.createBar('topCommunesChart', chartData, options);
     }
 
     createProjectionsChart() {
@@ -1102,69 +1111,67 @@ class ProcasefDashboard {
         });
     }
 
-    createGenreGlobalChart() {
-        if (!this.data.repartitionGenre || !Array.isArray(this.data.repartitionGenre)) return;
-
-        const ctx = document.getElementById('genreGlobalChart');
-        if (!ctx) return;
-
+       createGenreGlobalChart() {
+        if (!this.data.repartitionGenre || !Array.isArray(this.data.repartitionGenre) || !window.chartManager) return;
+    
         const hommes = this.data.repartitionGenre.find(r => r.genre === 'Homme')?.total_nombre || 43576;
         const femmes = this.data.repartitionGenre.find(r => r.genre === 'Femme')?.total_nombre || 9332;
-
-        this.charts.genreGlobal = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Hommes', 'Femmes'],
-                datasets: [{
-                    data: [hommes, femmes],
-                    backgroundColor: [this.colors.secondary, this.colors.primary],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
+    
+        const chartData = {
+            labels: ['Hommes', 'Femmes'],
+            datasets: [{
+                data: [hommes, femmes],
+                backgroundColor: [this.colors.secondary, this.colors.primary],
+                borderWidth: 0
+            }]
+        };
+    
+        const options = {
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Répartition Globale par Genre'
+                },
+                legend: {
+                    position: 'bottom'
                 }
             }
-        });
+        };
+    
+        window.chartManager.createDoughnut('genreGlobalChart', chartData, options);
     }
-
+    
     createRegionChart() {
-        if (!this.data.parcelles) return;
-
-        const ctx = document.getElementById('regionChart');
-        if (!ctx) return;
-
+        if (!this.data.parcelles || !window.chartManager) return;
+    
         const regionData = {};
         this.data.parcelles.forEach(parcelle => {
             const region = parcelle.region || 'Non définie';
             regionData[region] = (regionData[region] || 0) + 1;
         });
-
-        this.charts.region = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(regionData),
-                datasets: [{
-                    data: Object.values(regionData),
-                    backgroundColor: this.colors.chartColors.slice(0, Object.keys(regionData).length),
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
+    
+        const chartData = {
+            labels: Object.keys(regionData),
+            datasets: [{
+                data: Object.values(regionData),
+                backgroundColor: this.colors.chartColors.slice(0, Object.keys(regionData).length),
+                borderWidth: 0
+            }]
+        };
+    
+        const options = {
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Répartition par Région'
+                },
+                legend: {
+                    position: 'bottom'
                 }
             }
-        });
+        };
+    
+        window.chartManager.createDoughnut('regionChart', chartData, options);
     }
 
     createNicadChart() {
@@ -1217,50 +1224,49 @@ class ProcasefDashboard {
     }
 
     createObjectifsChart() {
-        if (!this.data.projections || !Array.isArray(this.data.projections)) return;
-
-        const ctx = document.getElementById('objectifsChart');
-        if (!ctx) return;
-
-        this.charts.objectifs = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: this.data.projections.map(p => (p.mois || p.periode || '').split(' ')[0]),
-                datasets: [{
-                    label: 'Objectif',
-                    data: this.data.projections.map(p => p.objectif_inventaires_mensuels || p.objectif || 8000),
-                    borderColor: this.colors.secondary,
-                    backgroundColor: this.colors.secondary + '30',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4
-                }, {
-                    label: 'Réalisé',
-                    data: this.data.projections.map(p => p.inventaires_mensuels_realises || p.realise || 0),
-                    borderColor: this.colors.primary,
-                    backgroundColor: this.colors.primary + '30',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top'
-                    }
+        if (!this.data.projections || !Array.isArray(this.data.projections) || !window.chartManager) return;
+    
+        const chartData = {
+            labels: this.data.projections.map(p => (p.mois || p.periode || '').split(' ')[0]),
+            datasets: [{
+                label: 'Objectif',
+                data: this.data.projections.map(p => p.objectif_inventaires_mensuels || p.objectif || 8000),
+                borderColor: this.colors.secondary,
+                backgroundColor: this.colors.secondary + '30',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }, {
+                label: 'Réalisé',
+                data: this.data.projections.map(p => p.inventaires_mensuels_realises || p.realise || 0),
+                borderColor: this.colors.primary,
+                backgroundColor: this.colors.primary + '30',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        };
+    
+        const options = {
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Évolution Objectifs vs Réalisations'
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
+                legend: {
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
                 }
             }
-        });
+        };
+    
+        window.chartManager.createLine('objectifsChart', chartData, options);
     }
-
+    
     createGenreTrimestreChart() {
         if (!this.data.genreTrimestre || !Array.isArray(this.data.genreTrimestre)) return;
 
@@ -1348,6 +1354,94 @@ class ProcasefDashboard {
             }
         });
     }
+
+    createTemporalChart(canvasId, temporalData) {
+    if (!temporalData || !Array.isArray(temporalData)) {
+        console.warn('Données temporelles invalides');
+        return null;
+    }
+
+    const canvas = this.prepareCanvas(canvasId);
+    if (!canvas) return null;
+    
+    const ctx = canvas.getContext('2d');
+    
+    const config = {
+        type: 'line',
+        data: {
+            labels: temporalData.map(d => d.periode || d.date || ''),
+            datasets: [{
+                label: 'Évolution',
+                data: temporalData.map(d => d.valeur || d.total || 0),
+                borderColor: this.colors.primary,
+                backgroundColor: this.colors.primary + '20',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: this.colors.primary,
+                pointBorderColor: '#FFFFFF',
+                pointBorderWidth: 2,
+                pointRadius: 5
+            }]
+        },
+        options: {
+            ...this.defaultConfig,
+            plugins: {
+                ...this.defaultConfig.plugins,
+                title: {
+                    display: true,
+                    text: 'Évolution Temporelle',
+                    font: { size: 14, weight: 'bold' },
+                    color: '#374151'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(212, 165, 116, 0.1)',
+                        lineWidth: 1
+                    },
+                    ticks: {
+                        color: '#6B7280',
+                        font: {
+                            size: 11,
+                            weight: '500'
+                        }
+                    },
+                    border: {
+                        display: false
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(212, 165, 116, 0.05)',
+                        lineWidth: 1
+                    },
+                    ticks: {
+                        color: '#6B7280',
+                        font: {
+                            size: 11,
+                            weight: '500'
+                        }
+                    },
+                    border: {
+                        display: false
+                    }
+                }
+            }
+        }
+    };
+    
+    try {
+        this.charts[canvasId] = new Chart(ctx, config);
+        console.log(`📈 Graphique temporel ${canvasId} créé avec succès`);
+        return this.charts[canvasId];
+    } catch (error) {
+        console.error(`❌ Erreur lors de la création du graphique temporel ${canvasId}:`, error);
+        return null;
+    }
+}
 
     // Méthodes pour les filtres d'état d'avancement
     populateEtatAvancementFilters() {
@@ -1506,6 +1600,39 @@ class ProcasefDashboard {
         });
     }
 
+    renderPerformanceList() {
+    const container = document.getElementById('performanceList');
+    if (!container || !this.data.projections) return;
+    
+    container.innerHTML = '';
+    
+    this.data.projections.forEach((item, index) => {
+        const objectif = item.objectif_inventaires_mensuels || item.objectif || 8000;
+        const realise = item.inventaires_mensuels_realises || item.realise || 0;
+        const performance = objectif > 0 ? ((realise / objectif) * 100).toFixed(1) : 0;
+        const periode = item.mois || item.periode || `Période ${index + 1}`;
+        
+        const performanceClass = performance >= 100 ? 'success' : 
+                               performance >= 80 ? 'warning' : 'danger';
+        
+        const listItem = document.createElement('div');
+        listItem.className = 'performance-item list-group-item d-flex justify-content-between align-items-center';
+        listItem.innerHTML = `
+            <div>
+                <strong>${periode}</strong>
+                <br>
+                <small class="text-muted">
+                    Réalisé: ${realise.toLocaleString()} / Objectif: ${objectif.toLocaleString()}
+                </small>
+            </div>
+            <span class="badge bg-${performanceClass} rounded-pill">${performance}%</span>
+        `;
+        
+        container.appendChild(listItem);
+    });
+}
+    
+
     // Utility methods
        populateFilters() {
         if (!this.communeStats) return;
@@ -1607,16 +1734,23 @@ class ProcasefDashboard {
         }
     }
 
-    destroyAllCharts() {
-        Object.values(this.charts).forEach(chart => {
-            try {
-                chart.destroy();
-            } catch (e) {
-                console.warn('Erreur destruction chart:', e);
-            }
-        });
-        this.charts = {};
+  destroyAllCharts() {
+    // Utiliser le ChartManager pour la destruction
+    if (window.chartManager) {
+        window.chartManager.destroyAll();
     }
+    
+    // Nettoyer notre registre local aussi
+    Object.values(this.charts).forEach(chart => {
+        try {
+            if (chart && typeof chart.destroy === 'function') {
+                chart.destroy();
+            }
+        } catch (e) {
+            console.warn('Erreur destruction chart local:', e);
+        }
+    });
+    this.charts = {};
 }
 
 // Initialisation de l'application
