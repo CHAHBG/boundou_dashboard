@@ -508,7 +508,14 @@
                             <select id="topoTopographeFilter" class="form-control">
                                 <option value="">Tous les topographes</option>
                             </select>
-                            <input type="date" id="topoDateFilter" class="form-control">
+                            <div class="date-range-container">
+                                <input type="date" id="topoDateDebut" class="form-control date-input" placeholder="Date début">
+                                <span class="date-separator">à</span>
+                                <input type="date" id="topoDateFin" class="form-control date-input" placeholder="Date fin">
+                                <button type="button" id="clearDateRange" class="btn btn--secondary btn-sm" title="Effacer les dates">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
                             <button id="exportTopoBtn" class="btn btn--primary">
                                 <i class="fas fa-download"></i> Export CSV
                             </button>
