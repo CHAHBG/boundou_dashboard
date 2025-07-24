@@ -19,11 +19,12 @@ class MapManager {
         
         // Couleurs PROCASEF pour les marqueurs
         this.colors = {
-            primary: '#D4A574',    // Orange Gold Mat
-            secondary: '#1E3A8A',  // Bleu Navy
-            accent: '#B8860B',     // Dark Goldenrod
-            success: '#10B981',
-            warning: '#F59 '#EF4444'
+          primary:   '#D4A574', // Orange Gold Mat
+          secondary: '#1E3A8A', // Bleu Navy
+          accent:    '#B8860B', // Dark Goldenrod
+          success:   '#10B981',
+          warning:   '#F59E0B',
+          error:     '#EF4444'
         };
         
         // Données des communes (coordonnées approximatives de la région de Boundou)
