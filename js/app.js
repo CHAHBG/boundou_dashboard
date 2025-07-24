@@ -244,12 +244,18 @@ class ProcasefDashboard {
         });
 
         // Event listeners pour les filtres topo
-        ['topoCommuneFilter', 'topoTopographeFilter', 'topoDateFilter'].forEach(filterId => {
+        ['topoCommuneFilter', 'topoTopographeFilter', 'topoDateDebut', 'topoDateFin'].forEach(filterId => {
             const filter = document.getElementById(filterId);
             if (filter) {
                 filter.addEventListener('change', () => this.applyTopoFilters());
             }
         });
+
+        // Ajouter également l'event listener pour le bouton de reset
+        const clearDateBtn = document.getElementById('clearDateRange');
+        if (clearDateBtn) {
+            clearDateBtn.addEventListener('click', () => this.clearDateRange());
+        }
 
         // Export buttons
         const exportParcellesBtn = document.getElementById('exportParcellesBtn');
@@ -759,7 +765,8 @@ class ProcasefDashboard {
     applyTopoFilters() {
         const communeFilter = document.getElementById('topoCommuneFilter')?.value;
         const topoFilter = document.getElementById('topoTopographeFilter')?.value;
-        const dateFilter = document.getElementById('topoDateFilter')?.value;
+        const dateDebut = document.getElementById('topoDateDebut')?.value;
+        const dateFin = document.getElementById('topoDateFin')?.value;
         
         let filtered = this.data.topoData || [];
         
@@ -776,8 +783,24 @@ class ProcasefDashboard {
             });
         }
         
-        if (dateFilter) {
-            filtered = filtered.filter(t => t.date?.startsWith(dateFilter));
+        // 🔴 NOUVEAU : Filtrage par plage de dates
+        if (dateDebut || dateFin) {
+            filtered = filtered.filter(t => {
+                const itemDate = t.date;
+                if (!itemDate) return false;
+                
+                let isInRange = true;
+                
+                if (dateDebut) {
+                    isInRange = isInRange && (itemDate >= dateDebut);
+                }
+                
+                if (dateFin) {
+                    isInRange = isInRange && (itemDate <= dateFin);
+                }
+                
+                return isInRange;
+            });
         }
         
         this.filteredTopoData = filtered;
@@ -786,8 +809,51 @@ class ProcasefDashboard {
             this.updateTopoKPIs();
             this.renderTopoTable();
             this.renderTopoTimeline();
+            // Recréer les graphiques avec les nouvelles données filtrées
+            setTimeout(() => {
+                this.createTopoCharts();
+            }, 100);
         }
     }
+
+    // 3. Ajouter cette nouvelle méthode pour effacer les dates :
+    clearDateRange() {
+        const dateDebut = document.getElementById('topoDateDebut');
+        const dateFin = document.getElementById('topoDateFin');
+        
+        if (dateDebut) dateDebut.value = '';
+        if (dateFin) dateFin.value = '';
+        
+        // Réappliquer les filtres
+        this.applyTopoFilters();
+    }
+    
+    // 4. Optionnel : Ajouter une validation pour s'assurer que dateDebut <= dateFin
+    validateDateRange() {
+        const dateDebut = document.getElementById('topoDateDebut')?.value;
+        const dateFin = document.getElementById('topoDateFin')?.value;
+        
+        if (dateDebut && dateFin && dateDebut > dateFin) {
+            this.showError('La date de début doit être antérieure à la date de fin');
+            // Reset la date de fin
+            document.getElementById('topoDateFin').value = '';
+            return false;
+        }
+        return true;
+    }
+    
+    // 5. Modifier setupEventListeners() pour inclure la validation :
+    // Ajouter après la configuration des event listeners des dates :
+    ['topoDateDebut', 'topoDateFin'].forEach(filterId => {
+        const filter = document.getElementById(filterId);
+        if (filter) {
+            filter.addEventListener('change', () => {
+                if (this.validateDateRange()) {
+                    this.applyTopoFilters();
+                }
+            });
+        }
+    });
 
     updateTopoKPIs() {
         const d = this.filteredTopoData || [];
@@ -802,7 +868,28 @@ class ProcasefDashboard {
         this.updateKPI('totalTopoParcellesKPI', total);
         this.updateKPI('avgParJourKPI', avg);
         
-        // 🔴 CORRECTION: Topographe le plus actif avec nettoyage des noms
+        // Afficher la période filtrée
+        const dateDebut = document.getElementById('topoDateDebut')?.value;
+        const dateFin = document.getElementById('topoDateFin')?.value;
+        let periode = '';
+        
+        if (dateDebut && dateFin) {
+            periode = `Du ${new Date(dateDebut).toLocaleDateString('fr-FR')} au ${new Date(dateFin).toLocaleDateString('fr-FR')}`;
+        } else if (dateDebut) {
+            periode = `Depuis le ${new Date(dateDebut).toLocaleDateString('fr-FR')}`;
+        } else if (dateFin) {
+            periode = `Jusqu'au ${new Date(dateFin).toLocaleDateString('fr-FR')}`;
+        } else {
+            periode = 'Toute la période';
+        }
+        
+        // Mettre à jour le titre de la section ou ajouter un indicateur
+        const sectionHeader = document.querySelector('#stats-topo-section .section-description');
+        if (sectionHeader) {
+            sectionHeader.textContent = `Analyse détaillée des levés topographiques - ${periode}`;
+        }
+        
+        // Topographe le plus actif
         const counts = {};
         d.forEach(x => {
             const prenom = (x.prenom || '').trim();
