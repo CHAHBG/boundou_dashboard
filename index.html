@@ -7,7 +7,7 @@
 
   <!-- Styles -->
   <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4Nx..." crossorigin />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;550;600;700&display=swap" rel="stylesheet" />
@@ -58,6 +58,10 @@
                     <i class="nav-icon fas fa-ruler-combined"></i>
                     <span class="nav-text">Stats Topo</span>
                 </a>
+                <a href="#" class="nav-item" data-section="post-traitement">
+                    <i class="nav-icon fas fa-cogs"></i>
+                    <span class="nav-text">Post-Traitement</span>
+                </a>
             </nav>
         </aside>
 
@@ -86,7 +90,7 @@
             </header>
 
             <!-- Loading Overlay -->
-            <div id="loadingOverlay" class="loading-container">
+            <div id="loadingOverlay" class="loading-container" style="display: none;">
                 <div class="spinner"></div>
                 <p>Chargement des données...</p>
             </div>
@@ -109,7 +113,7 @@
                                 <h3>Total Parcelles</h3>
                                 <i class="kpi-icon fas fa-map-marked-alt"></i>
                             </div>
-                            <div class="kpi-value" id="totalParcellesKPI">31,302</div>
+                            <div class="kpi-value" id="totalParcelles">31,302</div>
                             <div class="kpi-subtitle">Parcelles identifiées</div>
                         </div>
 
@@ -118,8 +122,8 @@
                                 <h3>Parcelles NICAD</h3>
                                 <i class="kpi-icon fas fa-check-circle"></i>
                             </div>
-                            <div class="kpi-value success" id="nicadParcellesKPI">17,146</div>
-                            <div class="kpi-subtitle">54.8% avec NICAD</div>
+                            <div class="kpi-value success" id="parcellesNicad">17,146</div>
+                            <div class="kpi-subtitle" id="percentageNicad">54.8% avec NICAD</div>
                         </div>
 
                         <div class="kpi-card">
@@ -127,8 +131,8 @@
                                 <h3>Parcelles Délibérées</h3>
                                 <i class="kpi-icon fas fa-gavel"></i>
                             </div>
-                            <div class="kpi-value" id="delibereesParcellesKPI">11,036</div>
-                            <div class="kpi-subtitle">35.3% délibérées</div>
+                            <div class="kpi-value" id="parcellesDeliberees">11,036</div>
+                            <div class="kpi-subtitle" id="percentageDeliberees">35.3% délibérées</div>
                         </div>
 
                         <div class="kpi-card">
@@ -136,7 +140,7 @@
                                 <h3>Superficie Totale</h3>
                                 <i class="kpi-icon fas fa-expand-arrows-alt"></i>
                             </div>
-                            <div class="kpi-value" id="superficieTotaleKPI">67,934.12</div>
+                            <div class="kpi-value" id="superficieTotale">67,934.12</div>
                             <div class="kpi-subtitle">m²</div>
                         </div>
 
@@ -145,7 +149,7 @@
                                 <h3>Taux Réalisation</h3>
                                 <i class="kpi-icon fas fa-chart-pie"></i>
                             </div>
-                            <div class="kpi-value warning" id="tauxRealisationKPI">47.80%</div>
+                            <div class="kpi-value warning" id="tauxRealisation">47.80%</div>
                             <div class="kpi-subtitle">33457 / 70000</div>
                         </div>
 
@@ -154,7 +158,7 @@
                                 <h3>Communes Actives</h3>
                                 <i class="kpi-icon fas fa-city"></i>
                             </div>
-                            <div class="kpi-value" id="communesActivesKPI">13/17</div>
+                            <div class="kpi-value" id="communesActives">13/17</div>
                             <div class="kpi-subtitle">Zones d'intervention</div>
                         </div>
                     </div>
@@ -253,8 +257,8 @@
                             <table class="data-table" id="parcellesTable">
                                 <thead>
                                     <tr>
-                                        <th>Région</th>
                                         <th>Commune</th>
+                                        <th>Région</th>
                                         <th>Total Parcelles</th>
                                         <th>NICAD</th>
                                         <th>% NICAD</th>
@@ -263,7 +267,7 @@
                                         <th>Superficie (ha)</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="parcellesTableBody">
                                     <!-- Dynamic content -->
                                 </tbody>
                             </table>
@@ -394,7 +398,7 @@
                                 <i class="kpi-icon fas fa-male"></i>
                             </div>
                             <div class="kpi-value" id="hommesTotal">43,576</div>
-                            <div class="kpi-subtitle">82.4%</div>
+                            <div class="kpi-subtitle" id="hommesPercentage">82.4%</div>
                         </div>
 
                         <div class="kpi-card">
@@ -403,7 +407,7 @@
                                 <i class="kpi-icon fas fa-female"></i>
                             </div>
                             <div class="kpi-value" id="femmesTotal">9,332</div>
-                            <div class="kpi-subtitle">17.6%</div>
+                            <div class="kpi-subtitle" id="femmesPercentage">17.6%</div>
                         </div>
                     </div>
 
@@ -441,9 +445,14 @@
                 <section id="rapport-section" class="content-section">
                     <div class="section-header">
                         <div>
-                            <h2>👫🏿 Répartition par Genre</h2>
+                            <h2>📋 Rapport Complet</h2>
                             <p class="section-description">Analyse détaillée des données genre du projet PROCASEF Boundou</p>
                         </div>
+                    </div>
+
+                    <!-- KPI Grid Rapport -->
+                    <div class="kpi-grid" id="rapportKpiGrid">
+                        <!-- Dynamic KPI content -->
                     </div>
 
                     <div class="charts-grid">
@@ -458,10 +467,10 @@
 
                         <div class="chart-card">
                             <div class="chart-header">
-                                <h3>Analyse par Commune (Top 10)</h3>
+                                <h3>Top 10 Communes (Mixed Chart)</h3>
                             </div>
                             <div class="chart-content">
-                                <canvas id="rapportCommuneChart"></canvas>
+                                <canvas id="rapportCommuneMixedChart"></canvas>
                             </div>
                         </div>
 
@@ -470,22 +479,22 @@
                                 <h3>Analyse Temporelle</h3>
                             </div>
                             <div class="chart-content">
-                                <canvas id="rapportTemporelChart"></canvas>
+                                <canvas id="rapportTemporalChart"></canvas>
                             </div>
                         </div>
 
                         <div class="chart-card">
                             <div class="chart-header">
-                                <h3>Répartition Régionale</h3>
+                                <h3>Répartition Régionale (Polar)</h3>
                             </div>
                             <div class="chart-content">
-                                <canvas id="rapportRegionalChart"></canvas>
+                                <canvas id="rapportRegionPolarChart"></canvas>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                <!-- Nouvelle Section Stats Topo -->
+                <!-- Section Stats Topo -->
                 <section id="stats-topo-section" class="content-section">
                     <div class="section-header">
                         <div>
@@ -493,25 +502,13 @@
                             <p class="section-description">Analyse détaillée des levés topographiques - Données en temps réel</p>
                         </div>
                         <div class="filter-panel">
-                            <input type="date" id="dateFromFilter" class="form-control" placeholder="Date début">
-                            <input type="date" id="dateToFilter" class="form-control" placeholder="Date fin">
-                            <select id="communeTopoFilter" class="form-control">
+                            <select id="topoCommuneFilter" class="form-control">
                                 <option value="">Toutes les communes</option>
                             </select>
-                            <select id="topographeFilter" class="form-control">
+                            <select id="topoTopographeFilter" class="form-control">
                                 <option value="">Tous les topographes</option>
                             </select>
-                            <select id="villageTopoFilter" class="form-control">
-                                <option value="">Tous les villages</option>
-                            </select>
-                            <select id="typeTopoFilter" class="form-control">
-                                <option value="">Tous les types</option>
-                                <option value="champs">Champs</option>
-                                <option value="batis">Bâtis</option>
-                            </select>
-                            <button id="resetTopoFiltersBtn" class="btn btn--secondary">
-                                <i class="fas fa-refresh"></i> Reset
-                            </button>
+                            <input type="date" id="topoDateFilter" class="form-control">
                             <button id="exportTopoBtn" class="btn btn--primary">
                                 <i class="fas fa-download"></i> Export CSV
                             </button>
@@ -543,7 +540,7 @@
                                 <h3>Total Parcelles</h3>
                                 <i class="kpi-icon fas fa-map-marked-alt"></i>
                             </div>
-                            <div class="kpi-value" id="totalParcellestopoKPI">0</div>
+                            <div class="kpi-value" id="totalTopoParcellesKPI">0</div>
                             <div class="kpi-subtitle">Total général levé</div>
                         </div>
 
@@ -582,7 +579,7 @@
                                 <h3>Top 10 Topographes</h3>
                             </div>
                             <div class="chart-content">
-                                <canvas id="topTopographesChart"></canvas>
+                                <canvas id="topToposChart"></canvas>
                             </div>
                         </div>
 
@@ -591,16 +588,25 @@
                                 <h3>Totaux par Commune</h3>
                             </div>
                             <div class="chart-content">
-                                <canvas id="topoCommunesChart"></canvas>
+                                <canvas id="topoCommuneChart"></canvas>
                             </div>
                         </div>
 
-                        <div class="chart-card large">
+                        <div class="chart-card">
                             <div class="chart-header">
                                 <h3>Évolution Mensuelle</h3>
                             </div>
                             <div class="chart-content">
                                 <canvas id="topoEvolutionChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Répartition Type</h3>
+                            </div>
+                            <div class="chart-content">
+                                <canvas id="topoTypeDonut"></canvas>
                             </div>
                         </div>
 
@@ -618,46 +624,136 @@
                     <div class="table-container">
                         <div class="table-header">
                             <h3>Données complètes des levés topographiques</h3>
-                            <div style="display: flex; gap: 1rem; align-items: center;">
-                                <input type="text" id="tableTopoSearch" class="form-control" placeholder="Rechercher..." style="width: 250px;">
-                                <select id="tableTopoPageSize" class="form-control" style="width: 150px;">
-                                    <option value="10">10 par page</option>
-                                    <option value="25">25 par page</option>
-                                    <option value="50">50 par page</option>
-                                    <option value="100">100 par page</option>
-                                </select>
-                            </div>
                         </div>
                         <div class="table-responsive">
                             <table class="data-table" id="topoTable">
                                 <thead>
                                     <tr>
-                                        <th data-sort="date">Date <i class="fas fa-sort"></i></th>
-                                        <th data-sort="topographe">Topographe <i class="fas fa-sort"></i></th>
-                                        <th data-sort="commune">Commune <i class="fas fa-sort"></i></th>
-                                        <th data-sort="village">Village <i class="fas fa-sort"></i></th>
-                                        <th data-sort="champs">Champs <i class="fas fa-sort"></i></th>
-                                        <th data-sort="batis">Bâtis <i class="fas fa-sort"></i></th>
-                                        <th data-sort="totale_parcelles">Total <i class="fas fa-sort"></i></th>
-                                        <th data-sort="deroulement_des_operations">Déroulement <i class="fas fa-sort"></i></th>
+                                        <th>Date</th>
+                                        <th>Topographe</th>
+                                        <th>Commune</th>
+                                        <th>Champs</th>
+                                        <th>Bâtis</th>
+                                        <th>Total</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="topoTableBody">
                                     <!-- Dynamic content -->
                                 </tbody>
                             </table>
                         </div>
-                        <div class="table-footer">
-                            <div class="table-info" id="topoTableInfo">Affichage de 1 à 10 sur 0 entrées</div>
-                            <div class="table-pagination">
-                                <button id="prevTopoPageBtn" class="btn btn--secondary" disabled>
-                                    <i class="fas fa-chevron-left"></i> Précédent
-                                </button>
-                                <span id="currentTopoPage">Page 1 sur 1</span>
-                                <button id="nextTopoPageBtn" class="btn btn--secondary" disabled>
-                                    Suivant <i class="fas fa-chevron-right"></i>
-                                </button>
+                    </div>
+                </section>
+
+                <!-- Section Post-Traitement -->
+                <section id="post-traitement-section" class="content-section">
+                    <div class="section-header">
+                        <div>
+                            <h2>⚙️ Post-Traitement</h2>
+                            <p class="section-description">Suivi et analyse du post-traitement des données</p>
+                        </div>
+                        <div class="filter-panel">
+                            <select id="postCommuneFilter" class="form-control">
+                                <option value="">Toutes les communes</option>
+                            </select>
+                            <select id="postGeomFilter" class="form-control">
+                                <option value="">Tous les géomètres</option>
+                            </select>
+                            <button id="exportPostBtn" class="btn btn--primary">
+                                <i class="fas fa-download"></i> Export CSV
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- KPI Post-Traitement -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <h3>Total Reçues</h3>
+                                <i class="kpi-icon fas fa-inbox"></i>
                             </div>
+                            <div class="kpi-value" id="totalRecuesKPI">4,445</div>
+                            <div class="kpi-subtitle">Données reçues</div>
+                        </div>
+
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <h3>Total Traitées</h3>
+                                <i class="kpi-icon fas fa-check-circle"></i>
+                            </div>
+                            <div class="kpi-value success" id="totalTraiteesKPI">4,120</div>
+                            <div class="kpi-subtitle">Données traitées</div>
+                        </div>
+
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <h3>Taux Traitement</h3>
+                                <i class="kpi-icon fas fa-percentage"></i>
+                            </div>
+                            <div class="kpi-value warning" id="tauxTraitementKPI">92.7%</div>
+                            <div class="kpi-subtitle">Taux global</div>
+                        </div>
+
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <h3>En Attente</h3>
+                                <i class="kpi-icon fas fa-clock"></i>
+                            </div>
+                            <div class="kpi-value" id="enAttenteKPI">325</div>
+                            <div class="kpi-subtitle">À traiter</div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Post-Traitement -->
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Taux de Traitement par Commune</h3>
+                            </div>
+                            <div class="chart-content">
+                                <canvas id="postTauxChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Évolution Traitement</h3>
+                            </div>
+                            <div class="chart-content">
+                                <canvas id="postEvolutionChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card large">
+                            <div class="chart-header">
+                                <h3>Statut par Géomètre</h3>
+                            </div>
+                            <div class="chart-content">
+                                <canvas id="postGeometreChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Table Post-Traitement -->
+                    <div class="table-container">
+                        <div class="table-header">
+                            <h3>Données détaillées du post-traitement</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table" id="postTable">
+                                <thead>
+                                    <tr>
+                                        <th>Commune</th>
+                                        <th>Reçues</th>
+                                        <th>Traitées</th>
+                                        <th>Taux (%)</th>
+                                        <th>Statut</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="postTableBody">
+                                    <!-- Dynamic content -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </section>
@@ -677,12 +773,5 @@
     <script src="js/charts.js"></script>
     <script src="js/map.js"></script>
     <script src="js/app.js"></script>
-
-    <script>
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', function() {
-            window.procasefApp = new ProcasefDashboard();
-        });
-    </script>
 </body>
 </html>
