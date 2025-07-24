@@ -1438,7 +1438,7 @@ class ProcasefDashboard {
 
         // Populate commune filter
         const commSelect = document.getElementById('communeFilter');
-        (commSelect) {
+        if (commSelect) {
             commSelect.innerHTML = '<option value="">Toutes les communes</option>';
             Object.keys(this.communeStats).sort().forEach(commune => {
                 commSelect.insertAdjacentHTML('beforeend',
