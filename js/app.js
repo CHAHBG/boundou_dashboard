@@ -347,7 +347,13 @@ class ProcasefDashboard {
     }
 
     async navigateToSection(sectionId) {
-        console.log('Navigation vers la section:', sectionId);
+        // Éviter la navigation répétitive
+        if (this.currentSection === sectionId) {
+            console.log(`Déjà sur la section ${sectionId}, ignorer navigation`);
+            return;
+        }
+
+    console.log('Navigation vers la section:', sectionId);
     
         // Destruction sécurisée de la carte
         if (this.mapManager && this.mapManager.map && sectionId !== 'parcelles') {
@@ -411,27 +417,29 @@ class ProcasefDashboard {
         if (!config) return;
 
         try {
-            if (Array.isArray(config)) {
-                // Charger plusieurs fichiers
-                await Promise.allSettled(
-                    config.map(c => this.loadDataSafely(c.path, c.key))
-                );
-            } else {
-                // Charger un seul fichier
-                if (!this.data[config.key] || this.data[config.key].length === 0) {
-                    await this.loadDataSafely(config.path, config.key);
+                this.showLoading(); 
+                
+                if (Array.isArray(config)) {
+                    const promises = config.map(c => this.loadDataSafely(c.path, c.key));
+                    await Promise.allSettled(promises);
+                } else {
+                    if (!this.data[config.key] || this.data[config.key].length === 0) {
+                        await this.loadDataSafely(config.path, config.key);
+                    }
                 }
+        
+                // Actions spécifiques après chargement
+                if (sec === 'stats-topo') {
+                    this.filteredTopoData = this.data.topoData || [];
+                    this.populateTopoFilters();
+                }
+            } catch (error) {
+                console.error(`Erreur lors du chargement des données pour ${sec}:`, error);
+                this.showError(`Impossible de charger les données pour ${sec}`);
+            } finally {
+                this.hideLoading(); 
             }
-
-            // Actions spécifiques après chargement
-            if (sec === 'stats-topo') {
-                this.filteredTopoData = this.data.topoData || [];
-                this.populateTopoFilters();
-            }
-        } catch (error) {
-            console.error(`Erreur lors du chargement des données pour ${sec}:`, error);
         }
-    }
 
     renderDashboard() {
         this.renderAccueil();
@@ -468,7 +476,7 @@ class ProcasefDashboard {
                 this.showError(`Erreur lors de l'affichage de la section ${sec}`);
                 this.renderAccueil();
             }
-        }, 100); // Délai de 100ms pour la destruction
+        }, 30); // Délai de 100ms pour la destruction
     }
 
     renderAccueil() {
@@ -881,6 +889,43 @@ class ProcasefDashboard {
             .join('');
             
         container.innerHTML = timelineHTML;
+    }
+
+    // Méthode createPolarChart manquante
+    createPolarChart(canvasId, regionData) {
+        if (!window.chartManager || !regionData) return;
+        
+        window.chartManager.createPolar(canvasId, {
+            labels: regionData.map(r => r.nom || r.region),
+            datasets: [{
+                data: regionData.map(r => r.total || r.valeur || 0),
+                backgroundColor: this.colors.chartColors
+            }]
+        });
+    }
+    
+    // Méthode createMixedChart manquante  
+    createMixedChart(canvasId, communesData) {
+        if (!window.chartManager || !communesData) return;
+        
+        window.chartManager.createMixed(canvasId, {
+            labels: communesData.map(c => c.commune || c.nom),
+            datasets: [
+                {
+                    type: 'bar',
+                    label: 'Hommes',
+                    data: communesData.map(c => c.hommes || 0),
+                    backgroundColor: this.colors.secondary
+                },
+                {
+                    type: 'line',
+                    label: 'Femmes',
+                    data: communesData.map(c => c.femmes || 0),
+                    borderColor: this.colors.primary,
+                    fill: false
+                }
+            ]
+        });
     }
 
     // Gestion de la carte
