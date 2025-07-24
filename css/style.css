@@ -1214,6 +1214,61 @@ body {
     color: var(--color-error);
 }
 
+/* Ajouter ce CSS dans votre fichier style.css */
+
+.date-range-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f8f9fa;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+}
+
+.date-input {
+    flex: 1;
+    min-width: 120px;
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 13px;
+    background: white;
+}
+
+.date-input:focus {
+    outline: none;
+    border-color: #D4A574;
+    box-shadow: 0 0 0 2px rgba(212, 165, 116, 0.2);
+}
+
+.date-separator {
+    color: #666;
+    font-weight: 500;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.btn--secondary {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.2s;
+}
+
+.btn--secondary:hover {
+    background: #5a6268;
+}
+
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 11px;
+}
+
 /* Responsive adjustments pour Stats Topo */
 @media (max-width: 768px) {
     .filter-panel {
