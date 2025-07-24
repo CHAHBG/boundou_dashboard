@@ -713,8 +713,27 @@ class ProcasefDashboard {
     populateTopoFilters() {
         if (!this.data.topoData || !Array.isArray(this.data.topoData)) return;
         
-        const communes = [...new Set(this.data.topoData.map(t => t.commune).filter(Boolean))].sort();
-        const topographes = [...new Set(this.data.topoData.map(t => `${t.prenom || ''} ${t.nom || ''}`).filter(name => name.trim()))].sort();
+        // 🔴 CORRECTION: Nettoyer et dédupliquer les communes
+        const communes = [...new Set(
+            this.data.topoData
+                .map(t => (t.commune || '').trim())
+                .filter(commune => commune !== '')
+        )].sort();
+        
+        // 🔴 CORRECTION: Nettoyer et dédupliquer les topographes
+        const topographes = [...new Set(
+            this.data.topoData
+                .map(t => {
+                    const prenom = (t.prenom || '').trim();
+                    const nom = (t.nom || '').trim();
+                    const fullName = `${prenom} ${nom}`.trim();
+                    return fullName;
+                })
+                .filter(name => name !== '' && name.length > 1) // Éviter les noms vides ou trop courts
+        )].sort();
+        
+        console.log('Communes uniques trouvées:', communes.length);
+        console.log('Topographes uniques trouvés:', topographes.length);
         
         // Populate commune filter
         const communeSelect = document.getElementById('topoCommuneFilter');
@@ -745,11 +764,16 @@ class ProcasefDashboard {
         let filtered = this.data.topoData || [];
         
         if (communeFilter) {
-            filtered = filtered.filter(t => t.commune === communeFilter);
+            filtered = filtered.filter(t => (t.commune || '').trim() === communeFilter);
         }
         
         if (topoFilter) {
-            filtered = filtered.filter(t => `${t.prenom} ${t.nom}` === topoFilter);
+            filtered = filtered.filter(t => {
+                const prenom = (t.prenom || '').trim();
+                const nom = (t.nom || '').trim();
+                const fullName = `${prenom} ${nom}`.trim();
+                return fullName === topoFilter;
+            });
         }
         
         if (dateFilter) {
@@ -770,7 +794,7 @@ class ProcasefDashboard {
         const totalChamps = d.reduce((s, x) => s + (x.champs || 0), 0);
         const totalBatis = d.reduce((s, x) => s + (x.batis || 0), 0);
         const total = d.reduce((s, x) => s + (x.totale_parcelles || 0), 0);
-        const dates = [...new Set(d.map(x => x.date))];
+        const dates = [...new Set(d.map(x => x.date).filter(Boolean))];
         const avg = dates.length ? Math.round(total / dates.length) : 0;
         
         this.updateKPI('totalChampsKPI', totalChamps);
@@ -778,12 +802,18 @@ class ProcasefDashboard {
         this.updateKPI('totalTopoParcellesKPI', total);
         this.updateKPI('avgParJourKPI', avg);
         
-        // Topographe le plus actif
+        // 🔴 CORRECTION: Topographe le plus actif avec nettoyage des noms
         const counts = {};
         d.forEach(x => {
-            const name = `${x.prenom} ${x.nom}`;
-            counts[name] = (counts[name] || 0) + (x.totale_parcelles || 0);
+            const prenom = (x.prenom || '').trim();
+            const nom = (x.nom || '').trim();
+            const name = `${prenom} ${nom}`.trim();
+            
+            if (name && name.length > 1) {
+                counts[name] = (counts[name] || 0) + (x.totale_parcelles || 0);
+            }
         });
+        
         const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
         this.updateKPI('topTopoKPI', top ? `${top[0]} (${top[1]})` : '-');
         this.updateKPI('activeTopoKPI', Object.keys(counts).length);
@@ -796,43 +826,81 @@ class ProcasefDashboard {
         }
     }
 
-    createTopoCharts() {
-        if (!window.chartManager) return;
+createTopoCharts() {
+    if (!window.chartManager) return;
+    
+    // 🔴 CORRECTION: Nettoyer les noms de topographes et éviter les doublons
+    const cleanTopoStats = this.filteredTopoData.reduce((acc, x) => {
+        const prenom = (x.prenom || '').trim();
+        const nom = (x.nom || '').trim();
+        const cleanName = `${prenom} ${nom}`.trim();
         
-        const stats = [...Object.entries(this.filteredTopoData.reduce((acc, x) => {
-            acc[x.prenom + ' ' + x.nom] = (acc[x.prenom + ' ' + x.nom] || 0) + (x.totale_parcelles || 0);
-            return acc;
-        }, {}))].map(([name, total]) => ({ name, total })).sort((a, b) => b.total - a.total).slice(0, 10);
-        
+        if (cleanName && cleanName.length > 1) {
+            acc[cleanName] = (acc[cleanName] || 0) + (x.totale_parcelles || 0);
+        }
+        return acc;
+    }, {});
+    
+    const stats = Object.entries(cleanTopoStats)
+        .map(([name, total]) => ({ name, total }))
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 10);
+    
+    if (stats.length > 0) {
         window.chartManager.createBar('topToposChart', {
             labels: stats.map(x => x.name),
-            datasets: [{ data: stats.map(x => x.total) }]
+            datasets: [{ 
+                label: 'Total parcelles',
+                data: stats.map(x => x.total),
+                backgroundColor: this.colors.primary
+            }]
         });
-        
-        const communeStats = [...Object.entries(this.filteredTopoData.reduce((g, x) => {
-            (g[x.commune] || (g[x.commune] = { champs: 0, batis: 0 }));
-            g[x.commune].champs += x.champs || 0;
-            g[x.commune].batis += x.batis || 0;
-            return g;
-        }, {}))].map(([name, s]) => ({ name, champs: s.champs, batis: s.batis }));
-        
+    }
+    
+    // 🔴 CORRECTION: Nettoyer les noms de communes pour les graphiques
+    const cleanCommuneStats = this.filteredTopoData.reduce((g, x) => {
+        const commune = (x.commune || '').trim();
+        if (commune && commune !== '') {
+            if (!g[commune]) g[commune] = { champs: 0, batis: 0 };
+            g[commune].champs += x.champs || 0;
+            g[commune].batis += x.batis || 0;
+        }
+        return g;
+    }, {});
+    
+    const communeStats = Object.entries(cleanCommuneStats)
+        .map(([name, s]) => ({ name, champs: s.champs, batis: s.batis }))
+        .filter(item => item.name !== '');
+    
+    if (communeStats.length > 0) {
         window.chartManager.createStackedBar('topoCommuneChart', {
             labels: communeStats.map(x => x.name),
             datasets: [
-                { data: communeStats.map(x => x.champs) },
-                { data: communeStats.map(x => x.batis) }
+                { 
+                    label: 'Champs',
+                    data: communeStats.map(x => x.champs),
+                    backgroundColor: this.colors.success
+                },
+                { 
+                    label: 'Bâtis',
+                    data: communeStats.map(x => x.batis),
+                    backgroundColor: this.colors.secondary
+                }
             ]
         });
-        
-        const monthly = [...Object.entries(this.filteredTopoData.reduce((m, x) => {
-            const mKey = x.date?.slice(0, 7) || 'Inconnu';
-            (m[mKey] || (m[mKey] = { champs: 0, batis: 0 }));
-            m[mKey].champs += x.champs || 0;
-            m[mKey].batis += x.batis || 0;
-            return m;
-        }, {}))].map(([month, s]) => ({ month, champs: s.champs, batis: s.batis }))
-          .sort((a, b) => a.month.localeCompare(b.month));
-        
+    }
+    
+    // Graphique d'évolution mensuelle
+    const monthly = [...Object.entries(this.filteredTopoData.reduce((m, x) => {
+        const mKey = x.date?.slice(0, 7) || 'Inconnu';
+        if (!m[mKey]) m[mKey] = { champs: 0, batis: 0 };
+        m[mKey].champs += x.champs || 0;
+        m[mKey].batis += x.batis || 0;
+        return m;
+    }, {}))].map(([month, s]) => ({ month, champs: s.champs, batis: s.batis }))
+      .sort((a, b) => a.month.localeCompare(b.month));
+    
+    if (monthly.length > 0) {
         window.chartManager.createLine('topoEvolutionChart', {
             labels: monthly.map(x => x.month),
             datasets: [
@@ -841,12 +909,19 @@ class ProcasefDashboard {
             ]
         });
         
-        window.chartManager.createTopoTypeDonutChart('topoTypeDonut', {
-            champs: monthly.reduce((s, x) => s + x.champs, 0),
-            batis: monthly.reduce((s, x) => s + x.batis, 0)
-        });
+        // Graphique donut pour les types
+        const totalChamps = monthly.reduce((s, x) => s + x.champs, 0);
+        const totalBatis = monthly.reduce((s, x) => s + x.batis, 0);
+        
+        if (window.chartManager.createTopoTypeDonutChart) {
+            window.chartManager.createTopoTypeDonutChart('topoTypeDonut', {
+                champs: totalChamps,
+                batis: totalBatis
+            });
+        }
     }
-
+}
+    
     renderTopoTable() {
         const tbody = document.getElementById('topoTableBody');
         if (!tbody || !this.filteredTopoData) return;
