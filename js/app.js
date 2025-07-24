@@ -225,81 +225,88 @@ class ProcasefDashboard {
     }
 
     async navigateToSection(sectionId) {
-        console.log('Navigation vers la section:', sectionId);
-        
-        // Détruire la carte si on quitte la section parcelles
-        if (this.mapManager && this.mapManager.map && sectionId !== 'parcelles') {
-            console.log('Destruction de la carte avant changement de section');
-            this.mapManager.destroyMap();
-        }
-
-        // Update active nav item
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.classList.remove('active');
-        });
-        
-        const activeNavItem = document.querySelector(`[data-section="${sectionId}"]`);
-        if (activeNavItem) {
-            activeNavItem.classList.add('active');
-        }
-
-        // Show/hide sections
-        document.querySelectorAll('.content-section').forEach(section => {
-            section.classList.remove('active');
-        });
-        
-        const targetSection = document.getElementById(`${sectionId}-section`);
-        if (targetSection) {
-            targetSection.classList.add('active');
-        }
-
-        // Update page title
-        const titles = {
-            'accueil': 'Dashboard PROCASEF',
-            'parcelles': 'Répartition des Parcelles',
-            'etat-avancement': 'État d\'Avancement',
-            'projections-2025': 'Projections 2025',
-            'genre': 'Répartition par Genre',
-            'rapport': 'Rapport Complet',
-            'post-traitement': 'Post-Traitement'
-        };
-
-        const pageTitle = document.getElementById('pageTitle');
-        if (pageTitle) {
-            pageTitle.textContent = titles[sectionId] || titles.accueil;
-        }
-
-        // Load data and render section
-        await this.loadDataForSection(sectionId);
-        this.currentSection = sectionId;
-        this.renderSection(sectionId);
+      console.log('Navigation vers la section:', sectionId);
+    
+      if (this.mapManager && this.mapManager.map && sectionId !== 'parcelles') {
+        console.log('Destruction de la carte avant changement de section');
+        this.mapManager.destroyMap();
+      }
+    
+      // Met à jour les éléments de navigation active
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      const activeNavItem = document.querySelector(`[data-section="${sectionId}"]`);
+      if (activeNavItem) activeNavItem.classList.add('active');
+    
+      // Affiche la bonne section et cache les autres
+      document.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
+      const targetSection = document.getElementById(`${sectionId}-section`);
+      if (targetSection) targetSection.classList.add('active');
+    
+      // Changer le titre
+      const titles = {
+        'accueil': 'Dashboard PROCASEF',
+        'parcelles': 'Répartition des Parcelles',
+        'etat-avancement': 'État d\'Avancement',
+        'projections-2025': 'Projections 2025',
+        'genre': 'Répartition par Genre',
+        'rapport': 'Rapport Complet',
+        'post-traitement': 'Post-Traitement'
+        // Ajouter d’autres titres si besoin
+      };
+      const pageTitle = document.getElementById('pageTitle');
+      if (pageTitle) pageTitle.textContent = titles[sectionId] || titles.accueil;
+    
+      // Chargement données avant rendu
+      await this.loadDataForSection(sectionId);
+    
+      this.currentSection = sectionId;
+      this.renderSection(sectionId);
     }
 
-  async loadDataForSection(sec) {
-    switch(sec) {
-      case 'parcelles':
-        if (!this.data.parcelles.length) this.data.parcelles = await this.dataLoader.loadData('data/parcelles.json');
-        break;
-      case 'etat-avancement':
-        if (!this.data.etatOperations.length) this.data.etatOperations = await this.dataLoader.loadData('data/Etat_des_operations_Boundou_Mai_2025.json');
-        break;
-      case 'projections-2025':
-        if (!this.data.projections.length) this.data.projections = await this.dataLoader.loadData('data/Projections_2025.json');
-        break;
-      case 'genre':
-        if (!this.data.genreCommune.length) this.data.genreCommune = await this.dataLoader.loadData('data/Genre_par_Commune.json');
-        if (!this.data.genreTrimestre.length) this.data.genreTrimestre = await this.dataLoader.loadData('data/Genre_par_trimestre.json');
-        if (!this.data.repartitionGenre.length) this.data.repartitionGenre = await this.dataLoader.loadData('data/Repartition_genre.json');
-        break;
-      case 'rapport':
-        if (!this.data.rapportComplet.length) this.data.rapportComplet = await this.dataLoader.loadData('data/rapport_complet.json');
-        break;
-      case 'stats-topo':
-        if (!this.data.topoData.length) this.data.topoData = await this.dataLoader.loadData('data/Rapports_Topo_nettoyee.json');
-        this.populateTopoFilters();
-        break;
-    }
-  }
+
+    async loadDataForSection(sec) {
+      switch(sec) {
+        case 'parcelles':
+          if (!Array.isArray(this.data.parcelles) || this.data.parcelles.length === 0) {
+            this.data.parcelles = await this.dataLoader.loadData('data/parcelles.json');
+          }
+          break;
+        case 'etat-avancement':
+          if (!Array.isArray(this.data.etatOperations) || this.data.etatOperations.length === 0) {
+            this.data.etatOperations = await this.dataLoader.loadData('data/Etat_des_operations_Boundou_Mai_2025.json');
+          }
+          break;
+        case 'projections-2025':
+          if (!Array.isArray(this.data.projections) || this.data.projections.length === 0) {
+            this.data.projections = await this.dataLoader.loadData('data/Projections_2025.json');
+          }
+          break;
+        case 'genre':
+          if (!Array.isArray(this.data.genreCommune) || this.data.genreCommune.length === 0) {
+            this.data.genreCommune = await this.dataLoader.loadData('data/Genre_par_Commune.json');
+          }
+          if (!Array.isArray(this.data.genreTrimestre) || this.data.genreTrimestre.length === 0) {
+            this.data.genreTrimestre = await this.dataLoader.loadData('data/Genre_par_trimestre.json');
+          }
+          if (!Array.isArray(this.data.repartitionGenre) || this.data.repartitionGenre.length === 0) {
+            this.data.repartitionGenre = await this.dataLoader.loadData('data/Repartition_genre.json');
+          }
+          break;
+        case 'rapport':
+          if (!Array.isArray(this.data.rapportComplet) || this.data.rapportComplet.length === 0) {
+            this.data.rapportComplet = await this.dataLoader.loadData('data/rapport_complet.json');
+          }
+          break;
+        case 'stats-topo':
+          if (!Array.isArray(this.data.topoData) || this.data.topoData.length === 0) {
+            this.data.topoData = await this.dataLoader.loadData('data/Rapports_Topo_nettoyee.json');
+          }
+          this.populateTopoFilters();
+          break;
+        // autres cas selon besoin
+      }
+}
+
 
     renderDashboard() {
         this.renderAccueil();
