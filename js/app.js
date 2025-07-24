@@ -257,6 +257,32 @@ class ProcasefDashboard {
             clearDateBtn.addEventListener('click', () => this.clearDateRange());
         }
 
+             validateDateRange() {
+            const dateDebut = document.getElementById('topoDateDebut')?.value;
+            const dateFin = document.getElementById('topoDateFin')?.value;
+            
+            if (dateDebut && dateFin && dateDebut > dateFin) {
+                this.showError('La date de début doit être antérieure à la date de fin');
+                // Reset la date de fin
+                document.getElementById('topoDateFin').value = '';
+                return false;
+            }
+            return true;
+        }
+        
+        // 5. Modifier setupEventListeners() pour inclure la validation :
+        // Ajouter après la configuration des event listeners des dates :
+        ['topoDateDebut', 'topoDateFin'].forEach(filterId => {
+            const filter = document.getElementById(filterId);
+            if (filter) {
+                filter.addEventListener('change', () => {
+                    if (this.validateDateRange()) {
+                        this.applyTopoFilters();
+                    }
+                });
+            }
+        });
+
         // Export buttons
         const exportParcellesBtn = document.getElementById('exportParcellesBtn');
         const exportPostBtn = document.getElementById('exportPostBtn');
@@ -829,31 +855,7 @@ class ProcasefDashboard {
     }
     
     // 4. Optionnel : Ajouter une validation pour s'assurer que dateDebut <= dateFin
-    validateDateRange() {
-        const dateDebut = document.getElementById('topoDateDebut')?.value;
-        const dateFin = document.getElementById('topoDateFin')?.value;
-        
-        if (dateDebut && dateFin && dateDebut > dateFin) {
-            this.showError('La date de début doit être antérieure à la date de fin');
-            // Reset la date de fin
-            document.getElementById('topoDateFin').value = '';
-            return false;
-        }
-        return true;
-    }
-    
-    // 5. Modifier setupEventListeners() pour inclure la validation :
-    // Ajouter après la configuration des event listeners des dates :
-    ['topoDateDebut', 'topoDateFin'].forEach(filterId => {
-        const filter = document.getElementById(filterId);
-        if (filter) {
-            filter.addEventListener('change', () => {
-                if (this.validateDateRange()) {
-                    this.applyTopoFilters();
-                }
-            });
-        }
-    });
+   
 
     updateTopoKPIs() {
         const d = this.filteredTopoData || [];
