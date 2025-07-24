@@ -174,7 +174,7 @@ class ProcasefDashboard {
             this.communeStats = {};
             return;
         }
-
+    
         console.log('Calcul des statistiques...');
         
         this.stats = {
@@ -187,7 +187,7 @@ class ProcasefDashboard {
                 .filter(p => p.superficie && !isNaN(parseFloat(p.superficie)))
                 .reduce((sum, p) => sum + parseFloat(p.superficie), 0)
         };
-
+    
         // Stats par commune
         this.communeStats = {};
         this.data.parcelles.forEach(parcelle => {
@@ -208,7 +208,7 @@ class ProcasefDashboard {
                 this.communeStats[commune].superficie += parseFloat(parcelle.superficie);
             }
         });
-
+    
         console.log('Statistiques calculées:', this.stats);
     }
 
@@ -693,8 +693,9 @@ class ProcasefDashboard {
         if (!this.data.topoData || !Array.isArray(this.data.topoData)) return;
         
         const communes = [...new Set(this.data.topoData.map(t => t.commune).filter(Boolean))].sort();
-        const topographes = [...new Set(this.data.topoData.map(t => `${t.prenom} ${t.nom}`).filter(Boolean))].sort();
+        const topographes = [...new Set(this.data.topoData.map(t => `${t.prenom || ''} ${t.nom || ''}`).filter(name => name.trim()))].sort();
         
+        // Populate commune filter
         const communeSelect = document.getElementById('topoCommuneFilter');
         if (communeSelect) {
             communeSelect.innerHTML = '<option value="">Toutes les communes</option>';
@@ -704,6 +705,7 @@ class ProcasefDashboard {
             });
         }
         
+        // Populate topographe filter
         const topoSelect = document.getElementById('topoTopographeFilter');
         if (topoSelect) {
             topoSelect.innerHTML = '<option value="">Tous les topographes</option>';
@@ -963,10 +965,10 @@ class ProcasefDashboard {
     updateKPIs() {
         if (!this.stats) return;
     
-        this.updateElement('totalParcelles', this.stats.total.toLocaleString());
-        this.updateElement('parcellesNicad', this.stats.nicad_oui.toLocaleString());
-        this.updateElement('parcellesDeliberees', this.stats.deliberees_oui.toLocaleString());
-        this.updateElement('superficieTotale', this.stats.superficie_totale.toLocaleString(undefined, { maximumFractionDigits: 2 }));
+        this.updateElement('totalParcelles', (this.stats.total || 0).toLocaleString());
+        this.updateElement('parcellesNicad', (this.stats.nicad_oui || 0).toLocaleString());
+        this.updateElement('parcellesDeliberees', (this.stats.deliberees_oui || 0).toLocaleString());
+        this.updateElement('superficieTotale', (this.stats.superficie_totale || 0).toLocaleString(undefined, { maximumFractionDigits: 2 }));
     
         const nicadPct = this.stats.total > 0 ? ((this.stats.nicad_oui / this.stats.total) * 100).toFixed(1) : 0;
         const delibPct = this.stats.total > 0 ? ((this.stats.deliberees_oui / this.stats.total) * 100).toFixed(1) : 0;
@@ -995,7 +997,7 @@ class ProcasefDashboard {
 
     updateProjectionsKPIs() {
         const OBJECTIF = 70000;
-        const realise = this.stats?.total ?? 0;
+        const realise = (this.stats && this.stats.total) ? this.stats.total : 0;
         const performance = OBJECTIF > 0 ? ((realise / OBJECTIF) * 100).toFixed(1) : 0;
     
         this.updateElement('objectif2025', OBJECTIF.toLocaleString());
@@ -1003,17 +1005,21 @@ class ProcasefDashboard {
         this.updateElement('performance2025', `${performance}%`);
     }
 
+
     updateGenreKPIs() {
         if (!this.data.repartitionGenre || !Array.isArray(this.data.repartitionGenre)) return;
-
-        const hommes = this.data.repartitionGenre.find(r => r.genre === 'Homme')?.total_nombre || 43576;
-        const femmes = this.data.repartitionGenre.find(r => r.genre === 'Femme')?.total_nombre || 9332;
-        const total = hommes + femmes;
-
-        this.updateElement('hommesTotal', hommes.toLocaleString());
-        this.updateElement('femmesTotal', femmes.toLocaleString());
-        this.updateElement('hommesPercentage', `${total > 0 ? ((hommes / total) * 100).toFixed(1) : 0}%`);
-        this.updateElement('femmesPercentage', `${total > 0 ? ((femmes / total) * 100).toFixed(1) : 0}%`);
+    
+        const hommes = this.data.repartitionGenre.find(r => r.genre === 'Homme');
+        const femmes = this.data.repartitionGenre.find(r => r.genre === 'Femme');
+        
+        const hommesTotal = hommes ? hommes.total_nombre : 43576;
+        const femmesTotal = femmes ? femmes.total_nombre : 9332;
+        const total = hommesTotal + femmesTotal;
+    
+        this.updateElement('hommesTotal', hommesTotal.toLocaleString());
+        this.updateElement('femmesTotal', femmesTotal.toLocaleString());
+        this.updateElement('hommesPercentage', `${total > 0 ? ((hommesTotal / total) * 100).toFixed(1) : 0}%`);
+        this.updateElement('femmesPercentage', `${total > 0 ? ((femmesTotal / total) * 100).toFixed(1) : 0}%`);
     }
 
     // Méthodes de création de graphiques
@@ -1752,8 +1758,3 @@ class ProcasefDashboard {
     });
     this.charts = {};
 }
-
-// Initialisation de l'application
-document.addEventListener('DOMContentLoaded', () => {
-    window.procasefApp = new ProcasefDashboard();
-});
