@@ -32,7 +32,7 @@ class ProcasefDashboard {
         this.currentSection = 'accueil';
         this.fontSize = 14;
         this.filteredParcelles = null;
-        this.filteredTopoData = []; // 🔴 AJOUT: Initialisation
+        this.filteredTopoData = [];
         this.filters = {
             commune: '',
             nicad: '',
@@ -40,6 +40,65 @@ class ProcasefDashboard {
         };
         
         this.init();
+    }
+
+    // 🔴 AJOUT: Méthodes de loading manquantes
+    showLoading() {
+        const loadingEl = document.getElementById('loadingSpinner');
+        if (loadingEl) {
+            loadingEl.style.display = 'flex';
+        } else {
+            // Créer un spinner si n'existe pas
+            const spinner = document.createElement('div');
+            spinner.id = 'loadingSpinner';
+            spinner.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                     background: rgba(0,0,0,0.5); display: flex; justify-content: center; 
+                     align-items: center; z-index: 9999;">
+                    <div style="background: white; padding: 20px; border-radius: 8px; text-align: center;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                        <div class="mt-2">Chargement des données...</div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(spinner);
+        }
+    }
+
+    hideLoading() {
+        const loadingEl = document.getElementById('loadingSpinner');
+        if (loadingEl) {
+            loadingEl.style.display = 'none';
+        }
+    }
+
+    // 🔴 AJOUT: Méthode toggleSidebar manquante
+    toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+        
+        if (sidebar && mainContent) {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+        }
+    }
+
+    // 🔴 AJOUT: Méthode updateElement manquante
+    updateElement(elementId, value) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.textContent = value;
+        }
+    }
+
+    // 🔴 AJOUT: Méthode getRegionForCommune manquante
+    getRegionForCommune(commune) {
+        if (!this.data.parcelles || !Array.isArray(this.data.parcelles)) return 'N/A';
+        
+        const parcelle = this.data.parcelles.find(p => p.commune === commune);
+        return parcelle ? parcelle.region || 'N/A' : 'N/A';
     }
 
     async init() {
@@ -51,34 +110,70 @@ class ProcasefDashboard {
             this.renderDashboard();
         } catch (error) {
             console.error('Erreur durant l\'init:', error);
+            this.showError('Erreur lors de l\'initialisation de l\'application');
         }
         this.hideLoading();
     }
 
+    // 🔴 AJOUT: Méthode showError
+    showError(message) {
+        const errorEl = document.createElement('div');
+        errorEl.className = 'alert alert-danger alert-dismissible fade show';
+        errorEl.style.position = 'fixed';
+        errorEl.style.top = '20px';
+        errorEl.style.right = '20px';
+        errorEl.style.zIndex = '10000';
+        errorEl.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(errorEl);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (errorEl.parentNode) {
+                errorEl.remove();
+            }
+        }, 5000);
+    }
+
     async loadInitialData() {
         console.log('Chargement des données initiales...');
+        
+        const loadPromises = [
+            this.loadDataSafely('data/parcelles.json', 'parcelles'),
+            this.loadDataSafely('data/Projections_2025.json', 'projections'),
+            this.loadDataSafely('data/Repartition_genre.json', 'repartitionGenre')
+        ];
+
+        await Promise.allSettled(loadPromises);
+    }
+
+    // 🔴 AJOUT: Méthode de chargement sécurisée
+    async loadDataSafely(path, key) {
         try {
-            this.data.parcelles = await this.dataLoader.loadData('data/parcelles.json');
-        } catch (e) {
-            console.error('Échec chargement parcelles:', e);
-            this.data.parcelles = [];
-        }
-        try {
-            this.data.projections = await this.dataLoader.loadData('data/Projections_2025.json');
-        } catch (e) {
-            console.error('Échec chargement projections:', e);
-            this.data.projections = [];
-        }
-        try {
-            this.data.repartitionGenre = await this.dataLoader.loadData('data/Repartition_genre.json');
-        } catch (e) {
-            console.error('Échec chargement repartitionGenre:', e);
-            this.data.repartitionGenre = [];
+            this.data[key] = await this.dataLoader.loadData(path);
+            console.log(`✅ ${key} chargé avec succès:`, this.data[key]?.length || 'N/A', 'éléments');
+        } catch (error) {
+            console.error(`❌ Échec chargement ${key}:`, error);
+            this.data[key] = [];
         }
     }
 
     calculateStats() {
-        if (!this.data.parcelles || !Array.isArray(this.data.parcelles)) return;
+        if (!this.data.parcelles || !Array.isArray(this.data.parcelles)) {
+            console.warn('Pas de données parcelles disponibles pour le calcul des stats');
+            this.stats = {
+                total: 0,
+                nicad_oui: 0,
+                nicad_non: 0,
+                deliberees_oui: 0,
+                deliberees_non: 0,
+                superficie_totale: 0
+            };
+            this.communeStats = {};
+            return;
+        }
 
         console.log('Calcul des statistiques...');
         
@@ -148,7 +243,7 @@ class ProcasefDashboard {
             }
         });
 
-        // 🔴 AJOUT: Event listeners pour les filtres topo
+        // Event listeners pour les filtres topo
         ['topoCommuneFilter', 'topoTopographeFilter', 'topoDateFilter'].forEach(filterId => {
             const filter = document.getElementById(filterId);
             if (filter) {
@@ -159,7 +254,7 @@ class ProcasefDashboard {
         // Export buttons
         const exportParcellesBtn = document.getElementById('exportParcellesBtn');
         const exportPostBtn = document.getElementById('exportPostBtn');
-        const exportTopoBtn = document.getElementById('exportTopoBtn'); // 🔴 AJOUT
+        const exportTopoBtn = document.getElementById('exportTopoBtn');
         
         if (exportParcellesBtn) {
             exportParcellesBtn.addEventListener('click', () => this.exportParcellesData());
@@ -178,10 +273,19 @@ class ProcasefDashboard {
     }
 
     setupFontSizeControls() {
+        // Charger la préférence sauvegardée
+        try {
+            const saved = localStorage.getItem('procasef-font-size');
+            if (saved) {
+                this.fontSize = parseInt(saved);
+            }
+        } catch (error) {
+            console.log('localStorage non disponible');
+        }
+
         const fontSlider = document.getElementById('fontSizeSlider');
         const fontDecrease = document.getElementById('fontDecrease');
         const fontIncrease = document.getElementById('fontIncrease');
-        const fontTooltip = document.getElementById('fontTooltip');
 
         if (fontSlider) {
             fontSlider.value = this.fontSize;
@@ -218,6 +322,9 @@ class ProcasefDashboard {
                 }
             });
         }
+
+        // Appliquer la taille de police initiale
+        this.updateFontSize();
     }
 
     updateFontSize() {
@@ -239,7 +346,6 @@ class ProcasefDashboard {
         }
     }
 
-    // 🔴 CORRECTION: Gestion d'erreurs améliorée pour la navigation
     async navigateToSection(sectionId) {
         console.log('Navigation vers la section:', sectionId);
     
@@ -250,7 +356,6 @@ class ProcasefDashboard {
                 this.mapManager.destroyMap();
             } catch (error) {
                 console.warn('Erreur lors de la destruction de la carte:', error);
-                // Forcer le nettoyage même en cas d'erreur
                 this.mapManager.map = null;
                 if (this.mapManager.markers) this.mapManager.markers = [];
                 if (this.mapManager.markerCluster) this.mapManager.markerCluster = null;
@@ -289,46 +394,39 @@ class ProcasefDashboard {
     }
 
     async loadDataForSection(sec) {
+        const dataConfigs = {
+            'parcelles': { path: 'data/parcelles.json', key: 'parcelles' },
+            'etat-avancement': { path: 'data/Etat_des_operations_Boundou_Mai_2025.json', key: 'etatOperations' },
+            'projections-2025': { path: 'data/Projections_2025.json', key: 'projections' },
+            'genre': [
+                { path: 'data/Genre_par_Commune.json', key: 'genreCommune' },
+                { path: 'data/Genre_par_trimestre.json', key: 'genreTrimestre' },
+                { path: 'data/Repartition_genre.json', key: 'repartitionGenre' }
+            ],
+            'rapport': { path: 'data/rapport_complet.json', key: 'rapportComplet' },
+            'stats-topo': { path: 'data/Rapports_Topo_nettoyee.json', key: 'topoData' }
+        };
+
+        const config = dataConfigs[sec];
+        if (!config) return;
+
         try {
-            switch(sec) {
-                case 'parcelles':
-                    if (!Array.isArray(this.data.parcelles) || this.data.parcelles.length === 0) {
-                        this.data.parcelles = await this.dataLoader.loadData('data/parcelles.json');
-                    }
-                    break;
-                case 'etat-avancement':
-                    if (!Array.isArray(this.data.etatOperations) || this.data.etatOperations.length === 0) {
-                        this.data.etatOperations = await this.dataLoader.loadData('data/Etat_des_operations_Boundou_Mai_2025.json');
-                    }
-                    break;
-                case 'projections-2025':
-                    if (!Array.isArray(this.data.projections) || this.data.projections.length === 0) {
-                        this.data.projections = await this.dataLoader.loadData('data/Projections_2025.json');
-                    }
-                    break;
-                case 'genre':
-                    if (!Array.isArray(this.data.genreCommune) || this.data.genreCommune.length === 0) {
-                        this.data.genreCommune = await this.dataLoader.loadData('data/Genre_par_Commune.json');
-                    }
-                    if (!Array.isArray(this.data.genreTrimestre) || this.data.genreTrimestre.length === 0) {
-                        this.data.genreTrimestre = await this.dataLoader.loadData('data/Genre_par_trimestre.json');
-                    }
-                    if (!Array.isArray(this.data.repartitionGenre) || this.data.repartitionGenre.length === 0) {
-                        this.data.repartitionGenre = await this.dataLoader.loadData('data/Repartition_genre.json');
-                    }
-                    break;
-                case 'rapport':
-                    if (!Array.isArray(this.data.rapportComplet) || this.data.rapportComplet.length === 0) {
-                        this.data.rapportComplet = await this.dataLoader.loadData('data/rapport_complet.json');
-                    }
-                    break;
-                case 'stats-topo':
-                    if (!Array.isArray(this.data.topoData) || this.data.topoData.length === 0) {
-                        this.data.topoData = await this.dataLoader.loadData('data/Rapports_Topo_nettoyee.json');
-                        this.filteredTopoData = this.data.topoData; // Initialiser les données filtrées
-                    }
-                    this.populateTopoFilters();
-                    break;
+            if (Array.isArray(config)) {
+                // Charger plusieurs fichiers
+                await Promise.allSettled(
+                    config.map(c => this.loadDataSafely(c.path, c.key))
+                );
+            } else {
+                // Charger un seul fichier
+                if (!this.data[config.key] || this.data[config.key].length === 0) {
+                    await this.loadDataSafely(config.path, config.key);
+                }
+            }
+
+            // Actions spécifiques après chargement
+            if (sec === 'stats-topo') {
+                this.filteredTopoData = this.data.topoData || [];
+                this.populateTopoFilters();
             }
         } catch (error) {
             console.error(`Erreur lors du chargement des données pour ${sec}:`, error);
@@ -340,41 +438,32 @@ class ProcasefDashboard {
         this.populateFilters();
     }
 
-    // 🔴 CORRECTION: Gestion d'erreurs améliorée pour le rendu
     renderSection(sec) {
         // Détruire tous les charts avant de rendre une nouvelle section
         this.destroyAllCharts();
         
         try {
-            switch(sec) {
-                case 'accueil': 
-                    this.renderAccueil(); 
-                    break;
-                case 'parcelles': 
-                    this.renderParcelles(); 
-                    break;
-                case 'etat-avancement': 
-                    this.renderEtatAvancement(); 
-                    break;
-                case 'projections-2025': 
-                    this.renderProjections(); 
-                    break;
-                case 'genre': 
-                    this.renderGenre(); 
-                    break;
-                case 'rapport': 
-                    this.renderRapport(); 
-                    break;
-                case 'stats-topo': 
-                    this.renderStatsTopo(); 
-                    break;
-                default:
-                    console.warn(`Section inconnue: ${sec}`);
-                    this.renderAccueil();
+            const renderMethods = {
+                'accueil': () => this.renderAccueil(),
+                'parcelles': () => this.renderParcelles(),
+                'etat-avancement': () => this.renderEtatAvancement(),
+                'projections-2025': () => this.renderProjections(),
+                'genre': () => this.renderGenre(),
+                'rapport': () => this.renderRapport(),
+                'stats-topo': () => this.renderStatsTopo(),
+                'post-traitement': () => this.renderPostTraitement()
+            };
+
+            const renderMethod = renderMethods[sec];
+            if (renderMethod) {
+                renderMethod();
+            } else {
+                console.warn(`Section inconnue: ${sec}`);
+                this.renderAccueil();
             }
         } catch (error) {
             console.error(`Erreur lors du rendu de la section ${sec}:`, error);
-            // Fallback vers l'accueil en cas d'erreur
+            this.showError(`Erreur lors de l'affichage de la section ${sec}`);
             this.renderAccueil();
         }
     }
@@ -409,11 +498,9 @@ class ProcasefDashboard {
             const communes = dataArr.map(x => x.commune);
             const etats = dataArr.map(x => x.etat_d_avancement || "Non défini");
 
-            // Bar chart horizontal
             if (window.chartManager) {
                 window.chartManager.createEtatCommuneBarChart('etatCommuneBarChart', communes, etats);
 
-                // Donut chart
                 const etatCounts = dataArr.reduce((acc, op) => {
                     const key = op.etat_d_avancement?.trim() || "Non défini";
                     acc[key] = (acc[key] || 0) + 1;
@@ -430,55 +517,6 @@ class ProcasefDashboard {
         }, 200);
     }
 
-    populateEtatAvancementFilters() {
-        const arr = this.data.etatOperations || [];
-        const regions = [...new Set(arr.map(e => e.region).filter(Boolean))].sort();
-        const etats = [...new Set(arr.map(e => e.etat_d_avancement).filter(Boolean))].sort();
-        const csigs = [...new Set(arr.map(e => e.csig).filter(Boolean))].sort();
-        const communes = [...new Set(arr.map(e => e.commune).filter(Boolean))].sort();
-
-        function updateSelect(selectId, options, allLabel) {
-            const sel = document.getElementById(selectId);
-            if (!sel) return;
-            const prevValue = sel.value;
-            sel.innerHTML = `<option value="">${allLabel}</option>` + options.map(o => `<option value="${o}">${o}</option>`).join('');
-            sel.value = prevValue;
-            sel.onchange = () => window.procasefApp.renderEtatAvancement();
-        }
-        updateSelect('regionFilterEtat', regions, 'Toutes les régions');
-        updateSelect('etatFilterEtat', etats, 'Tous les états');
-        updateSelect('csigFilterEtat', csigs, 'Tous les CSIG');
-        updateSelect('communeFilterEtat', communes, 'Toutes les communes');
-    }
-
-    getFilteredEtatOperations() {
-        const r = document.getElementById('regionFilterEtat')?.value;
-        const e = document.getElementById('etatFilterEtat')?.value;
-        const c = document.getElementById('communeFilterEtat')?.value;
-        const csig = document.getElementById('csigFilterEtat')?.value;
-        let arr = this.data.etatOperations || [];
-        if (r) arr = arr.filter(x => x.region === r);
-        if (e) arr = arr.filter(x => x.etat_d_avancement === e);
-        if (c) arr = arr.filter(x => x.commune === c);
-        if (csig) arr = arr.filter(x => x.csig === csig);
-        return arr;
-    }
-
-    renderEtatTimeline() {
-        const container = document.getElementById('etatTimeline');
-        if (!container) return;
-        const dataArr = this.getFilteredEtatOperations();
-        container.innerHTML = dataArr.map(x => `
-            <div class="timeline-item ${x.etat_d_avancement?.toLowerCase().includes('terminé') ? 'completed' : x.etat_d_avancement?.toLowerCase().includes('cours') ? 'in-progress' : 'pending'}">
-                <div class="timeline-content">
-                    <div class="timeline-commune">${x.commune} <span style="color:#888;">(${x.region})</span>  <span style="font-size:12px; color:#B8860B;">CSIG: ${x.csig || '-'}</span></div>
-                    <div class="timeline-status">${x.etat_d_avancement || "Non défini"}</div>
-                    <div class="timeline-steps">${(x.progres_des_etapes || '').replace(/\n/g, '<br>')}</div>
-                </div>
-            </div>
-        `).join('');
-    }
-
     renderProjections() {
         console.log('Rendu de la section Projections');
         this.updateProjectionsKPIs();
@@ -492,20 +530,17 @@ class ProcasefDashboard {
         console.log('Rendu de la section Genre');
         this.updateGenreKPIs();
         setTimeout(() => {
-            this.createGenreGlobalChart(); // 🔴 CORRECTION: Utiliser la bonne méthode
+            this.createGenreGlobalChart();
             this.createGenreTrimestreChart();
             this.createGenreCommuneChart();
         }, 200);
     }
 
-    /**
-     * SECTION RAPPORT COMPLET
-     */
     renderRapport() {
         console.log('Rendu de la section Rapport');
         const data = this.data.rapportComplet || {};
 
-        // 1. KPIs synthèse globale
+        // KPIs synthèse globale
         const wrap = document.getElementById("rapportKpiGrid");
         if (wrap) {
             wrap.innerHTML = "";
@@ -515,7 +550,7 @@ class ProcasefDashboard {
                 card.innerHTML = `
                     <div class="kpi-header">
                         <h3>${kpi.indicateur}</h3>
-                        <span class="kpi-icon">📊⚤</span>
+                        <span class="kpi-icon">📊</span>
                     </div>
                     <div class="kpi-value">${kpi.valeur.toLocaleString?.() ?? kpi.valeur}</div>
                     <div class="kpi-subtitle">Données complètes</div>
@@ -524,59 +559,59 @@ class ProcasefDashboard {
             });
         }
 
-        setTimeout(() => {
-            // 2. Graphique sources
-            const ctxSource = "rapportSourceChart";
-            if (window.chartManager) {
-                const src = data["Détail par Source"] || [];
-                if (src.length > 0) {
-                    window.chartManager.createStackedBar(ctxSource, {
-                        labels: src.map(s => s.source),
-                        datasets: [
-                            {
-                                label: "Hommes",
-                                data: src.map(s => s.hommes),
-                                backgroundColor: this.colors.secondary
-                            },
-                            {
-                                label: "Femmes",
-                                data: src.map(s => s.femmes),
-                                backgroundColor: this.colors.primary
-                            }
-                        ]
-                    }, { 
-                        plugins: { 
-                            title: { 
-                                display: true, 
-                                text: "Participants par source" 
-                            } 
-                        }, 
-                        indexAxis: "y" 
-                    });
-                }
-            }
-
-            // 3. Mixed Top 10 Communes
-            const communesData = data["Analyse par Commune"]?.sort((a, b) => b.total - a.total).slice(0, 10) || [];
-            if (communesData.length > 0 && window.chartManager) {
-                window.chartManager.createMixedChart("rapportCommuneMixedChart", communesData);
-            }
-
-            // 4. Évolution temporelle
-            const temporal = data["Analyse Temporelle"] || [];
-            if (temporal.length > 0 && window.chartManager) {
-                window.chartManager.createTemporalChart("rapportTemporalChart", temporal);
-            }
-
-            // 5. Polar par région
-            const regions = data["Tamba-Kédougou"] || [];
-            if (regions.length > 0 && window.chartManager) {
-                window.chartManager.createPolarChart("rapportRegionPolarChart", regions);
-            }
-        }, 200);
+        setTimeout(() => this.renderRapportCharts(data), 200);
     }
 
-    // 🔴 AJOUT: Section Stats Topo complète
+    renderRapportCharts(data) {
+        if (!window.chartManager) return;
+
+        // Graphique sources
+        const src = data["Détail par Source"] || [];
+        if (src.length > 0) {
+            window.chartManager.createStackedBar("rapportSourceChart", {
+                labels: src.map(s => s.source),
+                datasets: [
+                    {
+                        label: "Hommes",
+                        data: src.map(s => s.hommes),
+                        backgroundColor: this.colors.secondary
+                    },
+                    {
+                        label: "Femmes",
+                        data: src.map(s => s.femmes),
+                        backgroundColor: this.colors.primary
+                    }
+                ]
+            }, { 
+                plugins: { 
+                    title: { 
+                        display: true, 
+                        text: "Participants par source" 
+                    } 
+                }, 
+                indexAxis: "y" 
+            });
+        }
+
+        // Mixed Top 10 Communes
+        const communesData = data["Analyse par Commune"]?.sort((a, b) => b.total - a.total).slice(0, 10) || [];
+        if (communesData.length > 0) {
+            window.chartManager.createMixedChart("rapportCommuneMixedChart", communesData);
+        }
+
+        // Évolution temporelle
+        const temporal = data["Analyse Temporelle"] || [];
+        if (temporal.length > 0) {
+            window.chartManager.createTemporalChart("rapportTemporalChart", temporal);
+        }
+
+        // Polar par région
+        const regions = data["Tamba-Kédougou"] || [];
+        if (regions.length > 0) {
+            window.chartManager.createPolarChart("rapportRegionPolarChart", regions);
+        }
+    }
+
     renderStatsTopo() {
         console.log('Rendu de la section Stats Topo');
         this.applyTopoFilters();
@@ -588,14 +623,75 @@ class ProcasefDashboard {
         }, 200);
     }
 
-    // 🔴 AJOUT: Méthodes pour la section stats-topo
+    // 🔴 AJOUT: Méthode renderPostTraitement manquante
+    renderPostTraitement() {
+        console.log('Rendu de la section Post-Traitement');
+        this.populatePostFilters();
+        setTimeout(() => {
+            this.renderPostTraitementTable();
+            this.createPostCharts();
+        }, 200);
+    }
+
+    // 🔴 AJOUT: Méthodes pour Post-Traitement
+    populatePostFilters() {
+        // Populate filters for post-traitement section
+        const communes = ['NDOGA BABACAR', 'BANDAFASSI', 'DIMBOLI', 'MISSIRAH', 'NETTEBOULOU'];
+        const geometres = ['FALL Mamadou', 'DIALLO Aissatou', 'NDIAYE Ousmane'];
+
+        const communeSelect = document.getElementById('postCommuneFilter');
+        if (communeSelect) {
+            communeSelect.innerHTML = '<option value="">Toutes les communes</option>';
+            communes.forEach(commune => {
+                communeSelect.insertAdjacentHTML('beforeend', 
+                    `<option value="${commune}">${commune}</option>`);
+            });
+        }
+
+        const geomSelect = document.getElementById('postGeomFilter');
+        if (geomSelect) {
+            geomSelect.innerHTML = '<option value="">Tous les géomètres</option>';
+            geometres.forEach(geom => {
+                geomSelect.insertAdjacentHTML('beforeend', 
+                    `<option value="${geom}">${geom}</option>`);
+            });
+        }
+    }
+
+    createPostCharts() {
+        if (!window.chartManager) return;
+
+        // Sample data for demonstration
+        const postData = [
+            { commune: 'NDOGA BABACAR', recues: 1250, traitees: 1180, taux: 94.4 },
+            { commune: 'BANDAFASSI', recues: 980, traitees: 920, taux: 93.9 },
+            { commune: 'DIMBOLI', recues: 845, traitees: 790, taux: 93.5 },
+            { commune: 'MISSIRAH', recues: 720, traitees: 650, taux: 90.3 },
+            { commune: 'NETTEBOULOU', recues: 650, traitees: 580, taux: 89.2 }
+        ];
+
+        // Chart des taux de traitement
+        window.chartManager.createBar('postTauxChart', {
+            labels: postData.map(d => d.commune.substring(0, 12)),
+            datasets: [{
+                label: 'Taux de traitement (%)',
+                data: postData.map(d => d.taux),
+                backgroundColor: postData.map(d => {
+                    if (d.taux >= 95) return this.colors.success;
+                    if (d.taux >= 90) return this.colors.warning;
+                    return this.colors.error;
+                })
+            }]
+        });
+    }
+
+    // Méthodes pour les filtres et stats topo
     populateTopoFilters() {
         if (!this.data.topoData || !Array.isArray(this.data.topoData)) return;
         
         const communes = [...new Set(this.data.topoData.map(t => t.commune).filter(Boolean))].sort();
         const topographes = [...new Set(this.data.topoData.map(t => `${t.prenom} ${t.nom}`).filter(Boolean))].sort();
         
-        // Populate commune filter pour topo
         const communeSelect = document.getElementById('topoCommuneFilter');
         if (communeSelect) {
             communeSelect.innerHTML = '<option value="">Toutes les communes</option>';
@@ -605,7 +701,6 @@ class ProcasefDashboard {
             });
         }
         
-        // Populate topographe filter
         const topoSelect = document.getElementById('topoTopographeFilter');
         if (topoSelect) {
             topoSelect.innerHTML = '<option value="">Tous les topographes</option>';
@@ -637,7 +732,6 @@ class ProcasefDashboard {
         
         this.filteredTopoData = filtered;
         
-        // Re-render les composants si on est sur cette section
         if (this.currentSection === 'stats-topo') {
             this.updateTopoKPIs();
             this.renderTopoTable();
@@ -658,7 +752,7 @@ class ProcasefDashboard {
         this.updateKPI('totalTopoParcellesKPI', total);
         this.updateKPI('avgParJourKPI', avg);
         
-        // topographe most active
+        // Topographe le plus actif
         const counts = {};
         d.forEach(x => {
             const name = `${x.prenom} ${x.nom}`;
@@ -733,7 +827,7 @@ class ProcasefDashboard {
         
         tbody.innerHTML = '';
         
-        this.filteredTopoData.slice(0, 50).forEach(item => { // Limiter à 50 pour performance
+        this.filteredTopoData.slice(0, 50).forEach(item => {
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${item.date || '-'}</td>
@@ -751,7 +845,6 @@ class ProcasefDashboard {
         const container = document.getElementById('topoTimeline');
         if (!container || !this.filteredTopoData) return;
         
-        // Grouper par date
         const groupedByDate = this.filteredTopoData.reduce((acc, item) => {
             const date = item.date || 'Date inconnue';
             if (!acc[date]) acc[date] = [];
@@ -759,10 +852,9 @@ class ProcasefDashboard {
             return acc;
         }, {});
         
-        // Créer la timeline
         const timelineHTML = Object.entries(groupedByDate)
-            .sort(([a], [b]) => b.localeCompare(a)) // Tri décroissant par date
-            .slice(0, 10) // Limiter à 10 dates récentes
+            .sort(([a], [b]) => b.localeCompare(a))
+            .slice(0, 10)
             .map(([date, items]) => {
                 const totalParcelles = items.reduce((sum, item) => sum + (item.totale_parcelles || 0), 0);
                 const topographes = [...new Set(items.map(item => `${item.prenom} ${item.nom}`))];
@@ -786,31 +878,26 @@ class ProcasefDashboard {
         container.innerHTML = timelineHTML;
     }
 
-    // Initialisation sécurisée de la carte
+    // Gestion de la carte
     initializeMap() {
         console.log('Initialisation de la carte...');
         
-        // Créer le MapManager s'il n'existe pas
         if (!this.mapManager) {
             this.mapManager = new MapManager();
         }
         
-        // Vérifier si la carte existe déjà
         if (this.mapManager.map) {
             console.log('Carte déjà initialisée, mise à jour des marqueurs seulement');
-            // Si la carte existe, on met juste à jour les marqueurs
             this.updateMapMarkersFromStats();
             return this.mapManager.map;
         }
         
-        // Initialisation seulement si pas de carte existante
         const mapInstance = this.mapManager.initMap('mapContainer');
         
         if (mapInstance && this.communeStats) {
             console.log('Ajout des marqueurs des communes...');
             this.updateMapMarkersFromStats();
             
-            // Ajuster la vue pour inclure tous les marqueurs
             setTimeout(() => {
                 this.mapManager.fitToMarkers();
             }, 500);
@@ -819,20 +906,16 @@ class ProcasefDashboard {
         return mapInstance;
     }
 
-    // Mise à jour des marqueurs depuis les stats
     updateMapMarkersFromStats() {
         if (!this.mapManager || !this.mapManager.map || !this.communeStats) return;
         
-        // Nettoyer les marqueurs existants
         this.mapManager.clearMarkers();
         
-        // Ajouter les marqueurs des communes
         Object.entries(this.communeStats).forEach(([commune, stats]) => {
             this.mapManager.addCommuneMarker(commune, stats);
         });
     }
 
-    // Application des filtres sans recréer la carte
     applyFilters() {
         console.log('Application des filtres');
         
@@ -841,25 +924,21 @@ class ProcasefDashboard {
             return;
         }
 
-        // Récupération des filtres
         let data = this.data.parcelles || [];
         const fComm = document.getElementById('communeFilter')?.value;
         const fNic = document.getElementById('nicadFilter')?.value;
         const fDel = document.getElementById('deliberationFilter')?.value;
         
-        // Application des filtres
         if (fComm) data = data.filter(p => p.commune === fComm);
         if (fNic) data = data.filter(p => p.nicad === fNic);
         if (fDel) data = data.filter(p => p.deliberee === fDel);
         
         this.filteredParcelles = data.length ? data : null;
         
-        // Mise à jour carte sans recréer
         this.updateMapWithFilteredData();
         this.renderParcellesTable();
     }
 
-    // Mise à jour des marqueurs selon filteredParcelles
     updateMapWithFilteredData() {
         if (!this.mapManager?.map) return;
         
@@ -877,6 +956,7 @@ class ProcasefDashboard {
         Object.entries(stats).forEach(([c, s]) => this.mapManager.addCommuneMarker(c, s));
     }
 
+    // Mise à jour des KPIs
     updateKPIs() {
         if (!this.stats) return;
     
@@ -900,7 +980,7 @@ class ProcasefDashboard {
         const progressFill = document.getElementById('globalProgressFill');
         const progressText = document.getElementById('globalProgressText');
         
-        const taux = 47.80; // Taux de réalisation
+        const taux = 47.80;
         
         if (progressFill) {
             progressFill.style.width = taux + '%';
@@ -933,7 +1013,7 @@ class ProcasefDashboard {
         this.updateElement('femmesPercentage', `${total > 0 ? ((femmes / total) * 100).toFixed(1) : 0}%`);
     }
 
-    // Chart creation methods simplifiés pour économiser l'espace
+    // Méthodes de création de graphiques
     createTopCommunesChart() {
         if (!this.communeStats) return;
 
@@ -1059,7 +1139,6 @@ class ProcasefDashboard {
         const ctx = document.getElementById('regionChart');
         if (!ctx) return;
 
-        // Aggregate by region
         const regionData = {};
         this.data.parcelles.forEach(parcelle => {
             const region = parcelle.region || 'Non définie';
@@ -1182,12 +1261,6 @@ class ProcasefDashboard {
         });
     }
 
-    // 🔴 CORRECTION: Méthode corrigée
-    createGenreGlobalDonut() {
-        // Utiliser la méthode existante au lieu de this.create()
-        this.createGenreGlobalChart();
-    }
-
     createGenreTrimestreChart() {
         if (!this.data.genreTrimestre || !Array.isArray(this.data.genreTrimestre)) return;
 
@@ -1276,14 +1349,72 @@ class ProcasefDashboard {
         });
     }
 
-    // Table rendering methods
+    // Méthodes pour les filtres d'état d'avancement
+    populateEtatAvancementFilters() {
+        const arr = this.data.etatOperations || [];
+        const regions = [...new Set(arr.map(e => e.region).filter(Boolean))].sort();
+        const etats = [...new Set(arr.map(e => e.etat_d_avancement).filter(Boolean))].sort();
+        const csigs = [...new Set(arr.map(e => e.csig).filter(Boolean))].sort();
+        const communes = [...new Set(arr.map(e => e.commune).filter(Boolean))].sort();
+
+        const updateSelect = (selectId, options, allLabel) => {
+            const sel = document.getElementById(selectId);
+            if (!sel) return;
+            const prevValue = sel.value;
+            sel.innerHTML = `<option value="">${allLabel}</option>` + 
+                options.map(o => `<option value="${o}">${o}</option>`).join('');
+            sel.value = prevValue;
+            sel.onchange = () => this.renderEtatAvancement();
+        };
+
+        updateSelect('regionFilterEtat', regions, 'Toutes les régions');
+        updateSelect('etatFilterEtat', etats, 'Tous les états');
+        updateSelect('csigFilterEtat', csigs, 'Tous les CSIG');
+        updateSelect('communeFilterEtat', communes, 'Toutes les communes');
+    }
+
+    getFilteredEtatOperations() {
+        const r = document.getElementById('regionFilterEtat')?.value;
+        const e = document.getElementById('etatFilterEtat')?.value;
+        const c = document.getElementById('communeFilterEtat')?.value;
+        const csig = document.getElementById('csigFilterEtat')?.value;
+        
+        let arr = this.data.etatOperations || [];
+        if (r) arr = arr.filter(x => x.region === r);
+        if (e) arr = arr.filter(x => x.etat_d_avancement === e);
+        if (c) arr = arr.filter(x => x.commune === c);
+        if (csig) arr = arr.filter(x => x.csig === csig);
+        
+        return arr;
+    }
+
+    renderEtatTimeline() {
+        const container = document.getElementById('etatTimeline');
+        if (!container) return;
+        
+        const dataArr = this.getFilteredEtatOperations();
+        container.innerHTML = dataArr.map(x => `
+            <div class="timeline-item ${x.etat_d_avancement?.toLowerCase().includes('terminé') ? 'completed' : 
+                                        x.etat_d_avancement?.toLowerCase().includes('cours') ? 'in-progress' : 'pending'}">
+                <div class="timeline-content">
+                    <div class="timeline-commune">${x.commune} 
+                        <span style="color:#888;">(${x.region})</span>  
+                        <span style="font-size:12px; color:#B8860B;">CSIG: ${x.csig || '-'}</span>
+                    </div>
+                    <div class="timeline-status">${x.etat_d_avancement || "Non défini"}</div>
+                    <div class="timeline-steps">${(x.progres_des_etapes || '').replace(/\n/g, '<br>')}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Méthodes de rendu des tableaux
     renderParcellesTable() {
         const tbody = document.getElementById('parcellesTableBody');
         if (!tbody) return;
 
         tbody.innerHTML = '';
 
-        // 🔴 CORRECTION: Utiliser les données filtrées si disponibles
         const src = this.filteredParcelles ? this.buildAgg(this.filteredParcelles) : this.communeStats;
         
         if (!src) return;
@@ -1326,7 +1457,6 @@ class ProcasefDashboard {
         });
     }
 
-    // 🔴 NOUVELLE MÉTHODE: Agrégation pour filteredParcelles
     buildAgg(arr) {
         const o = {};
         arr.forEach(p => {
@@ -1340,68 +1470,12 @@ class ProcasefDashboard {
         return o;
     }
 
-    renderTimeline() {
-        const timelineContainer = document.getElementById('timelineContainer');
-        if (!timelineContainer) return;
-
-        const timelineItems = [
-            { date: '2024-01', title: 'Démarrage Projet', status: 'completed', description: 'Lancement officiel du projet PROCASEF' },
-            { date: '2024-06', title: 'Phase Pilote', status: 'completed', description: 'Mise en œuvre phase pilote dans 3 communes' },
-            { date: '2024-12', title: 'Extension', status: 'current', description: 'Extension à l\'ensemble des communes' },
-            { date: '2025-06', title: 'Finalisation', status: 'pending', description: 'Finalisation et évaluation du projet' }
-        ];
-
-        timelineContainer.innerHTML = timelineItems.map(item => `
-            <div class="timeline-item ${item.status}">
-                <div class="timeline-marker"></div>
-                <div class="timeline-content">
-                    <h6>${item.title}</h6>
-                    <small class="text-muted">${item.date}</small>
-                    <p>${item.description}</p>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    renderPerformanceList() {
-        const performanceContainer = document.getElementById('performanceList');
-        if (!performanceContainer || !this.data.projections) return;
-
-        const performanceData = this.data.projections.map(p => ({
-            periode: p.mois || p.periode,
-            objectif: p.objectif_inventaires_mensuels || p.objectif || 8000,
-            realise: p.inventaires_mensuels_realises || p.realise || 0,
-            performance: p.objectif ? ((p.realise / p.objectif) * 100).toFixed(1) : 0
-        }));
-
-        performanceContainer.innerHTML = performanceData.map(item => `
-            <div class="performance-item">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="mb-1">${item.periode}</h6>
-                        <small class="text-muted">${item.realise.toLocaleString()} / ${item.objectif.toLocaleString()}</small>
-                    </div>
-                    <div class="text-end">
-                        <span class="badge ${parseFloat(item.performance) >= 80 ? 'bg-success' : 
-                                           parseFloat(item.performance) >= 60 ? 'bg-warning' : 'bg-danger'}">
-                            ${item.performance}%
-                        </span>
-                    </div>
-                </div>
-                <div class="progress mt-2" style="height: 4px;">
-                    <div class="progress-bar bg-primary" style="width: ${Math.min(item.performance, 100)}%"></div>
-                </div>
-            </div>
-        `).join('');
-    }
-
     renderPostTraitementTable() {
         const tbody = document.getElementById('postTableBody');
         if (!tbody) return;
 
         tbody.innerHTML = '';
 
-        // Sample data pour post-traitement
         const postData = [
             { commune: 'NDOGA BABACAR', recues: 1250, traitees: 1180, taux: 94.4, statut: 'Conforme' },
             { commune: 'BANDAFASSI', recues: 980, traitees: 920, taux: 93.9, statut: 'Conforme' },
