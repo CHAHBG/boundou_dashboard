@@ -574,52 +574,65 @@ class ProcasefDashboard {
     }
 
     renderRapportCharts(data) {
-        if (!window.chartManager) return;
-
-        // Graphique sources
-        const src = data["Détail par Source"] || [];
-        if (src.length > 0) {
-            window.chartManager.createStackedBar("rapportSourceChart", {
-                labels: src.map(s => s.source),
-                datasets: [
-                    {
-                        label: "Hommes",
-                        data: src.map(s => s.hommes),
-                        backgroundColor: this.colors.secondary
-                    },
-                    {
-                        label: "Femmes",
-                        data: src.map(s => s.femmes),
-                        backgroundColor: this.colors.primary
-                    }
-                ]
-            }, { 
-                plugins: { 
-                    title: { 
-                        display: true, 
-                        text: "Participants par source" 
-                    } 
-                }, 
-                indexAxis: "y" 
-            });
+        if (!window.chartManager) {
+            console.error('ChartManager non disponible');
+            return;
         }
-
-        // Mixed Top 10 Communes
-        const communesData = data["Analyse par Commune"]?.sort((a, b) => b.total - a.total).slice(0, 10) || [];
-        if (communesData.length > 0) {
-            window.chartManager.createMixedChart("rapportCommuneMixedChart", communesData);
-        }
-
-        // Évolution temporelle
-        const temporal = data["Analyse Temporelle"] || [];
-        if (temporal.length > 0) {
-            window.chartManager.createTemporalChart("rapportTemporalChart", temporal);
-        }
-
-        // Polar par région
-        const regions = data["Tamba-Kédougou"] || [];
-        if (regions.length > 0) {
-            window.chartManager.createPolarChart("rapportRegionPolarChart", regions);
+    
+        try {
+            // Graphique sources
+            const src = data["Détail par Source"] || [];
+            if (src.length > 0) {
+                window.chartManager.createStackedBar("rapportSourceChart", {
+                    labels: src.map(s => s.source || 'N/A'),
+                    datasets: [
+                        {
+                            label: "Hommes",
+                            data: src.map(s => s.hommes || 0),
+                            backgroundColor: this.colors.secondary
+                        },
+                        {
+                            label: "Femmes",
+                            data: src.map(s => s.femmes || 0),
+                            backgroundColor: this.colors.primary
+                        }
+                    ]
+                });
+            }
+    
+            // Mixed Top 10 Communes
+            const communesData = (data["Analyse par Commune"] || [])
+                .sort((a, b) => (b.total || 0) - (a.total || 0))
+                .slice(0, 10);
+            if (communesData.length > 0) {
+                window.chartManager.createMixedChart("rapportCommuneMixedChart", communesData);
+            }
+    
+            // Évolution temporelle
+            const temporal = data["Analyse Temporelle"] || [];
+            if (temporal.length > 0) {
+                window.chartManager.createTemporalChart("rapportTemporalChart", temporal);
+            }
+    
+            // Polar par région - CORRECTION ICI
+            const regions = data["Tamba-Kédougou"] || [];
+            if (regions.length > 0 && window.chartManager.createPolarChart) {
+                window.chartManager.createPolarChart("rapportRegionPolarChart", regions);
+            } else if (regions.length > 0) {
+                // Fallback si createPolarChart n'existe pas
+                console.warn('createPolarChart non disponible, utilisation d\'un graphique donut');
+                window.chartManager.createDoughnut("rapportRegionPolarChart", {
+                    labels: regions.map(r => r.nom || r.region || 'N/A'),
+                    datasets: [{
+                        data: regions.map(r => r.total || r.valeur || 0),
+                        backgroundColor: this.colors.chartColors
+                    }]
+                });
+            }
+            
+        } catch (error) {
+            console.error('Erreur lors du rendu des graphiques de rapport:', error);
+            this.showError('Erreur lors de l\'affichage des graphiques du rapport');
         }
     }
 
@@ -1756,14 +1769,30 @@ class ProcasefDashboard {
     }
 
     convertToCSV(objArray) {
-        const array = Array.isArray(objArray) ? objArray : JSON.parse(objArray);
-        if (array.length === 0) return '';
-        const keys = Object.keys(array[0]);
-        const header = keys.join(',') + '\n';
-        const rows = array.map(item =>
-            keys.map(k => `"${(item[k] !== undefined ? item[k] : '').toString().replace(/"/g, '""')}"`).join(',')
-        ).join('\n');
-        return header + rows;
+        if (!objArray || !Array.isArray(objArray) || objArray.length === 0) {
+            console.warn('Données d\'export vides ou invalides');
+            return 'Aucune donnée à exporter';
+        }
+        
+        try {
+            const keys = Object.keys(objArray[0]);
+            const header = keys.join(',') + '\n';
+            
+            const rows = objArray.map(item =>
+                keys.map(k => {
+                    const value = item[k];
+                    // Gérer les valeurs null/undefined
+                    const safeValue = (value !== null && value !== undefined) ? 
+                        value.toString().replace(/"/g, '""') : '';
+                    return `"${safeValue}"`;
+                }).join(',')
+            ).join('\n');
+            
+            return header + rows;
+        } catch (error) {
+            console.error('Erreur lors de la conversion CSV:', error);
+            return 'Erreur lors de l\'export';
+        }
     }
 
     downloadCSV(csvContent, filename) {
