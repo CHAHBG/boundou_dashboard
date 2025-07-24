@@ -1759,3 +1759,37 @@ destroyAllCharts() {
         this.charts = {};
     }
 } 
+
+// Initialisation de l'application
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Initialisation de PROCASEF Dashboard...');
+    
+    // Vérifier que tous les modules requis sont chargés
+    if (typeof DataLoader === 'undefined') {
+        console.error('❌ DataLoader non trouvé');
+        return;
+    }
+    
+    if (typeof MapManager === 'undefined') {
+        console.error('❌ MapManager non trouvé');
+        return;
+    }
+    
+    if (!window.chartManager) {
+        console.error('❌ ChartManager non trouvé');
+        return;
+    }
+    
+    // Créer l'instance du dashboard
+    try {
+        window.dashboard = new ProcasefDashboard();
+        console.log('✅ Dashboard PROCASEF initialisé avec succès');
+    } catch (error) {
+        console.error('❌ Erreur lors de l\'initialisation du dashboard:', error);
+    }
+});
+
+// Export pour utilisation en module si nécessaire
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = ProcasefDashboard;
+}
