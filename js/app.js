@@ -2074,5 +2074,5 @@ class ProcasefDashboard {
 
 // Initialisation de l'application
 document.addEventListener('DOMContentLoaded', () => {
-    window.procasefDashboard = new Date(ProcasefDashboard());
+    window.procasefDashboard = new ProcasefDashboard();
 });
