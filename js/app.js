@@ -2063,9 +2063,13 @@ class ProcasefDashboard {
     }
 
     handleResize() {
-        if (window.chartManager) {
+        // Resize charts if chartManager and resizeAll are available
+        if (window.chartManager && typeof window.chartManager.resizeAll === 'function') {
             window.chartManager.resizeAll();
+        } else {
+            console.warn('chartManager.resizeAll is not available');
         }
+        // Resize map if mapManager and map are initialized
         if (this.mapManager && this.mapManager.map) {
             this.mapManager.map.invalidateSize();
         }
