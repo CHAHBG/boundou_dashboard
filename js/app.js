@@ -691,10 +691,16 @@ class ProcasefDashboard {
             const total = totalHommes + totalFemmes;
 
             /* ---------- 2) Créer un graphe donut invisible ------------------- */
+            // Créer un canvas avec un ID unique
             const hiddenCanvas = document.createElement('canvas');
+            const canvasId = 'tempGenreChart_' + Date.now();
+            hiddenCanvas.id = canvasId;
             hiddenCanvas.width = 300; 
             hiddenCanvas.height = 300;
-            const chart = window.chartManager.createDoughnut(hiddenCanvas.id, {
+            hiddenCanvas.style.display = 'none';
+            document.body.appendChild(hiddenCanvas); // Ajouter au DOM temporairement
+            
+            const chart = window.chartManager.createDoughnut(canvasId, {
                 labels: ['Hommes', 'Femmes'],
                 datasets: [{
                     data: [totalHommes, totalFemmes],
@@ -766,6 +772,11 @@ class ProcasefDashboard {
                   la nécessité d'actions ciblées pour renforcer l'accès des femmes à la propriété foncière.
                 </p>
             `;
+           // Vérifier si html-docx-js est disponible
+            if (typeof window.htmlDocx === 'undefined') {
+                console.warn('html-docx-js non disponible, export .docx ignoré');
+                return; // ou continuez sans le .docx
+            }
             const docxBlob = window.htmlDocx.asBlob(htmlForDocx, { orientation: 'portrait', margins: { top: 720 }});
             const url = URL.createObjectURL(docxBlob);
             const link = document.createElement('a');
@@ -2189,6 +2200,10 @@ class ProcasefDashboard {
             const chart = this.charts[chartId];
             if (chart && typeof chart.destroy === 'function') {
                 chart.destroy();
+                // Nettoyer le DOM
+            if (hiddenCanvas.parentNode) {
+                hiddenCanvas.parentNode.removeChild(hiddenCanvas);
+            }
             }
         });
         this.charts = {};
