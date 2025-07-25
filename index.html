@@ -7,70 +7,84 @@
 
   <!-- Styles -->
   <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;550;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" 
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" 
+        integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" />
 </head>
 <body>
-    <div class="sidebar">
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
         <div class="p-3 text-center">
             <h4 class="mb-0">PROCASEF</h4>
         </div>
-        <div class="nav flex-column">
+        <nav class="nav flex-column">
             <div class="nav-item active" data-section="accueil">
-                <span class="nav-text">Accueil</span>
+                <span class="nav-text">🏠 Accueil</span>
             </div>
             <div class="nav-item" data-section="parcelles">
-                <span class="nav-text">Parcelles</span>
+                <span class="nav-text">📍 Parcelles</span>
             </div>
             <div class="nav-item" data-section="etat-avancement">
-                <span class="nav-text">État d'Avancement</span>
+                <span class="nav-text">📈 État d'Avancement</span>
             </div>
             <div class="nav-item" data-section="projections-2025">
-                <span class="nav-text">Projections 2025</span>
+                <span class="nav-text">🎯 Projections 2025</span>
             </div>
             <div class="nav-item" data-section="rapport">
-                <span class="nav-text">Rapport Complet</span>
+                <span class="nav-text">📊 Rapport Complet</span>
             </div>
             <div class="nav-item" data-section="stats-topo">
-                <span class="nav-text">Stats Topo</span>
+                <span class="nav-text">📏 Stats Topo</span>
             </div>
-        </div>
+        </nav>
     </div>
 
-    <div class="main-content">
+    <!-- Main Content Area -->
+    <div class="main-content" id="mainContent">
+        <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <button id="sidebarToggle" class="btn btn-primary">☰</button>
-                <h2 id="pageTitle" class="d-inline">Dashboard PROCASEF</h2>
+                <button id="sidebarToggle" class="btn btn-primary">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h2 id="pageTitle" class="d-inline ms-3">Dashboard PROCASEF</h2>
             </div>
             <div class="d-flex align-items-center">
-                <button id="fontDecrease" class="btn btn-outline-secondary me-2">A-</button>
-                <input id="fontSizeSlider" type="range" min="12" max="20" value="14" class="form-range me-2" style="width: 100px;">
+                <button id="fontDecrease" class="btn btn-outline-secondary me-2" title="Diminuer la taille">A-</button>
+                <input id="fontSizeSlider" type="range" min="12" max="20" value="14" 
+                       class="form-range me-2" style="width: 100px;" title="Taille de police">
                 <span id="fontTooltip" class="me-2">14px</span>
-                <button id="fontIncrease" class="btn btn-outline-secondary">A+</button>
+                <button id="fontIncrease" class="btn btn-outline-secondary" title="Augmenter la taille">A+</button>
             </div>
         </div>
 
-        <div id="loadingSpinner" style="display: none;">
-            <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 9999;">
-                <div style="background: white; padding: 20px; border-radius: 8px; text-align: center;">
-                    <div class="spinner-border text-primary" role="status">
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="d-none">
+            <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" 
+                 style="background: rgba(0,0,0,0.5); z-index: 9999;">
+                <div class="bg-white p-4 rounded text-center">
+                    <div class="spinner-border text-primary mb-3" role="status">
                         <span class="visually-hidden">Chargement...</span>
                     </div>
-                    <div class="mt-2">Chargement des données...</div>
+                    <div>Chargement des données...</div>
                 </div>
             </div>
         </div>
 
+        <!-- Section Accueil -->
         <div id="accueil-section" class="content-section active">
             <div class="section-header">
                 <h3>🏠 Tableau de Bord Principal</h3>
-                <p>Vue d'ensemble des indicateurs clés du projet PROCASEF à Boundou</p>
+                <p class="section-description">Vue d'ensemble des indicateurs clés du projet PROCASEF à Boundou</p>
             </div>
+            
+            <!-- KPI Grid -->
             <div class="row g-3 mb-4" id="kpiGrid">
                 <div class="col-md-4 col-lg-2">
                     <div class="kpi-card">
@@ -115,6 +129,8 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Charts Grid -->
             <div class="row g-3">
                 <div class="col-lg-6">
                     <div class="chart-container">
@@ -137,11 +153,14 @@
             </div>
         </div>
 
+        <!-- Section Parcelles -->
         <div id="parcelles-section" class="content-section">
             <div class="section-header">
                 <h3>📍 Répartition des Parcelles</h3>
-                <p>Analyse géographique et statistique des parcelles</p>
+                <p class="section-description">Analyse géographique et statistique des parcelles</p>
             </div>
+            
+            <!-- Filters -->
             <div class="mb-3">
                 <select id="communeFilter" class="form-select d-inline-block w-auto me-2">
                     <option value="">Toutes les communes</option>
@@ -156,8 +175,12 @@
                     <option value="Oui">Délibérées</option>
                     <option value="Non">Non délibérées</option>
                 </select>
-                <button id="exportParcellesBtn" class="btn btn-primary">Exporter</button>
+                <button id="exportParcellesBtn" class="btn btn-primary">
+                    <i class="fas fa-download me-1"></i>Exporter
+                </button>
             </div>
+            
+            <!-- Charts and Map -->
             <div class="row g-3">
                 <div class="col-lg-6">
                     <div class="chart-container">
@@ -178,11 +201,13 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Data Table -->
             <div class="mt-4">
                 <h4>Données détaillées par commune</h4>
                 <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead>
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
                             <tr>
                                 <th>Commune</th>
                                 <th>Région</th>
@@ -194,17 +219,22 @@
                                 <th>Superficie (ha)</th>
                             </tr>
                         </thead>
-                        <tbody id="parcellesTableBody"></tbody>
+                        <tbody id="parcellesTableBody">
+                            <!-- Données dynamiques -->
+                        </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
+        <!-- Section État d'Avancement -->
         <div id="etat-avancement-section" class="content-section">
             <div class="section-header">
                 <h3>📈 État des Opérations</h3>
-                <p>Suivi de l'avancement des opérations par commune et région</p>
+                <p class="section-description">Suivi de l'avancement des opérations par commune et région</p>
             </div>
+            
+            <!-- Filters -->
             <div class="mb-3">
                 <select id="regionFilterEtat" class="form-select d-inline-block w-auto me-2">
                     <option value="">Toutes les régions</option>
@@ -219,12 +249,15 @@
                     <option value="">Tous les CSIG</option>
                 </select>
             </div>
+            
+            <!-- Progress and Charts -->
             <div class="row g-3">
                 <div class="col-lg-12">
                     <div class="chart-container">
                         <h4>Progression Globale</h4>
                         <div class="progress" style="height: 30px;">
-                            <div id="globalProgressFill" class="progress-bar bg-primary" role="progressbar" style="width: 47.8%;" aria-valuenow="47.8" aria-valuemin="0" aria-valuemax="100">
+                            <div id="globalProgressFill" class="progress-bar" role="progressbar" 
+                                 style="width: 47.8%;" aria-valuenow="47.8" aria-valuemin="0" aria-valuemax="100">
                                 <span id="globalProgressText">47.8%</span>
                             </div>
                         </div>
@@ -251,11 +284,14 @@
             </div>
         </div>
 
+        <!-- Section Projections 2025 -->
         <div id="projections-2025-section" class="content-section">
             <div class="section-header">
                 <h3>🎯 Projections et Objectifs 2025</h3>
-                <p>Suivi des objectifs et des réalisations pour 2025</p>
+                <p class="section-description">Suivi des objectifs et des réalisations pour 2025</p>
             </div>
+            
+            <!-- Objectives KPIs -->
             <div class="row g-3 mb-4">
                 <div class="col-md-4">
                     <div class="kpi-card">
@@ -276,6 +312,8 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Charts -->
             <div class="row g-3">
                 <div class="col-lg-6">
                     <div class="chart-container">
@@ -292,15 +330,24 @@
             </div>
         </div>
 
+        <!-- Section Rapport -->
         <div id="rapport-section" class="content-section">
             <div class="section-header">
                 <h3>📊 Rapport Complet</h3>
-                <p>Analyse détaillée des données du projet PROCASEF Boundou</p>
+                <p class="section-description">Analyse détaillée des données du projet PROCASEF Boundou</p>
             </div>
+            
+            <!-- Export Button -->
             <div class="mb-3">
-                <button id="exportRapportGenreBtn" class="btn btn-primary me-2">Exporter Rapport Genre</button>
+                <button id="exportRapportGenreBtn" class="btn btn-primary me-2">
+                    <i class="fas fa-file-pdf me-1"></i>Exporter Rapport Genre
+                </button>
             </div>
+            
+            <!-- Dynamic KPIs -->
             <div class="row g-3 mb-4" id="rapportKpiGrid"></div>
+            
+            <!-- Charts -->
             <div class="row g-3">
                 <div class="col-lg-6">
                     <div class="chart-container">
@@ -329,11 +376,14 @@
             </div>
         </div>
 
+        <!-- Section Stats Topo -->
         <div id="stats-topo-section" class="content-section">
             <div class="section-header">
                 <h3>📏 Statistiques Topographiques</h3>
                 <p class="section-description">Analyse détaillée des levés topographiques - Données en temps réel</p>
             </div>
+            
+            <!-- Filters -->
             <div class="mb-3">
                 <select id="topoCommuneFilter" class="form-select d-inline-block w-auto me-2">
                     <option value="">Toutes les communes</option>
@@ -343,9 +393,15 @@
                 </select>
                 <input id="topoDateDebut" type="date" class="form-control d-inline-block w-auto me-2">
                 <input id="topoDateFin" type="date" class="form-control d-inline-block w-auto me-2">
-                <button id="clearDateRange" class="btn btn-outline-secondary me-2">Effacer</button>
-                <button id="exportTopoBtn" class="btn btn-primary">Exporter</button>
+                <button id="clearDateRange" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-eraser me-1"></i>Effacer
+                </button>
+                <button id="exportTopoBtn" class="btn btn-primary">
+                    <i class="fas fa-download me-1"></i>Exporter
+                </button>
             </div>
+            
+            <!-- Topo KPIs -->
             <div class="row g-3 mb-4">
                 <div class="col-md-4 col-lg-2">
                     <div class="kpi-card">
@@ -390,6 +446,8 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Topo Charts -->
             <div class="row g-3">
                 <div class="col-lg-6">
                     <div class="chart-container">
@@ -422,11 +480,13 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Topo Table -->
             <div class="mt-4">
                 <h4>Données complètes des levés topographiques</h4>
                 <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead>
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
                             <tr>
                                 <th>Date</th>
                                 <th>Topographe</th>
@@ -436,28 +496,32 @@
                                 <th>Total</th>
                             </tr>
                         </thead>
-                        <tbody id="topoTableBody"></tbody>
+                        <tbody id="topoTableBody">
+                            <!-- Données dynamiques -->
+                        </tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- JavaScript Libraries -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/jspdf-autotable@3.6.0/dist/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" 
+            integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
-  <!-- JavaScript Libraries -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-  <script src="https://unpkg.com/jspdf-autotable@3.6.0/dist/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <!-- Application Scripts -->
+    <script src="js/data-loader.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/app.js"></script>
 
-  <!-- Application Scripts -->
-  <script src="js/data-loader.js"></script>
-  <script src="js/charts.js"></script>
-  <script src="js/map.js"></script>
-  <script src="js/app.js"></script>
 </body>
 </html>
