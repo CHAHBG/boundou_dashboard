@@ -1,4 +1,4 @@
-// PROCASEF Dashboard Application - Version optimisée et corrigée
+// PROCASEF Dashboard Application - Version optimisée et corrigée avec export rapport genre
 class ProcasefDashboard {
     constructor() {
         // Palette de couleurs PROCASEF
@@ -268,6 +268,13 @@ class ProcasefDashboard {
         }
         if (exportTopoBtn) {
             exportTopoBtn.addEventListener('click', () => this.exportTopoData());
+        }
+
+        // =================== AJOUT #1 – BIND EVENT LISTENER ===================
+        // Nouveau bouton d'export genre
+        const exportGenreBtn = document.getElementById('exportGenreBtn');
+        if (exportGenreBtn) {
+            exportGenreBtn.addEventListener('click', () => this.exportGenreReport());
         }
 
         window.addEventListener('resize', () => this.handleResize());
@@ -663,6 +670,130 @@ class ProcasefDashboard {
         this.renderPostTraitementTable();
         this.createPostCharts();
     }
+
+    // =================== AJOUT #2 – EXPORT GENRE REPORT ===================
+    /**
+     * Exporte un rapport complet « Genre » en PDF et Word (.docx)
+     * – Statistiques globales
+     * – Graphe donut Hommes/Femmes
+     * – Explications textuelles
+     */
+    async exportGenreReport() {
+        try {
+            // 1) Vérifier/disposer des données nécessaires
+            await this.ensureGenreDataLoaded();
+
+            const hommes = this.data.repartitionGenre.find(r => r.genre === 'Homme');
+            const femmes = this.data.repartitionGenre.find(r => r.genre === 'Femme');
+
+            const totalHommes = hommes ? hommes.total_nombre : 0;
+            const totalFemmes = femmes ? femmes.total_nombre : 0;
+            const total = totalHommes + totalFemmes;
+
+            /* ---------- 2) Créer un graphe donut invisible ------------------- */
+            const hiddenCanvas = document.createElement('canvas');
+            hiddenCanvas.width = 300; 
+            hiddenCanvas.height = 300;
+            const chart = window.chartManager.createDoughnut(hiddenCanvas.id, {
+                labels: ['Hommes', 'Femmes'],
+                datasets: [{
+                    data: [totalHommes, totalFemmes],
+                    backgroundColor: [this.colors.secondary, this.colors.primary],
+                    borderWidth: 0
+                }]
+            }, { plugins: { legend: { display: false }}});
+
+            // Nécessaire pour permettre le rendu avant la capture
+            await new Promise(r => setTimeout(r, 300));
+
+            const chartImg = hiddenCanvas.toDataURL('image/png');
+
+            /* ---------- 3) Générer le PDF avec jsPDF ------------------------- */
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+
+            doc.setFontSize(18);
+            doc.text('Rapport Genre – PROCASEF Boundou', 40, 40);
+            doc.setFontSize(11);
+            doc.text(`Généré le : ${new Date().toLocaleString('fr-FR')}`, 40, 60);
+
+            // Image du graphe
+            doc.addImage(chartImg, 'PNG', 180, 90, 250, 250);
+
+            // Tableau récapitulatif
+            doc.autoTable({
+                head: [['Genre', 'Population', 'Pourcentage']],
+                body: [
+                    ['Hommes', totalHommes.toLocaleString(), ((totalHommes / total) * 100).toFixed(1) + ' %'],
+                    ['Femmes', totalFemmes.toLocaleString(), ((totalFemmes / total) * 100).toFixed(1) + ' %'],
+                    ['Total', total.toLocaleString(), '100 %']
+                ],
+                startY: 370,
+                headStyles: { fillColor: this.colors.primary },
+                styles: { fontSize: 10, cellPadding: 4 }
+            });
+
+            doc.setFontSize(12);
+            doc.text(
+                'Le graphe ci-dessus illustre la répartition globale par genre dans les inventaires PROCASEF. ' +
+                'On constate une nette prédominance masculine, liée aux systèmes coutumiers d'accès à la terre. ' +
+                'Une attention particulière devra être portée à l'inclusion foncière des femmes.',
+                40,
+                doc.lastAutoTable.finalY + 30,
+                { maxWidth: 520 }
+            );
+
+            doc.save('Rapport_Genre_PROCASEF.pdf');
+
+            /* ---------- 4) Générer un .docx depuis le même contenu ----------- */
+            const htmlForDocx = `
+                <h1 style="font-family:Inter,sans-serif;color:#1E3A8A;">Rapport Genre – PROCASEF Boundou</h1>
+                <p>Généré le : ${new Date().toLocaleString('fr-FR')}</p>
+                <img src="${chartImg}" width="300" alt="Graphique genre" />
+                <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse;margin-top:15px;font-family:Inter,sans-serif;">
+                  <thead style="background:#D4A574;color:#fff;">
+                    <tr><th>Genre</th><th>Population</th><th>Pourcentage</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>Hommes</td><td>${totalHommes.toLocaleString()}</td><td>${((totalHommes / total)*100).toFixed(1)} %</td></tr>
+                    <tr><td>Femmes</td><td>${totalFemmes.toLocaleString()}</td><td>${((totalFemmes / total)*100).toFixed(1)} %</td></tr>
+                    <tr><td><strong>Total</strong></td><td><strong>${total.toLocaleString()}</strong></td><td><strong>100 %</strong></td></tr>
+                  </tbody>
+                </table>
+                <p style="margin-top:15px;">
+                  Le graphique illustre la répartition globale par genre. La faible représentation féminine souligne
+                  la nécessité d'actions ciblées pour renforcer l'accès des femmes à la propriété foncière.
+                </p>
+            `;
+            const docxBlob = window.htmlDocx.asBlob(htmlForDocx, { orientation: 'portrait', margins: { top: 720 }});
+            const url = URL.createObjectURL(docxBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'Rapport_Genre_PROCASEF.docx';
+            link.click();
+            URL.revokeObjectURL(url);
+
+            // Nettoyage du canvas temporaire
+            chart.destroy();
+        } catch (err) {
+            console.error('Erreur export genre :', err);
+            this.showError('Échec de la génération du rapport genre.');
+        }
+    }
+
+    /** Charge à la volée les datasets genre si non déjà présents */
+    async ensureGenreDataLoaded() {
+        const promises = [];
+        if (!this.data.repartitionGenre || !this.data.repartitionGenre.length)
+            promises.push(this.loadDataSafely('data/Repartition_genre.json', 'repartitionGenre'));
+        if (!this.data.genreCommune || !this.data.genreCommune.length)
+            promises.push(this.loadDataSafely('data/Genre_par_Commune.json', 'genreCommune'));
+        if (!this.data.genreTrimestre || !this.data.genreTrimestre.length)
+            promises.push(this.loadDataSafely('data/Genre_par_trimestre.json', 'genreTrimestre'));
+        await Promise.all(promises);
+    }
+
+    // ================= FIN DES AJOUTS ====================================
 
     populatePostFilters() {
         const communes = ['NDOGA BABACAR', 'BANDAFASSI', 'DIMBOLI', 'MISSIRAH', 'NETTEBOULOU'];
