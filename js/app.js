@@ -95,43 +95,12 @@ class ProcasefDashboard {
 
     // 🔴 AJOUT: Méthode getRegionForCommune manquante
     getRegionForCommune(commune) {
-        if (!commune) return 'N/A';
+        if (!this.data.parcelles || !Array.isArray(this.data.parcelles)) return 'N/A';
         
-        // 1. Chercher d'abord dans les données parcelles
-        if (this.data.parcelles && Array.isArray(this.data.parcelles)) {
-            const parcelle = this.data.parcelles.find(p => 
-                p.commune === commune && 
-                p.region && 
-                p.region.trim() !== '' && 
-                p.region.toLowerCase() !== 'n/a'
-            );
-            if (parcelle) {
-                return parcelle.region.trim();
-            }
-        }
-        
-        // 2. Utiliser le mapping de référence
-        const communeToRegion = {
-            // Kédougou
-            'BANDAFASSI': 'Kédougou',
-            'DIMBOLI': 'Kédougou', 
-            'FONGOLIMBI': 'Kédougou',
-            'SARAYA': 'Kédougou',
-            
-            // Tambacounda  
-            'MISSIRAH': 'Tambacounda',
-            'NETTEBOULOU': 'Tambacounda',
-            'NDOGA BABACAR': 'Tambacounda',
-            'KOUSSANAR': 'Tambacounda',
-            'MAKACOULIBANTANG': 'Tambacounda',
-            'BALA': 'Tambacounda',
-            'DIALACOTO': 'Tambacounda',
-            'TOMBORONKOTO': 'Tambacounda',
-            'WASSADOU': 'Tambacounda'
-        };
-        
-        return communeToRegion[commune] || 'Région Non Définie';
+        const parcelle = this.data.parcelles.find(p => p.commune === commune);
+        return parcelle ? parcelle.region || 'N/A' : 'N/A';
     }
+
     async init() {
         this.showLoading();
         try {
@@ -643,89 +612,59 @@ class ProcasefDashboard {
         }
     
         try {
-            // ... autres graphiques (garder le code existant) ...
-    
-            // CORRECTION du graphique polaire régional
-            let regions = data["Tamba-Kédougou"] || data["Analyse par Région"] || [];
-            
-            // Si pas de données, créer des données par défaut basées sur les communes
-            if (!regions || regions.length === 0) {
-                console.log('🔄 Création de données régionales par défaut...');
-                
-                // Données par défaut pour la démonstration
-                regions = [
-                    { nom: 'Tambacounda', region: 'Tambacounda', total: 22800, valeur: 22800 },
-                    { nom: 'Kédougou', region: 'Kédougou', total: 8502, valeur: 8502 }
-                ];
+            // Graphique sources
+            const src = data["Détail par Source"] || [];
+            if (src.length > 0) {
+                window.chartManager.createStackedBar("rapportSourceChart", {
+                    labels: src.map(s => s.source || 'N/A'),
+                    datasets: [
+                        {
+                            label: "Hommes",
+                            data: src.map(s => s.hommes || 0),
+                            backgroundColor: this.colors.secondary
+                        },
+                        {
+                            label: "Femmes",
+                            data: src.map(s => s.femmes || 0),
+                            backgroundColor: this.colors.primary
+                        }
+                    ]
+                });
             }
     
-            if (regions && regions.length > 0) {
-                // Nettoyer et valider les données
-                const cleanRegions = regions.filter(r => {
-                    const name = r.nom || r.region || '';
-                    const value = r.total || r.valeur || 0;
-                    return name.trim() !== '' && name.toLowerCase() !== 'n/a' && value > 0;
-                });
+            // Mixed Top 10 Communes
+            const communesData = (data["Analyse par Commune"] || [])
+                .sort((a, b) => (b.total || 0) - (a.total || 0))
+                .slice(0, 10);
+            if (communesData.length > 0) {
+                window.chartManager.createMixedChart("rapportCommuneMixedChart", communesData);
+            }
     
-                if (cleanRegions.length > 0) {
-                    if (window.chartManager.createPolarChart) {
-                        window.chartManager.createPolarChart("rapportRegionPolarChart", cleanRegions);
-                    } else {
-                        // Fallback avec graphique donut
-                        console.log('📊 Utilisation du graphique donut comme fallback');
-                        window.chartManager.createDoughnut("rapportRegionPolarChart", {
-                            labels: cleanRegions.map(r => r.nom || r.region || 'N/A'),
-                            datasets: [{
-                                data: cleanRegions.map(r => r.total || r.valeur || 0),
-                                backgroundColor: this.colors.chartColors.slice(0, cleanRegions.length),
-                                borderWidth: 2,
-                                borderColor: '#ffffff'
-                            }]
-                        }, {
-                            plugins: {
-                                title: {
-                                    display: true,
-                                    text: 'Répartition Régionale'
-                                },
-                                legend: {
-                                    position: 'bottom',
-                                    labels: {
-                                        padding: 15,
-                                        usePointStyle: true
-                                    }
-                                }
-                            }
-                        });
-                    }
-                    console.log('✅ Graphique régional polaire créé avec', cleanRegions.length, 'régions');
-                } else {
-                    console.warn('⚠️ Aucune donnée régionale valide pour le graphique polaire');
-                    this.displayNoDataMessage('rapportRegionPolarChart', 'Données régionales non disponibles');
-                }
-            } else {
-                console.warn('⚠️ Aucune donnée régionale trouvée');
-                this.displayNoDataMessage('rapportRegionPolarChart', 'Données régionales non disponibles');
+            // Évolution temporelle
+            const temporal = data["Analyse Temporelle"] || [];
+            if (temporal.length > 0) {
+                window.chartManager.createTemporalChart("rapportTemporalChart", temporal);
+            }
+    
+            // Polar par région - CORRECTION ICI
+            const regions = data["Tamba-Kédougou"] || [];
+            if (regions.length > 0 && window.chartManager.createPolarChart) {
+                window.chartManager.createPolarChart("rapportRegionPolarChart", regions);
+            } else if (regions.length > 0) {
+                // Fallback si createPolarChart n'existe pas
+                console.warn('createPolarChart non disponible, utilisation d\'un graphique donut');
+                window.chartManager.createDoughnut("rapportRegionPolarChart", {
+                    labels: regions.map(r => r.nom || r.region || 'N/A'),
+                    datasets: [{
+                        data: regions.map(r => r.total || r.valeur || 0),
+                        backgroundColor: this.colors.chartColors
+                    }]
+                });
             }
             
         } catch (error) {
-            console.error('❌ Erreur lors du rendu des graphiques de rapport:', error);
+            console.error('Erreur lors du rendu des graphiques de rapport:', error);
             this.showError('Erreur lors de l\'affichage des graphiques du rapport');
-        }
-    }
-
-    displayNoDataMessage(canvasId, message = 'Aucune donnée disponible') {
-        const canvas = document.getElementById(canvasId);
-        if (canvas && canvas.parentElement) {
-            canvas.parentElement.innerHTML = `
-                <div style="display: flex; align-items: center; justify-content: center; height: 250px; color: #666;">
-                    <div style="text-align: center;">
-                        <i class="fas fa-chart-pie" style="font-size: 48px; color: #D4A574; margin-bottom: 15px; opacity: 0.5;"></i>
-                        <br>
-                        <div style="font-size: 16px; font-weight: 500; margin-bottom: 5px;">${message}</div>
-                        <div style="font-size: 14px; color: #999;">Vérifiez la source de données</div>
-                    </div>
-                </div>
-            `;
         }
     }
 
@@ -1491,118 +1430,35 @@ class ProcasefDashboard {
     createRegionChart() {
         if (!this.data.parcelles || !window.chartManager) return;
     
-        console.log('🔍 Création du graphique région avec', this.data.parcelles.length, 'parcelles');
-    
-        // CORRECTION: Analyse des régions réelles dans les données
         const regionData = {};
-        let totalWithRegion = 0;
-        let totalWithoutRegion = 0;
-    
         this.data.parcelles.forEach(parcelle => {
-            const region = parcelle.region;
-            
-            if (region && region.trim() !== '' && region.toLowerCase() !== 'n/a') {
-                const cleanRegion = region.trim();
-                regionData[cleanRegion] = (regionData[cleanRegion] || 0) + 1;
-                totalWithRegion++;
-            } else {
-                totalWithoutRegion++;
-            }
+            const region = parcelle.region || 'Non définie';
+            regionData[region] = (regionData[region] || 0) + 1;
         });
     
-        console.log('📊 Répartition régions:', regionData);
-        console.log('📊 Avec région:', totalWithRegion, 'Sans région:', totalWithoutRegion);
+        const chartData = {
+            labels: Object.keys(regionData),
+            datasets: [{
+                data: Object.values(regionData),
+                backgroundColor: this.colors.chartColors.slice(0, Object.keys(regionData).length),
+                borderWidth: 0
+            }]
+        };
     
-        // Si pas de données régionales, essayer d'inférer depuis les communes
-        if (Object.keys(regionData).length === 0 || totalWithoutRegion > totalWithRegion) {
-            console.log('🔄 Tentative d\'inférence des régions depuis les communes...');
-            
-            // Mapping commune -> région (à adapter selon vos données réelles)
-            const communeToRegion = {
-                // Kédougou
-                'BANDAFASSI': 'Kédougou',
-                'DIMBOLI': 'Kédougou', 
-                'FONGOLIMBI': 'Kédougou',
-                'SARAYA': 'Kédougou',
-                
-                // Tambacounda
-                'MISSIRAH': 'Tambacounda',
-                'NETTEBOULOU': 'Tambacounda',
-                'NDOGA BABACAR': 'Tambacounda',
-                'KOUSSANAR': 'Tambacounda',
-                'MAKACOULIBANTANG': 'Tambacounda',
-                'BALA': 'Tambacounda',
-                'DIALACOTO': 'Tambacounda',
-                'TOMBORONKOTO': 'Tambacounda',
-                'WASSADOU': 'Tambacounda'
-            };
-    
-            // Recalculer avec l'inférence
-            this.data.parcelles.forEach(parcelle => {
-                const commune = parcelle.commune;
-                const inferredRegion = communeToRegion[commune] || 'Région Non Définie';
-                regionData[inferredRegion] = (regionData[inferredRegion] || 0) + 1;
-            });
-        }
-    
-        // Créer le graphique seulement si on a des données
-        if (Object.keys(regionData).length > 0) {
-            const chartData = {
-                labels: Object.keys(regionData),
-                datasets: [{
-                    data: Object.values(regionData),
-                    backgroundColor: this.colors.chartColors.slice(0, Object.keys(regionData).length),
-                    borderWidth: 2,
-                    borderColor: '#ffffff'
-                }]
-            };
-    
-            const options = {
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Répartition par Région'
-                    },
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 15,
-                            usePointStyle: true
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = ((context.parsed / total) * 100).toFixed(1);
-                                return `${context.label}: ${context.parsed.toLocaleString()} (${percentage}%)`;
-                            }
-                        }
-                    }
+        const options = {
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Répartition par Région'
                 },
-                responsive: true,
-                maintainAspectRatio: false
-            };
-    
-            window.chartManager.createDoughnut('regionChart', chartData, options);
-            console.log('✅ Graphique région créé avec succès');
-        } else {
-            console.warn('⚠️ Aucune donnée régionale trouvée');
-            // Afficher un message dans le conteneur du graphique
-            const canvas = document.getElementById('regionChart');
-            if (canvas && canvas.parentElement) {
-                canvas.parentElement.innerHTML = `
-                    <div style="display: flex; align-items: center; justify-content: center; height: 200px; color: #666;">
-                        <div style="text-align: center;">
-                            <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #F59E0B; margin-bottom: 10px;"></i>
-                            <br>Données régionales non disponibles
-                        </div>
-                    </div>
-                `;
+                legend: {
+                    position: 'bottom'
+                }
             }
-        }
+        };
+    
+        window.chartManager.createDoughnut('regionChart', chartData, options);
     }
-
 
     createNicadChart() {
         if (!this.communeStats) return;
