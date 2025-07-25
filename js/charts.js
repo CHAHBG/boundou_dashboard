@@ -1,26 +1,26 @@
-// charts.js - Chart Management avec correction des erreurs Canvas
+// charts.js - Chart Management with error fixes and optimizations
 class ChartManager {
     constructor() {
         this.charts = {};
         
-        // Palette de couleurs PROCASEF étendue et optimisée
+        // PROCASEF color palette (optimized for dark/light themes)
         this.colors = {
             primary: '#D4A574',    // Orange Gold Mat
             secondary: '#1E3A8A',  // Bleu Navy
             accent: '#B8860B',     // Dark Goldenrod
-            success: '#10B981',    // Vert succès
-            warning: '#F59E0B',    // Orange avertissement
-            error: '#EF4444',      // Rouge erreur
-            info: '#3B82F6',       // Bleu information
+            success: '#10B981',    // Green success
+            warning: '#F59E0B',    // Orange warning
+            error: '#EF4444',      // Red error
+            info: '#3B82F6',       // Blue info
             
-            // Palette étendue pour graphiques avec nuances
+            // Extended chart colors
             chartColors: [
                 '#D4A574', '#1E3A8A', '#B8860B', '#10B981', '#F59E0B', '#EF4444', 
                 '#3B82F6', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16', '#F97316', 
                 '#6366F1', '#14B8A6', '#F472B6', '#A855F7'
             ],
             
-            // Couleurs spécifiques pour les états d'avancement
+            // State-specific colors
             stateColors: {
                 "Terminé": '#10B981',
                 "En cours": '#F59E0B',
@@ -34,7 +34,7 @@ class ChartManager {
             }
         };
         
-        // Configuration par défaut améliorée
+        // Default chart configuration
         this.defaultConfig = {
             responsive: true,
             maintainAspectRatio: false,
@@ -83,61 +83,82 @@ class ChartManager {
         };
     }
     
-    // Méthode de préparation du canvas AMÉLIORÉE
-prepareCanvas(canvasId) {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) {
-        console.error(`❌ Canvas '${canvasId}' non trouvé dans le DOM`);
-        return null;
-    }
+    /**
+     * Prepares a canvas element for chart rendering
+     * @param {string} canvasId - ID of the canvas element
+     * @returns {HTMLCanvasElement|null} Canvas element or null if not found
+     */
+    prepareCanvas(canvasId) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) {
+            console.error(`❌ Canvas '${canvasId}' not found in DOM`);
+            return null;
+        }
 
-    // Vérifier si c'est bien un canvas
-    if (canvas.tagName.toLowerCase() !== 'canvas') {
-        console.error(`❌ L'élément '${canvasId}' n'est pas un canvas`);
-        return null;
-    }
+        if (canvas.tagName.toLowerCase() !== 'canvas') {
+            console.error(`❌ Element '${canvasId}' is not a canvas`);
+            return null;
+        }
 
-    // Détruire le graphique existant s'il y en a un
-    if (this.charts[canvasId]) {
-        this.destroyChart(canvasId);
-    }
+        if (this.charts[canvasId]) {
+            this.destroyChart(canvasId);
+        }
 
-    console.log(`✅ Canvas préparé: ${canvasId}`);
-    return canvas;
-}
+        console.log(`✅ Canvas prepared: ${canvasId}`);
+        return canvas;
+    }
     
-    // Destruction propre de tous les graphiques
-       destroyChart(chartId) {
+    /**
+     * Destroys a single chart
+     * @param {string} chartId - ID of the chart to destroy
+     */
+    destroyChart(chartId) {
         if (this.charts[chartId]) {
             try {
-                console.log(`🧹 Destruction du graphique: ${chartId}`);
+                console.log(`🧹 Destroying chart: ${chartId}`);
                 this.charts[chartId].destroy();
                 delete this.charts[chartId];
-                console.log(`✅ Graphique ${chartId} détruit avec succès`);
+                console.log(`✅ Chart ${chartId} destroyed successfully`);
             } catch (error) {
-                console.warn(`⚠️ Erreur lors de la destruction de ${chartId}:`, error);
-                // Forcer la suppression même en cas d'erreur
+                console.warn(`⚠️ Error destroying chart ${chartId}:`, error);
                 delete this.charts[chartId];
             }
         }
     }
     
+    /**
+     * Destroys all charts
+     */
     destroyAll() {
-        console.log('🗑️ Destruction de tous les graphiques...');
-        
-        // Créer une copie des clés pour éviter les modifications pendant l'itération
-        const chartIds = Object.keys(this.charts);
-        
-        chartIds.forEach(chartId => {
-            this.destroyChart(chartId);
-        });
-        
-        // S'assurer que l'objet est vide
+        console.log('🗑️ Destroying all charts...');
+        Object.keys(this.charts).forEach(chartId => this.destroyChart(chartId));
         this.charts = {};
-        console.log('✅ Tous les graphiques ont été détruits');
+        console.log('✅ All charts destroyed');
     }
     
-    // Méthode utilitaire pour préparer les datasets avec couleurs
+    /**
+     * Resizes all charts (fixes resizeAll warning)
+     */
+    resizeAll() {
+        console.log('📏 Resizing all charts...');
+        Object.values(this.charts).forEach(chart => {
+            if (chart && typeof chart.resize === 'function') {
+                try {
+                    chart.resize();
+                } catch (error) {
+                    console.warn('⚠️ Error resizing chart:', error);
+                }
+            }
+        });
+        console.log('✅ All charts resized');
+    }
+    
+    /**
+     * Prepares datasets with appropriate styling based on chart type
+     * @param {Array} datasets - Chart datasets
+     * @param {string} type - Chart type (bar, line, doughnut, polarArea)
+     * @returns {Array} Prepared datasets
+     */
     prepareDatasets(datasets, type = 'bar') {
         return datasets.map((dataset, index) => {
             const baseColor = this.colors.chartColors[index % this.colors.chartColors.length];
@@ -166,10 +187,11 @@ prepareCanvas(canvasId) {
                     break;
                     
                 case 'doughnut':
+                case 'polarArea':
                     preparedDataset.backgroundColor = dataset.backgroundColor || this.colors.chartColors.slice(0, dataset.data?.length || 6);
-                    preparedDataset.borderColor = '#FFFFFF';
-                    preparedDataset.borderWidth = 3;
-                    preparedDataset.hoverBorderWidth = 5;
+                    preparedDataset.borderColor = dataset.borderColor || '#FFFFFF';
+                    preparedDataset.borderWidth = dataset.borderWidth || 3;
+                    preparedDataset.hoverBorderWidth = dataset.hoverBorderWidth || 5;
                     break;
             }
             
@@ -177,14 +199,19 @@ prepareCanvas(canvasId) {
         });
     }
     
-    // Wrapper amélioré pour créer un graphique en barres
+    /**
+     * Creates a bar chart
+     * @param {string} canvasId - Canvas ID
+     * @param {Object} data - Chart data { labels, datasets }
+     * @param {Object} options - Chart options
+     * @returns {Chart|null} Created chart instance
+     */
     createBar(canvasId, data, options = {}) {
         const canvas = this.prepareCanvas(canvasId);
         if (!canvas) return null;
         
         const ctx = canvas.getContext('2d');
         
-        // Préparation des datasets
         const preparedData = {
             ...data,
             datasets: this.prepareDatasets(data.datasets, 'bar')
@@ -204,30 +231,18 @@ prepareCanvas(canvasId) {
                         },
                         ticks: {
                             color: '#6B7280',
-                            font: {
-                                size: 11,
-                                weight: '500'
-                            }
+                            font: { size: 11, weight: '500' }
                         },
-                        border: {
-                            display: false
-                        }
+                        border: { display: false }
                     },
                     x: {
-                        grid: {
-                            display: false
-                        },
+                        grid: { display: false },
                         ticks: {
                             color: '#6B7280',
                             maxRotation: 45,
-                            font: {
-                                size: 11,
-                                weight: '500'
-                            }
+                            font: { size: 11, weight: '500' }
                         },
-                        border: {
-                            display: false
-                        }
+                        border: { display: false }
                     }
                 },
                 ...options
@@ -236,22 +251,27 @@ prepareCanvas(canvasId) {
         
         try {
             this.charts[canvasId] = new Chart(ctx, config);
-            console.log(`📊 Graphique en barres ${canvasId} créé avec succès`);
+            console.log(`📊 Bar chart ${canvasId} created successfully`);
             return this.charts[canvasId];
         } catch (error) {
-            console.error(`❌ Erreur lors de la création du graphique en barres ${canvasId}:`, error);
+            console.error(`❌ Error creating bar chart ${canvasId}:`, error);
             return null;
         }
     }
     
-    // Wrapper amélioré pour créer un graphique en doughnut
+    /**
+     * Creates a doughnut chart
+     * @param {string} canvasId - Canvas ID
+     * @param {Object} data - Chart data { labels, datasets }
+     * @param {Object} options - Chart options
+     * @returns {Chart|null} Created chart instance
+     */
     createDoughnut(canvasId, data, options = {}) {
         const canvas = this.prepareCanvas(canvasId);
         if (!canvas) return null;
         
         const ctx = canvas.getContext('2d');
         
-        // Préparation des datasets
         const preparedData = {
             ...data,
             datasets: this.prepareDatasets(data.datasets, 'doughnut')
@@ -277,7 +297,7 @@ prepareCanvas(canvasId) {
                                         const dataset = data.datasets[0];
                                         const value = dataset.data[i];
                                         const total = dataset.data.reduce((sum, val) => sum + val, 0);
-                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
                                         
                                         return {
                                             text: `${label} (${percentage}%)`,
@@ -302,22 +322,27 @@ prepareCanvas(canvasId) {
         
         try {
             this.charts[canvasId] = new Chart(ctx, config);
-            console.log(`🍩 Graphique donut ${canvasId} créé avec succès`);
+            console.log(`🍩 Doughnut chart ${canvasId} created successfully`);
             return this.charts[canvasId];
         } catch (error) {
-            console.error(`❌ Erreur lors de la création du graphique donut ${canvasId}:`, error);
+            console.error(`❌ Error creating doughnut chart ${canvasId}:`, error);
             return null;
         }
     }
     
-    // Wrapper amélioré pour créer un graphique en ligne
+    /**
+     * Creates a line chart
+     * @param {string} canvasId - Canvas ID
+     * @param {Object} data - Chart data { labels, datasets }
+     * @param {Object} options - Chart options
+     * @returns {Chart|null} Created chart instance
+     */
     createLine(canvasId, data, options = {}) {
         const canvas = this.prepareCanvas(canvasId);
         if (!canvas) return null;
         
         const ctx = canvas.getContext('2d');
         
-        // Préparation des datasets
         const preparedData = {
             ...data,
             datasets: this.prepareDatasets(data.datasets, 'line')
@@ -337,14 +362,9 @@ prepareCanvas(canvasId) {
                         },
                         ticks: {
                             color: '#6B7280',
-                            font: {
-                                size: 11,
-                                weight: '500'
-                            }
+                            font: { size: 11, weight: '500' }
                         },
-                        border: {
-                            display: false
-                        }
+                        border: { display: false }
                     },
                     x: {
                         grid: {
@@ -353,14 +373,9 @@ prepareCanvas(canvasId) {
                         },
                         ticks: {
                             color: '#6B7280',
-                            font: {
-                                size: 11,
-                                weight: '500'
-                            }
+                            font: { size: 11, weight: '500' }
                         },
-                        border: {
-                            display: false
-                        }
+                        border: { display: false }
                     }
                 },
                 ...options
@@ -369,34 +384,33 @@ prepareCanvas(canvasId) {
         
         try {
             this.charts[canvasId] = new Chart(ctx, config);
-            console.log(`📈 Graphique en ligne ${canvasId} créé avec succès`);
+            console.log(`📈 Line chart ${canvasId} created successfully`);
             return this.charts[canvasId];
         } catch (error) {
-            console.error(`❌ Erreur lors de la création du graphique en ligne ${canvasId}:`, error);
+            console.error(`❌ Error creating line chart ${canvasId}:`, error);
             return null;
         }
     }
     
-    // Wrapper pour créer un graphique en barres empilées
+    /**
+     * Creates a stacked bar chart
+     * @param {string} canvasId - Canvas ID
+     * @param {Object} data - Chart data { labels, datasets }
+     * @param {Object} options - Chart options
+     * @returns {Chart|null} Created chart instance
+     */
     createStackedBar(canvasId, data, options = {}) {
         const stackedOptions = {
             ...options,
             scales: {
                 x: {
                     stacked: true,
-                    grid: {
-                        display: false
-                    },
+                    grid: { display: false },
                     ticks: {
                         color: '#6B7280',
-                        font: {
-                            size: 11,
-                            weight: '500'
-                        }
+                        font: { size: 11, weight: '500' }
                     },
-                    border: {
-                        display: false
-                    }
+                    border: { display: false }
                 },
                 y: {
                     stacked: true,
@@ -407,14 +421,9 @@ prepareCanvas(canvasId) {
                     },
                     ticks: {
                         color: '#6B7280',
-                        font: {
-                            size: 11,
-                            weight: '500'
-                        }
+                        font: { size: 11, weight: '500' }
                     },
-                    border: {
-                        display: false
-                    }
+                    border: { display: false }
                 }
             }
         };
@@ -422,191 +431,59 @@ prepareCanvas(canvasId) {
         return this.createBar(canvasId, data, stackedOptions);
     }
 
-    // Graphique en barres horizontal optimisé - état d'avancement par commune
-    async createEtatCommuneBarChart(canvasId, communes, etats) {
-        if (!communes || !etats || communes.length !== etats.length) {
-            console.error('Données invalides pour createEtatCommuneBarChart');
+    /**
+     * Creates a polar area chart (fixed to handle chart config object)
+     * @param {string} canvasId - Canvas ID
+     * @param {Object} data - Chart data { labels, datasets }
+     * @param {Object} options - Chart options
+     * @returns {Chart|null} Created chart instance
+     */
+    createPolarChart(canvasId, data, options = {}) {
+        if (!data || !data.labels || !data.datasets) {
+            console.error(`❌ Invalid data for polar chart ${canvasId}:`, data);
             return null;
         }
-
-        // Mapping des couleurs par état avec fallback
-        const colors = etats.map(etat => {
-            const etatClean = etat?.toString().trim();
-            return this.colors.stateColors[etatClean] || '#6B7280';
-        });
 
         const canvas = this.prepareCanvas(canvasId);
         if (!canvas) return null;
         
         const ctx = canvas.getContext('2d');
         
+        const preparedData = {
+            ...data,
+            datasets: this.prepareDatasets(data.datasets, 'polarArea')
+        };
+        
         const config = {
-            type: 'bar',
-            data: {
-                labels: communes,
-                datasets: [{
-                    label: "État d'avancement",
-                    data: etats.map(() => 1), // Valeur uniforme, la couleur indique l'état
-                    backgroundColor: colors,
-                    borderWidth: 0,
-                    borderRadius: 8,
-                    borderSkipped: false
-                }]
-            },
+            type: 'polarArea',
+            data: preparedData,
             options: {
                 ...this.defaultConfig,
-                indexAxis: 'y',
                 plugins: {
                     ...this.defaultConfig.plugins,
-                    legend: { 
-                        display: false 
-                    },
-                    tooltip: {
-                        ...this.defaultConfig.plugins.tooltip,
-                        callbacks: {
-                            title: function(context) {
-                                return context[0].label;
-                            },
-                            label: function(context) {
-                                return `État: ${etats[context.dataIndex]}`;
-                            }
-                        }
+                    title: {
+                        display: true,
+                        text: 'Répartition par Région',
+                        font: { size: 14, weight: 'bold' },
+                        color: '#374151'
                     }
                 },
                 scales: {
-                    x: { 
-                        display: false,
-                        beginAtZero: true,
-                        max: 1.2
-                    },
-                    y: { 
+                    r: {
                         beginAtZero: true,
                         grid: {
-                            display: false
+                            color: 'rgba(212, 165, 116, 0.2)',
+                            lineWidth: 1
+                        },
+                        pointLabels: {
+                            color: '#6B7280',
+                            font: { size: 11 }
                         },
                         ticks: {
-                            color: '#374151',
-                            font: {
-                                size: 12,
-                                weight: '500'
-                            },
-                            padding: 10
-                        },
-                        border: {
-                            display: false
+                            color: '#6B7280',
+                            backdropColor: 'transparent'
                         }
                     }
-                },
-                layout: {
-                    padding: {
-                        left: 10,
-                        right: 20,
-                        top: 10,
-                        bottom: 10
-                    }
-                }
-            }
-        };
-        
-        try {
-            this.charts[canvasId] = new Chart(ctx, config);
-            console.log(`📊 Graphique état commune ${canvasId} créé avec succès`);
-            return this.charts[canvasId];
-        } catch (error) {
-            console.error(`❌ Erreur lors de la création du graphique état commune ${canvasId}:`, error);
-            return null;
-        }
-    }
-
-    // Graphique en donut optimisé - répartition des états d'avancement
-    async createEtatDonutChart(canvasId, labels, data, options = {}) {
-        if (!labels || !data || labels.length !== data.length) {
-            console.error('Données invalides pour createEtatDonutChart');
-            return null;
-        }
-
-        // Génération des couleurs basées sur le mapping des états
-        const colors = labels.map((label, index) => {
-            const labelClean = label?.toString().trim();
-            return this.colors.stateColors[labelClean] || 
-                   this.colors.chartColors[index % this.colors.chartColors.length];
-        });
-        
-        const canvas = this.prepareCanvas(canvasId);
-        if (!canvas) return null;
-        
-        const ctx = canvas.getContext('2d');
-        
-        const config = {
-            type: 'doughnut',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: data,
-                    backgroundColor: colors,
-                    borderColor: '#FFFFFF',
-                    borderWidth: 3,
-                    hoverBorderWidth: 5,
-                    hoverBackgroundColor: colors.map(color => color + 'DD')
-                }]
-            },
-            options: {
-                ...this.defaultConfig,
-                cutout: '70%',
-                plugins: {
-                    ...this.defaultConfig.plugins,
-                    legend: {
-                        ...this.defaultConfig.plugins.legend,
-                        position: 'bottom',
-                        labels: {
-                            ...this.defaultConfig.plugins.legend.labels,
-                            padding: 25,
-                            usePointStyle: true,
-                            pointStyle: 'circle',
-                            generateLabels: function(chart) {
-                                const data = chart.data;
-                                if (data.labels.length && data.datasets.length) {
-                                    const dataset = data.datasets[0];
-                                    const total = dataset.data.reduce((sum, val) => sum + val, 0);
-                                    
-                                    return data.labels.map((label, i) => {
-                                        const value = dataset.data[i];
-                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
-                                        
-                                        return {
-                                            text: `${label}: ${value} (${percentage}%)`,
-                                            fillStyle: Array.isArray(dataset.backgroundColor) 
-                                                ? dataset.backgroundColor[i] 
-                                                : dataset.backgroundColor,
-                                            strokeStyle: dataset.borderColor,
-                                            lineWidth: dataset.borderWidth,
-                                            hidden: isNaN(value) || value === 0,
-                                            index: i
-                                        };
-                                    });
-                                }
-                                return [];
-                            }
-                        }
-                    },
-                    tooltip: {
-                        ...this.defaultConfig.plugins.tooltip,
-                        callbacks: {
-                            title: function(context) {
-                                return context[0].label;
-                            },
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.raw;
-                                const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
-                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
-                                return `${label}: ${value} communes (${percentage}%)`;
-                            }
-                        }
-                    }
-                },
-                layout: {
-                    padding: 20
                 },
                 ...options
             }
@@ -614,29 +491,34 @@ prepareCanvas(canvasId) {
         
         try {
             this.charts[canvasId] = new Chart(ctx, config);
-            console.log(`🍩 Graphique état donut ${canvasId} créé avec succès`);
+            console.log(`🌟 Polar chart ${canvasId} created successfully`);
             return this.charts[canvasId];
         } catch (error) {
-            console.error(`❌ Erreur lors de la création du graphique état donut ${canvasId}:`, error);
+            console.error(`❌ Error creating polar chart ${canvasId}:`, error);
             return null;
         }
     }
-
-    // Graphique mixte - Barres + Ligne pour analyse complexe
+    
+    /**
+     * Creates a mixed bar/line chart for commune analysis
+     * @param {string} canvasId - Canvas ID
+     * @param {Array} communesData - Array of commune data objects
+     * @param {number} showTop - Number of top communes to display
+     * @returns {Chart|null} Created chart instance
+     */
     createMixedChart(canvasId, communesData, showTop = 8) {
         if (!communesData || !Array.isArray(communesData)) {
-            console.error('Données communes invalides');
+            console.error(`❌ Invalid communes data for mixed chart ${canvasId}`);
             return null;
         }
 
-        // Trier par population totale et prendre le top
         const sortedCommunes = communesData
-            .sort((a, b) => b.total - a.total)
+            .sort((a, b) => (b.total || 0) - (a.total || 0))
             .slice(0, showTop);
 
-        const labels = sortedCommunes.map(item => item.communesenegal);
-        const totals = sortedCommunes.map(item => item.total);
-        const femmePercentages = sortedCommunes.map(item => item.femme_pourcentage);
+        const labels = sortedCommunes.map(item => item.communesenegal || 'Unknown');
+        const totals = sortedCommunes.map(item => item.total || 0);
+        const femmePercentages = sortedCommunes.map(item => item.femme_pourcentage || 0);
 
         const canvas = this.prepareCanvas(canvasId);
         if (!canvas) return null;
@@ -646,7 +528,7 @@ prepareCanvas(canvasId) {
         const config = {
             type: 'bar',
             data: {
-                labels: labels,
+                labels,
                 datasets: [
                     {
                         type: 'bar',
@@ -711,9 +593,7 @@ prepareCanvas(canvasId) {
                         position: 'right',
                         min: 0,
                         max: 35,
-                        grid: {
-                            drawOnChartArea: false,
-                        },
+                        grid: { drawOnChartArea: false },
                         ticks: {
                             callback: function(value) {
                                 return value + '%';
@@ -727,9 +607,7 @@ prepareCanvas(canvasId) {
                         }
                     },
                     x: {
-                        grid: {
-                            display: false
-                        }
+                        grid: { display: false }
                     }
                 }
             }
@@ -737,18 +615,272 @@ prepareCanvas(canvasId) {
         
         try {
             this.charts[canvasId] = new Chart(ctx, config);
-            console.log(`📊 Graphique mixte ${canvasId} créé avec succès`);
+            console.log(`📊 Mixed chart ${canvasId} created successfully`);
             return this.charts[canvasId];
         } catch (error) {
-            console.error(`❌ Erreur lors de la création du graphique mixte ${canvasId}:`, error);
+            console.error(`❌ Error creating mixed chart ${canvasId}:`, error);
+            return null;
+        }
+    }
+    
+    /**
+     * Creates a temporal line chart
+     * @param {string} canvasId - Canvas ID
+     * @param {Array} temporalData - Array of temporal data objects
+     * @returns {Chart|null} Created chart instance
+     */
+    createTemporalChart(canvasId, temporalData) {
+        if (!temporalData || !Array.isArray(temporalData)) {
+            console.error(`❌ Invalid temporal data for chart ${canvasId}`);
+            return null;
+        }
+    
+        const canvas = this.prepareCanvas(canvasId);
+        if (!canvas) return null;
+        
+        const ctx = canvas.getContext('2d');
+        
+        const config = {
+            type: 'line',
+            data: {
+                labels: temporalData.map(d => d.periode || d.date || 'Unknown'),
+                datasets: [{
+                    label: 'Évolution',
+                    data: temporalData.map(d => d.valeur || d.total || 0),
+                    borderColor: '#D4A574',
+                    backgroundColor: 'rgba(212, 165, 116, 0.2)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                ...this.defaultConfig,
+                plugins: {
+                    ...this.defaultConfig.plugins,
+                    title: {
+                        display: true,
+                        text: 'Évolution Temporelle',
+                        font: { size: 14, weight: 'bold' },
+                        color: '#374151'
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        };
+        
+        try {
+            this.charts[canvasId] = new Chart(ctx, config);
+            console.log(`📈 Temporal chart ${canvasId} created successfully`);
+            return this.charts[canvasId];
+        } catch (error) {
+            console.error(`❌ Error creating temporal chart ${canvasId}:`, error);
+            return null;
+        }
+    }
+    
+    /**
+     * Creates a horizontal bar chart for commune state
+     * @param {string} canvasId - Canvas ID
+     * @param {Array} communes - Array of commune names
+     * @param {Array} etats - Array of state values
+     * @returns {Chart|null} Created chart instance
+     */
+    createEtatCommuneBarChart(canvasId, communes, etats) {
+        if (!communes || !etats || !Array.isArray(communes) || !Array.isArray(etats) || communes.length !== etats.length) {
+            console.error(`❌ Invalid data for commune bar chart ${canvasId}`);
+            return null;
+        }
+
+        const colors = etats.map(etat => this.colors.stateColors[etat?.toString().trim()] || '#6B7280');
+
+        const canvas = this.prepareCanvas(canvasId);
+        if (!canvas) return null;
+        
+        const ctx = canvas.getContext('2d');
+        
+        const config = {
+            type: 'bar',
+            data: {
+                labels: communes,
+                datasets: [{
+                    label: "État d'avancement",
+                    data: etats.map(() => 1),
+                    backgroundColor: colors,
+                    borderWidth: 0,
+                    borderRadius: 8,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                ...this.defaultConfig,
+                indexAxis: 'y',
+                plugins: {
+                    ...this.defaultConfig.plugins,
+                    legend: { display: false },
+                    tooltip: {
+                        ...this.defaultConfig.plugins.tooltip,
+                        callbacks: {
+                            title: function(context) {
+                                return context[0].label;
+                            },
+                            label: function(context) {
+                                return `État: ${etats[context.dataIndex]}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { 
+                        display: false,
+                        beginAtZero: true,
+                        max: 1.2
+                    },
+                    y: { 
+                        beginAtZero: true,
+                        grid: { display: false },
+                        ticks: {
+                            color: '#374151',
+                            font: { size: 12, weight: '500' },
+                            padding: 10
+                        },
+                        border: { display: false }
+                    }
+                },
+                layout: {
+                    padding: { left: 10, right: 20, top: 10, bottom: 10 }
+                }
+            }
+        };
+        
+        try {
+            this.charts[canvasId] = new Chart(ctx, config);
+            console.log(`📊 Commune state bar chart ${canvasId} created successfully`);
+            return this.charts[canvasId];
+        } catch (error) {
+            console.error(`❌ Error creating commune state bar chart ${canvasId}:`, error);
             return null;
         }
     }
 
-    // Graphique donut pour les types topo (Champs/Bâtis)
+    /**
+     * Creates a doughnut chart for state distribution
+     * @param {string} canvasId - Canvas ID
+     * @param {Array} labels - Array of state labels
+     * @param {Array} data - Array of state values
+     * @param {Object} options - Chart options
+     * @returns {Chart|null} Created chart instance
+     */
+    createEtatDonutChart(canvasId, labels, data, options = {}) {
+        if (!labels || !data || !Array.isArray(labels) || !Array.isArray(data) || labels.length !== data.length) {
+            console.error(`❌ Invalid data for state donut chart ${canvasId}`);
+            return null;
+        }
+
+        const colors = labels.map((label, index) => 
+            this.colors.stateColors[label?.toString().trim()] || 
+            this.colors.chartColors[index % this.colors.chartColors.length]
+        );
+        
+        const canvas = this.prepareCanvas(canvasId);
+        if (!canvas) return null;
+        
+        const ctx = canvas.getContext('2d');
+        
+        const config = {
+            type: 'doughnut',
+            data: {
+                labels,
+                datasets: [{
+                    data,
+                    backgroundColor: colors,
+                    borderColor: '#FFFFFF',
+                    borderWidth: 3,
+                    hoverBorderWidth: 5,
+                    hoverBackgroundColor: colors.map(color => color + 'DD')
+                }]
+            },
+            options: {
+                ...this.defaultConfig,
+                cutout: '70%',
+                plugins: {
+                    ...this.defaultConfig.plugins,
+                    legend: {
+                        ...this.defaultConfig.plugins.legend,
+                        position: 'bottom',
+                        labels: {
+                            ...this.defaultConfig.plugins.legend.labels,
+                            padding: 25,
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            generateLabels: function(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const dataset = data.datasets[0];
+                                    const total = dataset.data.reduce((sum, val) => sum + val, 0);
+                                    
+                                    return data.labels.map((label, i) => {
+                                        const value = dataset.data[i];
+                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                                        
+                                        return {
+                                            text: `${label}: ${value} (${percentage}%)`,
+                                            fillStyle: Array.isArray(dataset.backgroundColor) 
+                                                ? dataset.backgroundColor[i] 
+                                                : dataset.backgroundColor,
+                                            strokeStyle: dataset.borderColor,
+                                            lineWidth: dataset.borderWidth,
+                                            hidden: isNaN(value) || value === 0,
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    tooltip: {
+                        ...this.defaultConfig.plugins.tooltip,
+                        callbacks: {
+                            title: function(context) {
+                                return context[0].label;
+                            },
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw;
+                                const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                                return `${label}: ${value} communes (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                layout: { padding: 20 },
+                ...options
+            }
+        };
+        
+        try {
+            this.charts[canvasId] = new Chart(ctx, config);
+            console.log(`🍩 State donut chart ${canvasId} created successfully`);
+            return this.charts[canvasId];
+        } catch (error) {
+            console.error(`❌ Error creating state donut chart ${canvasId}:`, error);
+            return null;
+        }
+    }
+
+    /**
+     * Creates a doughnut chart for topo types (Champs/Bâtis)
+     * @param {string} canvasId - Canvas ID
+     * @param {Object} stats - Stats object { champs, batis }
+     * @returns {Chart|null} Created chart instance
+     */
     createTopoTypeDonutChart(canvasId, stats) {
         if (!stats || (!stats.champs && !stats.batis)) {
-            console.warn('Aucune donnée pour le donut Champs/Bâtis');
+            console.warn(`⚠️ No data for topo donut chart ${canvasId}`);
             return null;
         }
 
@@ -759,7 +891,7 @@ prepareCanvas(canvasId) {
         const data = {
             labels: ['Champs', 'Bâtis'],
             datasets: [{
-                data: [stats.champs, stats.batis],
+                data: [stats.champs || 0, stats.batis || 0],
                 backgroundColor: [this.colors.success, this.colors.primary],
                 borderColor: '#FFFFFF',
                 borderWidth: 3,
@@ -787,229 +919,73 @@ prepareCanvas(canvasId) {
 
         try {
             this.charts[canvasId] = new Chart(ctx, config);
-            console.log(`🍩 Graphique topo donut ${canvasId} créé avec succès`);
+            console.log(`🍩 Topo donut chart ${canvasId} created successfully`);
             return this.charts[canvasId];
         } catch (error) {
-            console.error(`❌ Erreur lors de la création du graphique topo donut ${canvasId}:`, error);
-            return null;
-        }
-    }
-
-    // Méthodes manquantes à ajouter au ChartManager
-    createPolar(canvasId, data, options = {}) {
-        const canvas = this.prepareCanvas(canvasId);
-        if (!canvas) return null;
-        
-        const config = {
-            type: 'polarArea',
-            data: data,
-            options: { ...this.defaultConfig, ...options }
-        };
-        
-        try {
-            this.charts[canvasId] = new Chart(canvas.getContext('2d'), config);
-            console.log(`🌟 Graphique polaire ${canvasId} créé`);
-            return this.charts[canvasId];
-        } catch (error) {
-            console.error(`❌ Erreur graphique polaire ${canvasId}:`, error);
-            return null;
-        }
-    }
-
-        createPolarChart(canvasId, regionData) {
-        const canvas = this.prepareCanvas(canvasId);
-        if (!canvas) return null;
-        
-        const ctx = canvas.getContext('2d');
-        
-        const config = {
-            type: 'polarArea',
-            data: {
-                labels: regionData.map(r => r.nom || r.region || 'N/A'),
-                datasets: [{
-                    data: regionData.map(r => r.total || r.valeur || 0),
-                    backgroundColor: [
-                        '#D4A574', '#1E3A8A', '#B8860B', '#10B981', 
-                        '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6'
-                    ],
-                    borderWidth: 2,
-                    borderColor: '#FFFFFF'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            color: '#374151',
-                            font: {
-                                size: 12,
-                                weight: '500'
-                            }
-                        }
-                    },
-                    title: {
-                        display: true,
-                        text: 'Répartition par Région',
-                        font: {
-                            size: 14,
-                            weight: 'bold'
-                        },
-                        color: '#374151'
-                    }
-                },
-                scales: {
-                    r: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(212, 165, 116, 0.2)'
-                        },
-                        pointLabels: {
-                            color: '#6B7280',
-                            font: {
-                                size: 11
-                            }
-                        }
-                    }
-                }
-            }
-        };
-        
-        try {
-            this.charts[canvasId] = new Chart(ctx, config);
-            console.log(`📊 Graphique polaire ${canvasId} créé avec succès`);
-            return this.charts[canvasId];
-        } catch (error) {
-            console.error(`❌ Erreur création graphique polaire ${canvasId}:`, error);
+            console.error(`❌ Error creating topo donut chart ${canvasId}:`, error);
             return null;
         }
     }
     
-    createMixed(canvasId, data, options = {}) {
-        const canvas = this.prepareCanvas(canvasId);
-        if (!canvas) return null;
-        
-        const config = {
-            type: 'bar', // Type de base
-            data: data,
-            options: { ...this.defaultConfig, ...options }
-        };
-        
-        try {
-            this.charts[canvasId] = new Chart(canvas.getContext('2d'), config);
-            console.log(`📊 Graphique mixte ${canvasId} créé`);
-            return this.charts[canvasId];
-        } catch (error) {
-            console.error(`❌ Erreur graphique mixte ${canvasId}:`, error);
-            return null;
-        }
-    }
-
-    
-    createTemporalChart(canvasId, temporalData) {
-        if (!temporalData || !Array.isArray(temporalData)) {
-            console.warn('Données temporelles invalides');
-            return null;
-        }
-    
-        const canvas = this.prepareCanvas(canvasId);
-        if (!canvas) return null;
-        
-        const ctx = canvas.getContext('2d');
-        
-        const config = {
-            type: 'line',
-            data: {
-                labels: temporalData.map(d => d.periode || d.date || ''),
-                datasets: [{
-                    label: 'Évolution',
-                    data: temporalData.map(d => d.valeur || d.total || 0),
-                    borderColor: '#D4A574',
-                    backgroundColor: '#D4A57420',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                ...this.defaultConfig,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Évolution Temporelle'
-                    }
-                },
-                scales: {
-                    y: { beginAtZero: true }
-                }
-            }
-        };
-        
-        try {
-            this.charts[canvasId] = new Chart(ctx, config);
-            console.log(`📈 Graphique temporel ${canvasId} créé avec succès`);
-            return this.charts[canvasId];
-        } catch (error) {
-            console.error(`❌ Erreur création graphique temporel ${canvasId}:`, error);
-            return null;
-        }
-    }
-    
-    // Utilitaire pour obtenir une couleur de la palette
+    /**
+     * Gets a single color from the chart palette
+     * @param {number} index - Color index
+     * @returns {string} Color
+     */
     getColor(index) {
         return this.colors.chartColors[index % this.colors.chartColors.length];
     }
     
-    // Utilitaire pour obtenir plusieurs couleurs
+    /**
+     * Gets multiple colors from the chart palette
+     * @param {number} count - Number of colors
+     * @returns {Array} Array of colors
+     */
     getColors(count) {
-        return Array.from({length: count}, (_, i) => this.getColor(i));
+        return Array.from({ length: count }, (_, i) => this.getColor(i));
     }
     
-    // Utilitaire pour obtenir les couleurs d'états
+    /**
+     * Gets a state-specific color
+     * @param {string} state - State name
+     * @returns {string} Color
+     */
     getStateColor(state) {
         const stateClean = state?.toString().trim();
         return this.colors.stateColors[stateClean] || '#6B7280';
     }
     
-    // Redimensionnement pour responsive
+    /**
+     * Resizes a single chart (for backward compatibility)
+     */
     resize() {
-        Object.values(this.charts).forEach(chart => {
-            if (chart && typeof chart.resize === 'function') {
-                try {
-                    chart.resize();
-                } catch (error) {
-                    console.warn('Erreur lors du redimensionnement:', error);
-                }
-            }
-        });
+        this.resizeAll();
     }
 }
 
-// Export pour utilisation globale
+// Export for global use
 window.ChartManager = ChartManager;
 
-// Création d'une instance globale pour utilisation immédiate
+// Create global instance
 if (window.chartManager) {
     window.chartManager.destroyAll();
 }
 window.chartManager = new ChartManager();
 
-console.log('🚀 ChartManager version corrigée créé et disponible globalement');
+console.log('🚀 Optimized ChartManager created and available globally');
 
-// Gestion du redimensionnement automatique optimisée
+// Automatic resize handling
 let resizeTimeout;
 window.addEventListener('resize', () => {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(() => {
         if (window.chartManager) {
-            window.chartManager.resize();
+            window.chartManager.resizeAll();
         }
     }, 150);
 });
 
-// Gestion de la destruction automatique lors du changement de page
+// Cleanup on page unload
 window.addEventListener('beforeunload', () => {
     if (window.chartManager) {
         window.chartManager.destroyAll();
