@@ -2,783 +2,623 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PROCASEF Dashboard – Boundou</title>
 
   <!-- Styles -->
   <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;550;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" />
 </head>
 <body>
-    <div class="app-container">
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <div class="logo-section">
-                    <div class="logo-icon">
-                        <i class="fas fa-map-marked-alt"></i>
-                    </div>
-                    <div class="logo-text">PROCASEF</div>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-section">
+          <div class="logo-icon">
+            <i class="fas fa-map-marked-alt"></i>
+          </div>
+          <div class="logo-text">PROCASEF</div>
+        </div>
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Basculer la sidebar">
+          <div class="hamburger"></div>
+        </button>
+      </div>
+      
+      <nav class="nav-menu">
+        <a href="#" class="nav-item active" data-section="accueil">
+          <i class="nav-icon fas fa-home"></i>
+          <span class="nav-text">Accueil</span>
+        </a>
+        <a href="#" class="nav-item" data-section="parcelles">
+          <i class="nav-icon fas fa-map"></i>
+          <span class="nav-text">Parcelles</span>
+        </a>
+        <a href="#" class="nav-item" data-section="etat-avancement">
+          <i class="nav-icon fas fa-tasks"></i>
+          <span class="nav-text">État d'Avancement</span>
+        </a>
+        <a href="#" class="nav-item" data-section="projections-2025">
+          <i class="nav-icon fas fa-chart-line"></i>
+          <span class="nav-text">Projections 2025</span>
+        </a>
+        <!-- <a href="#" class="nav-item" data-section="genre">
+          <i class="nav-icon fas fa-users"></i>
+          <span class="nav-text">Répartition Genre</span>
+        </a> -->
+        <a href="#" class="nav-item" data-section="rapport">
+          <i class="nav-icon fas fa-file-alt"></i>
+          <span class="nav-text">Rapport Complet</span>
+        </a>
+        <a href="#" class="nav-item" data-section="stats-topo">
+          <i class="nav-icon fas fa-ruler-combined"></i>
+          <span class="nav-text">Stats Topo</span>
+        </a>
+        <!-- <a href="#" class="nav-item" data-section="post-traitement">
+          <i class="nav-icon fas fa-cogs"></i>
+          <span class="nav-text">Post-Traitement</span>
+        </a> -->
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="app-header">
+        <div class="header-content">
+          <div class="header-left">
+            <div class="header-logo">
+              <i class="fas fa-map-marked-alt"></i>
+            </div>
+            <h1 class="page-title" id="pageTitle">Dashboard PROCASEF</h1>
+          </div>
+          <div class="header-actions">
+            <div class="font-size-control">
+              <button type="button" class="font-btn btn btn-outline-secondary btn-sm" id="fontDecrease" aria-label="Diminuer la taille de la police">A-</button>
+              <div class="font-slider-container">
+                <input type="range" class="font-slider form-range" id="fontSizeSlider" min="12" max="20" value="14" aria-label="Ajuster la taille de la police">
+                <div class="font-tooltip" id="fontTooltip">14px</div>
+              </div>
+              <button type="button" class="font-btn btn btn-outline-secondary btn-sm" id="fontIncrease" aria-label="Augmenter la taille de la police">A+</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Loading Overlay -->
+      <div id="loadingSpinner" class="loading-container" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Chargement...</span>
+        </div>
+        <p>Chargement des données...</p>
+      </div>
+
+      <!-- Error Container -->
+      <div id="errorContainer"></div>
+
+      <!-- Content Area -->
+      <div class="content-area">
+        <!-- Section Accueil -->
+        <section id="accueil-section" class="content-section active">
+          <div class="section-header">
+            <div>
+              <h2>🏠 Tableau de Bord Principal</h2>
+              <p class="section-description">Vue d'ensemble des indicateurs clés du projet PROCASEF à Boundou</p>
+            </div>
+          </div>
+
+          <!-- KPI Grid -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <h3>Total Parcelles</h3>
+                <i class="kpi-icon fas fa-map-marked-alt"></i>
+              </div>
+              <div class="kpi-value" id="totalParcelles">31,302</div>
+              <div class="kpi-subtitle">Parcelles identifiées</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <h3>Parcelles NICAD</h3>
+                <i class="kpi-icon fas fa-check-circle"></i>
+              </div>
+              <div class="kpi-value text-success" id="parcellesNicad">17,146</div>
+              <div class="kpi-subtitle" id="percentageNicad">54.8% avec NICAD</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <h3>Parcelles Délibérées</h3>
+                <i class="kpi-icon fas fa-gavel"></i>
+              </div>
+              <div class="kpi-value" id="parcellesDeliberees">11,036</div>
+              <div class="kpi-subtitle" id="percentageDeliberees">35.3% délibérées</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <h3>Superficie Totale</h3>
+                <i class="kpi-icon fas fa-expand-arrows-alt"></i>
+              </div>
+              <div class="kpi-value" id="superficieTotale">67,934.12</div>
+              <div class="kpi-subtitle">Hectares</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <h3>Taux Réalisation</h3>
+                <i class="kpi-icon fas fa-chart-pie"></i>
+              </div>
+              <div class="kpi-value text-warning" id="tauxRealisation">47.80%</div>
+              <div class="kpi-subtitle">33,457 / 70,000</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <h3>Communes Actives</h3>
+                <i class="kpi-icon fas fa-city"></i>
+              </div>
+              <div class="kpi-value" id="communesActives">13/17</div>
+              <div class="kpi-subtitle">Zones d'intervention</div>
+            </div>
+          </div>
+
+          <!-- Charts Overview -->
+          <div class="charts-overview">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Top Communes par Parcelles</h3>
+              </div>
+              <div class="chart-content">
+                <canvas id="topCommunesChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Projections Mensuelles 2025</h3>
+              </div>
+              <div class="chart-content">
+                <canvas id="projectionsChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Répartition Genre Global</h3>
+              </div>
+              <div class="chart-content">
+                <canvas id="genreGlobalChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section Parcelles -->
+        <section id="parcelles-section" class="content-section">
+          <div class="section-header">
+            <div>
+              <h2>📍 Répartition des Parcelles</h2>
+              <p class="section-description">Analyse géographique et statistique des parcelles</p>
+            </div>
+            <div class="filter-panel">
+              <select id="communeFilter" class="form-select" aria-label="Filtrer par commune">
+                <option value="">Toutes les communes</option>
+              </select>
+              <select id="nicadFilter" class="form-select" aria-label="Filtrer par NICAD">
+                <option value="">Toutes les parcelles</option>
+                <option value="Oui">Avec NICAD</option>
+                <option value="Non">Sans NICAD</option>
+              </select>
+              <select id="deliberationFilter" class="form-select" aria-label="Filtrer par délibération">
+                <option value="">Toutes les délibérations</option>
+                <option value="Oui">Délibérées</option>
+                <option value="Non">Non délibérées</option>
+              </select>
+              <button id="exportParcellesBtn" class="btn btn-primary">
+                <i class="fas fa-download"></i> Exporter
+              </button>
+            </div>
+          </div>
+
+          <div class="charts-grid">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Distribution par Région</h3>
+              </div>
+              <div class="chart-content">
+                <canvas id="regionChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Progression NICAD par Commune</h3>
+              </div>
+              <div class="chart-content">
+                <canvas id="nicadChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card large">
+              <div class="chart-header">
+                <h3>Carte Interactive des Communes</h3>
+              </div>
+              <div class="chart-content">
+                <div id="mapContainer" style="height: 100%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <div class="table-header">
+              <h3>Données détaillées par commune</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-striped" id="parcellesTable">
+                <thead>
+                  <tr>
+                    <th>Commune</th>
+                    <th>Région</th>
+                    <th>Total Parcelles</th>
+                    <th>NICAD</th>
+                    <th>% NICAD</th>
+                    <th>Délibérées</th>
+                    <th>% Délibérées</th>
+                    <th>Superficie (ha)</th>
+                  </tr>
+                </thead>
+                <tbody id="parcellesTableBody">
+                  <!-- Dynamic content -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section État des Opérations -->
+        <section id="etat-avancement-section" class="content-section">
+          <div class="section-header">
+            <div>
+              <h2>📈 État des Opérations</h2>
+              <p class="section-description">Suivi de l'avancement des opérations par commune et région</p>
+            </div>
+            <div class="filter-panel">
+              <select id="regionFilterEtat" class="form-select" aria-label="Filtrer par région">
+                <option value="">Toutes les régions</option>
+              </select>
+              <select id="etatFilterEtat" class="form-select" aria-label="Filtrer par état">
+                <option value="">Tous les états</option>
+              </select>
+              <select id="communeFilterEtat" class="form-select" aria-label="Filtrer par commune">
+                <option value="">Toutes les communes</option>
+              </select>
+              <select id="csigFilterEtat" class="form-select" aria-label="Filtrer par CSIG">
+                <option value="">Tous les CSIG</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="progress-overview">
+            <div class="progress-card">
+              <h3>Progression Globale</h3>
+              <div class="progress-bar-container">
+                <div class="progress">
+                  <div class="progress-bar bg-success" id="globalProgressFill" role="progressbar" style="width: 47.8%;" aria-valuenow="47.8" aria-valuemin="0" aria-valuemax="100"></div>
                 </div>
-                <button class="sidebar-toggle" id="sidebarToggle" aria-label="Basculer la sidebar">
-                    <div class="hamburger"></div>
+                <div class="progress-text" id="globalProgressText">47.8%</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="charts-grid">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>État par Commune</h3>
+              </div>
+              <div class="chart-content">
+                <canvas id="etatCommuneBarChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Répartition des États</h3>
+              </div>
+              <div class="chart-content">
+                <canvas id="etatDonutChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card large">
+              <div class="chart-header">
+                <h3>Timeline par Commune</h3>
+              </div>
+              <div class="timeline-container" id="etatTimeline">
+                <!-- Dynamic timeline content -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section Projections 2025 -->
+        <section id="projections-2025-section" class="content-section">
+          <div class="section-header">
+            <div>
+              <h2>🎯 Projections et Objectifs 2025</h2>
+              <p class="section-description">Suivi des objectifs et des réalisations pour 2025</p>
+            </div>
+          </div>
+
+          <div class="metrics-row">
+            <div class="metric-card">
+              <h3>Objectif 2025</h3>
+              <div class="metric-value" id="objectif2025">70,000</div>
+            </div>
+            <div class="metric-card">
+              <h3>Réalisé</h3>
+              <div class="metric-value text-success" id="realise2025">31,302</div>
+            </div>
+            <div class="metric-card">
+              <h3>Performance</h3>
+              <div class="metric-value text-warning" id="performance2025">44.72%</div>
+            </div>
+          </div>
+
+          <div class="charts-grid">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Objectifs vs Réalisations</h3>
+              </div>
+              <div class="chart-content">
+                <canvas id="objectifsChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Performance par Période</h3>
+              </div>
+              <div class="performance-list list-group" id="performanceList">
+                <!-- Dynamic performance content -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section Rapport -->
+        <section id="rapport-section" class="content-section">
+          <div class="section-header">
+            <div>
+              <h2>📊 Rapport Complet</h2>
+              <p class="section-description">Analyse détaillée des données du projet PROCASEF Boundou</p>
+            </div>
+          </div>
+
+          <!-- KPI Grid Rapport -->
+          <div class="kpi-grid" id="rapportKpiGrid">
+            <!-- Dynamic KPI content -->
+          </div>
+
+          <div class="charts-grid">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Détail par Source</h3>
+              </div>
+              <div class="chart-content">
+                <canvas id="rapportSourceChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Top 10 Communes</h3>
+              </div>
+              <div class="chart-content">
+                <canvas id="rapportCommuneMixedChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Analyse Temporelle</h3>
+              </div>
+              <div class="chart-content">
+                <canvas id="rapportTemporalChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Répartition Régionale</h3>
+              </div>
+              <div class="chart-content">
+                <canvas id="rapportRegionPolarChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section Stats Topo -->
+        <section id="stats-topo-section" class="content-section">
+          <div class="section-header">
+            <div>
+              <h2>📏 Statistiques Topographiques</h2>
+              <p class="section-description">Analyse détaillée des levés topographiques - Données en temps réel</p>
+            </div>
+            <div class="filter-panel">
+              <select id="topoCommuneFilter" class="form-select" aria-label="Filtrer par commune">
+                <option value="">Toutes les communes</option>
+              </select>
+              <select id="topoTopographeFilter" class="form-select" aria-label="Filtrer par topographe">
+                <option value="">Tous les topographes</option>
+              </select>
+              <div class="date-range-container">
+                <input type="date" id="topoDateDebut" class="form-control date-input" placeholder="Date début" aria-label="Date de début">
+                <span class="date-separator">à</span>
+                <input type="date" id="topoDateFin" class="form-control date-input" placeholder="Date fin" aria-label="Date de fin">
+                <button type="button" id="clearDateRange" class="btn btn-outline-secondary btn-sm" title="Effacer les dates" aria-label="Effacer les dates">
+                  <i class="fas fa-times"></i>
                 </button>
+              </div>
+              <button id="exportTopoBtn" class="btn btn-primary">
+                <i class="fas fa-download"></i> Exporter
+              </button>
             </div>
-            
-            <nav class="nav-menu">
-                <a href="#" class="nav-item active" data-section="accueil">
-                    <i class="nav-icon fas fa-home"></i>
-                    <span class="nav-text">Accueil</span>
-                </a>
-                <a href="#" class="nav-item" data-section="parcelles">
-                    <i class="nav-icon fas fa-map"></i>
-                    <span class="nav-text">Parcelles</span>
-                </a>
-                <a href="#" class="nav-item" data-section="etat-avancement">
-                    <i class="nav-icon fas fa-tasks"></i>
-                    <span class="nav-text">État d'Avancement</span>
-                </a>
-                <a href="#" class="nav-item" data-section="projections-2025">
-                    <i class="nav-icon fas fa-chart-line"></i>
-                    <span class="nav-text">Projections 2025</span>
-                </a>
-               <!--  <a href="#" class="nav-item" data-section="genre">
-                    <i class="nav-icon fas fa-users"></i>
-                    <span class="nav-text">Répartition Genre</span>
-                </a>  -->
-                <a href="#" class="nav-item" data-section="rapport">
-                    <i class="nav-icon fas fa-file-alt"></i>
-                    <span class="nav-text">Répartition Genre</span>
-                </a>
-                <a href="#" class="nav-item" data-section="stats-topo">
-                    <i class="nav-icon fas fa-ruler-combined"></i>
-                    <span class="nav-text">Stats Topo</span>
-                </a>
-               <!-- <a href="#" class="nav-item" data-section="post-traitement">
-                    <i class="nav-icon fas fa-cogs"></i>
-                    <span class="nav-text">Post-Traitement</span> -->
-                </a>
-            </nav>
-        </aside>
+          </div>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Header -->
-            <header class="app-header">
-                <div class="header-content">
-                    <div class="header-left">
-                        <div class="header-logo">
-                            <i class="fas fa-map-marked-alt"></i>
-                        </div>
-                        <h1 class="page-title" id="pageTitle">Dashboard PROCASEF</h1>
-                    </div>
-                    <div class="header-actions">
-                        <div class="font-size-control">
-                            <button type="button" class="font-btn" id="fontDecrease" aria-label="Diminuer la taille">A-</button>
-                            <div class="font-slider-container">
-                                <input type="range" class="font-slider" id="fontSizeSlider" min="12" max="20" value="14" aria-label="Taille de police">
-                                <div class="font-tooltip" id="fontTooltip">14px</div>
-                            </div>
-                            <button type="button" class="font-btn" id="fontIncrease" aria-label="Augmenter la taille">A+</button>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <!-- Loading Overlay -->
-            <div id="loadingOverlay" class="loading-container" style="display: none;">
-                <div class="spinner"></div>
-                <p>Chargement des données...</p>
+          <!-- KPI Stats Topo -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <h3>Total Champs</h3>
+                <i class="kpi-icon fas fa-seedling"></i>
+              </div>
+              <div class="kpi-value text-success" id="totalChampsKPI">0</div>
+              <div class="kpi-subtitle">Parcelles champs levées</div>
             </div>
 
-            <!-- Content Area -->
-            <div class="content-area">
-                <!-- Section Accueil -->
-                <section id="accueil-section" class="content-section active">
-                    <div class="section-header">
-                        <div>
-                            <h2>🏠 Tableau de Bord Principal</h2>
-                            <p class="section-description">Vue d'ensemble des indicateurs clés du projet PROCASEF à Boundou</p>
-                        </div>
-                    </div>
-
-                    <!-- KPI Grid -->
-                    <div class="kpi-grid">
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <h3>Total Parcelles</h3>
-                                <i class="kpi-icon fas fa-map-marked-alt"></i>
-                            </div>
-                            <div class="kpi-value" id="totalParcelles">31,302</div>
-                            <div class="kpi-subtitle">Parcelles identifiées</div>
-                        </div>
-
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <h3>Parcelles NICAD</h3>
-                                <i class="kpi-icon fas fa-check-circle"></i>
-                            </div>
-                            <div class="kpi-value success" id="parcellesNicad">17,146</div>
-                            <div class="kpi-subtitle" id="percentageNicad">54.8% avec NICAD</div>
-                        </div>
-
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <h3>Parcelles Délibérées</h3>
-                                <i class="kpi-icon fas fa-gavel"></i>
-                            </div>
-                            <div class="kpi-value" id="parcellesDeliberees">11,036</div>
-                            <div class="kpi-subtitle" id="percentageDeliberees">35.3% délibérées</div>
-                        </div>
-
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <h3>Superficie Totale</h3>
-                                <i class="kpi-icon fas fa-expand-arrows-alt"></i>
-                            </div>
-                            <div class="kpi-value" id="superficieTotale">67,934.12</div>
-                            <div class="kpi-subtitle">m²</div>
-                        </div>
-
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <h3>Taux Réalisation</h3>
-                                <i class="kpi-icon fas fa-chart-pie"></i>
-                            </div>
-                            <div class="kpi-value warning" id="tauxRealisation">47.80%</div>
-                            <div class="kpi-subtitle">33457 / 70000</div>
-                        </div>
-
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <h3>Communes Actives</h3>
-                                <i class="kpi-icon fas fa-city"></i>
-                            </div>
-                            <div class="kpi-value" id="communesActives">13/17</div>
-                            <div class="kpi-subtitle">Zones d'intervention</div>
-                        </div>
-                    </div>
-
-                    <!-- Charts Overview -->
-                    <div class="charts-overview">
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>Top Communes par Parcelles</h3>
-                            </div>
-                            <div class="chart-content">
-                                <canvas id="topCommunesChart"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>Projections Mensuelles 2025</h3>
-                            </div>
-                            <div class="chart-content">
-                                <canvas id="projectionsChart"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>Répartition Genre Global</h3>
-                            </div>
-                            <div class="chart-content">
-                                <canvas id="genreGlobalChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Section Parcelles -->
-                <section id="parcelles-section" class="content-section">
-                    <div class="section-header">
-                        <div>
-                            <h2>📊 Répartition des Parcelles</h2>
-                        </div>
-                        <div class="filter-panel">
-                            <select id="communeFilter" class="form-control">
-                                <option value="">Toutes les communes</option>
-                            </select>
-                            <select id="nicadFilter" class="form-control">
-                                <option value="">Toutes les parcelles</option>
-                                <option value="Oui">Avec NICAD</option>
-                                <option value="Non">Sans NICAD</option>
-                            </select>
-                            <select id="deliberationFilter" class="form-control">
-                                <option value="">Toutes les délibérations</option>
-                                <option value="Oui">Délibérées</option>
-                                <option value="Non">Non délibérées</option>
-                            </select>
-                            <button id="exportParcellesBtn" class="btn btn--primary">
-                                <i class="fas fa-download"></i> Exporter CSV
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="charts-grid">
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>Distribution par Région</h3>
-                            </div>
-                            <div class="chart-content">
-                                <canvas id="regionChart"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>Progression NICAD par Commune</h3>
-                            </div>
-                            <div class="chart-content">
-                                <canvas id="nicadChart"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="chart-card large">
-                            <div class="chart-header">
-                                <h3>Carte Interactive des Communes</h3>
-                            </div>
-                            <div class="chart-content">
-                                <div id="mapContainer" style="height: 100%;"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="table-container">
-                        <div class="table-header">
-                            <h3>Données détaillées par commune</h3>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="data-table" id="parcellesTable">
-                                <thead>
-                                    <tr>
-                                        <th>Commune</th>
-                                        <th>Région</th>
-                                        <th>Total Parcelles</th>
-                                        <th>NICAD</th>
-                                        <th>% NICAD</th>
-                                        <th>Délibérées</th>
-                                        <th>% Délibérées</th>
-                                        <th>Superficie (ha)</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="parcellesTableBody">
-                                    <!-- Dynamic content -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Section État des Opérations -->
-                <section id="etat-avancement-section" class="content-section">
-                    <div class="section-header">
-                        <div>
-                            <h2>📈 État des Opérations</h2>
-                        </div>
-                        <div class="filter-panel">
-                            <select id="regionFilterEtat" class="form-control">
-                                <option value="">Toutes les régions</option>
-                            </select>
-                            <select id="etatFilterEtat" class="form-control">
-                                <option value="">Tous les états</option>
-                            </select>
-                            <select id="communeFilterEtat" class="form-control">
-                                <option value="">Toutes les communes</option>
-                            </select>
-                            <select id="csigFilterEtat" class="form-control">
-                                <option value="">Tous les CSIG</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="progress-overview">
-                        <div class="progress-card">
-                            <h3>Progression Globale</h3>
-                            <div class="progress-bar-container">
-                                <div class="progress-bar">
-                                    <div class="progress-fill" id="globalProgressFill" style="width: 67.4%;"></div>
-                                </div>
-                                <div class="progress-text" id="globalProgressText">67.4%</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="charts-grid">
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>État par Commune</h3>
-                            </div>
-                            <div class="chart-content">
-                                <canvas id="etatCommuneBarChart"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>Répartition des États</h3>
-                            </div>
-                            <div class="chart-content">
-                                <canvas id="etatDonutChart"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="chart-card large">
-                            <div class="chart-header">
-                                <h3>Timeline par Commune</h3>
-                            </div>
-                            <div class="timeline-container" id="etatTimeline">
-                                <!-- Dynamic timeline content -->
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Section Projections 2025 -->
-                <section id="projections-2025-section" class="content-section">
-                    <div class="section-header">
-                        <div>
-                            <h2>🎯 Projections et Objectifs 2025</h2>
-                        </div>
-                    </div>
-
-                    <div class="metrics-row">
-                        <div class="metric-card">
-                            <h3>Objectif 2025</h3>
-                            <div class="metric-value" id="objectif2025">70000</div>
-                        </div>
-                        <div class="metric-card">
-                            <h3>Réalisé</h3>
-                            <div class="metric-value success" id="realise2025">31 302</div>
-                        </div>
-                        <div class="metric-card">
-                            <h3>Performance</h3>
-                            <div class="metric-value warning" id="performance2025">44.72%</div>
-                        </div>
-                    </div>
-
-                    <div class="charts-grid">
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>Objectifs vs Réalisations</h3>
-                            </div>
-                            <div class="chart-content">
-                                <canvas id="objectifsChart"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>Performance par Période</h3>
-                            </div>
-                            <div class="performance-list" id="performanceList">
-                                <!-- Dynamic performance content -->
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Section Genre -->
-                <section id="genre-section" class="content-section">
-                    <div class="section-header">
-                        <div>
-                            <h2>👫🏿 Répartition par Genre</h2>
-                        </div>
-                    </div>
-
-                    <div class="kpi-grid">
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <h3>Hommes</h3>
-                                <i class="kpi-icon fas fa-male"></i>
-                            </div>
-                            <div class="kpi-value" id="hommesTotal">43,576</div>
-                            <div class="kpi-subtitle" id="hommesPercentage">82.4%</div>
-                        </div>
-
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <h3>Femmes</h3>
-                                <i class="kpi-icon fas fa-female"></i>
-                            </div>
-                            <div class="kpi-value" id="femmesTotal">9,332</div>
-                            <div class="kpi-subtitle" id="femmesPercentage">17.6%</div>
-                        </div>
-                    </div>
-
-                    <div class="charts-grid">
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>Répartition Globale</h3>
-                            </div>
-                            <div class="chart-content">
-                                <canvas id="genreGlobalRepart"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>Évolution Trimestrielle</h3>
-                            </div>
-                            <div class="chart-content">
-                                <canvas id="genreTrimestreChart"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="chart-card large">
-                            <div class="chart-header">
-                                <h3>Répartition par Commune</h3>
-                            </div>
-                            <div class="chart-content">
-                                <canvas id="genreCommuneChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Section Rapport -->
-                <section id="rapport-section" class="content-section">
-                    <div class="section-header">
-                        <div>
-                            <h2>👫🏿 Répartition du genre</h2>
-                            <p class="section-description">Analyse détaillée des données genre du projet PROCASEF Boundou</p>
-                        </div>
-                    </div>
-
-                    <!-- KPI Grid Rapport -->
-                    <div class="kpi-grid" id="rapportKpiGrid">
-                        <!-- Dynamic KPI content -->
-                    </div>
-
-                    <div class="charts-grid">
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>Détail par Source</h3>
-                            </div>
-                            <div class="chart-content">
-                                <canvas id="rapportSourceChart"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>Top 10 Communes (Mixed Chart)</h3>
-                            </div>
-                            <div class="chart-content">
-                                <canvas id="rapportCommuneMixedChart"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>Analyse Temporelle</h3>
-                            </div>
-                            <div class="chart-content">
-                                <canvas id="rapportTemporalChart"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>Répartition Régionale (Polar)</h3>
-                            </div>
-                            <div class="chart-content">
-                                <canvas id="rapportRegionPolarChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Section Stats Topo -->
-                <section id="stats-topo-section" class="content-section">
-                    <div class="section-header">
-                        <div>
-                            <h2>📏 Statistiques Topographiques</h2>
-                            <p class="section-description">Analyse détaillée des levés topographiques - Données en temps réel</p>
-                        </div>
-                        <div class="filter-panel">
-                            <select id="topoCommuneFilter" class="form-control">
-                                <option value="">Toutes les communes</option>
-                            </select>
-                            <select id="topoTopographeFilter" class="form-control">
-                                <option value="">Tous les topographes</option>
-                            </select>
-                            <div class="date-range-container">
-                                <input type="date" id="topoDateDebut" class="form-control date-input" placeholder="Date début">
-                                <span class="date-separator">à</span>
-                                <input type="date" id="topoDateFin" class="form-control date-input" placeholder="Date fin">
-                                <button type="button" id="clearDateRange" class="btn btn--secondary btn-sm" title="Effacer les dates">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                            <button id="exportTopoBtn" class="btn btn--primary">
-                                <i class="fas fa-download"></i> Export CSV
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- KPI Stats Topo -->
-                    <div class="kpi-grid">
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <h3>Total Champs</h3>
-                                <i class="kpi-icon fas fa-seedling"></i>
-                            </div>
-                            <div class="kpi-value success" id="totalChampsKPI">0</div>
-                            <div class="kpi-subtitle">Parcelles champs levées</div>
-                        </div>
-
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <h3>Total Bâtis</h3>
-                                <i class="kpi-icon fas fa-building"></i>
-                            </div>
-                            <div class="kpi-value" id="totalBatisKPI">0</div>
-                            <div class="kpi-subtitle">Parcelles bâties levées</div>
-                        </div>
-
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <h3>Total Parcelles</h3>
-                                <i class="kpi-icon fas fa-map-marked-alt"></i>
-                            </div>
-                            <div class="kpi-value" id="totalTopoParcellesKPI">0</div>
-                            <div class="kpi-subtitle">Total général levé</div>
-                        </div>
-
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <h3>Moyenne/Jour</h3>
-                                <i class="kpi-icon fas fa-calendar-day"></i>
-                            </div>
-                            <div class="kpi-value warning" id="avgParJourKPI">0</div>
-                            <div class="kpi-subtitle">Parcelles par jour</div>
-                        </div>
-
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <h3>Top Topographe</h3>
-                                <i class="kpi-icon fas fa-medal"></i>
-                            </div>
-                            <div class="kpi-value" id="topTopoKPI">-</div>
-                            <div class="kpi-subtitle">Plus productif</div>
-                        </div>
-
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <h3>Topographes Actifs</h3>
-                                <i class="kpi-icon fas fa-users"></i>
-                            </div>
-                            <div class="kpi-value" id="activeTopoKPI">0</div>
-                            <div class="kpi-subtitle">En activité</div>
-                        </div>
-                    </div>
-
-                    <!-- Charts Topo -->
-                    <div class="charts-grid">
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>Top 10 Topographes</h3>
-                            </div>
-                            <div class="chart-content">
-                                <canvas id="topToposChart"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>Totaux par Commune</h3>
-                            </div>
-                            <div class="chart-content">
-                                <canvas id="topoCommuneChart"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>Évolution Mensuelle</h3>
-                            </div>
-                            <div class="chart-content">
-                                <canvas id="topoEvolutionChart"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>Répartition Type</h3>
-                            </div>
-                            <div class="chart-content">
-                                <canvas id="topoTypeDonut"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="chart-card large">
-                            <div class="chart-header">
-                                <h3>Timeline des Opérations</h3>
-                            </div>
-                            <div class="timeline-container" id="topoTimeline">
-                                <!-- Dynamic timeline content -->
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Table Topo -->
-                    <div class="table-container">
-                        <div class="table-header">
-                            <h3>Données complètes des levés topographiques</h3>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="data-table" id="topoTable">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Topographe</th>
-                                        <th>Commune</th>
-                                        <th>Champs</th>
-                                        <th>Bâtis</th>
-                                        <th>Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="topoTableBody">
-                                    <!-- Dynamic content -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Section Post-Traitement -->
-                <section id="post-traitement-section" class="content-section">
-                    <div class="section-header">
-                        <div>
-                            <h2>⚙️ Post-Traitement</h2>
-                            <p class="section-description">Suivi et analyse du post-traitement des données</p>
-                        </div>
-                        <div class="filter-panel">
-                            <select id="postCommuneFilter" class="form-control">
-                                <option value="">Toutes les communes</option>
-                            </select>
-                            <select id="postGeomFilter" class="form-control">
-                                <option value="">Tous les géomètres</option>
-                            </select>
-                            <button id="exportPostBtn" class="btn btn--primary">
-                                <i class="fas fa-download"></i> Export CSV
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- KPI Post-Traitement -->
-                    <div class="kpi-grid">
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <h3>Total Reçues</h3>
-                                <i class="kpi-icon fas fa-inbox"></i>
-                            </div>
-                            <div class="kpi-value" id="totalRecuesKPI">4,445</div>
-                            <div class="kpi-subtitle">Données reçues</div>
-                        </div>
-
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <h3>Total Traitées</h3>
-                                <i class="kpi-icon fas fa-check-circle"></i>
-                            </div>
-                            <div class="kpi-value success" id="totalTraiteesKPI">4,120</div>
-                            <div class="kpi-subtitle">Données traitées</div>
-                        </div>
-
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <h3>Taux Traitement</h3>
-                                <i class="kpi-icon fas fa-percentage"></i>
-                            </div>
-                            <div class="kpi-value warning" id="tauxTraitementKPI">92.7%</div>
-                            <div class="kpi-subtitle">Taux global</div>
-                        </div>
-
-                        <div class="kpi-card">
-                            <div class="kpi-header">
-                                <h3>En Attente</h3>
-                                <i class="kpi-icon fas fa-clock"></i>
-                            </div>
-                            <div class="kpi-value" id="enAttenteKPI">325</div>
-                            <div class="kpi-subtitle">À traiter</div>
-                        </div>
-                    </div>
-
-                    <!-- Charts Post-Traitement -->
-                    <div class="charts-grid">
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>Taux de Traitement par Commune</h3>
-                            </div>
-                            <div class="chart-content">
-                                <canvas id="postTauxChart"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>Évolution Traitement</h3>
-                            </div>
-                            <div class="chart-content">
-                                <canvas id="postEvolutionChart"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="chart-card large">
-                            <div class="chart-header">
-                                <h3>Statut par Géomètre</h3>
-                            </div>
-                            <div class="chart-content">
-                                <canvas id="postGeometreChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Table Post-Traitement -->
-                    <div class="table-container">
-                        <div class="table-header">
-                            <h3>Données détaillées du post-traitement</h3>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="data-table" id="postTable">
-                                <thead>
-                                    <tr>
-                                        <th>Commune</th>
-                                        <th>Reçues</th>
-                                        <th>Traitées</th>
-                                        <th>Taux (%)</th>
-                                        <th>Statut</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="postTableBody">
-                                    <!-- Dynamic content -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <h3>Total Bâtis</h3>
+                <i class="kpi-icon fas fa-building"></i>
+              </div>
+              <div class="kpi-value" id="totalBatisKPI">0</div>
+              <div class="kpi-subtitle">Parcelles bâties levées</div>
             </div>
-        </main>
-    </div>
 
-    <!-- JavaScript Libraries -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <h3>Total Parcelles</h3>
+                <i class="kpi-icon fas fa-map-marked-alt"></i>
+              </div>
+              <div class="kpi-value" id="totalTopoParcellesKPI">0</div>
+              <div class="kpi-subtitle">Total général levé</div>
+            </div>
 
-    <!-- Application Scripts -->
-    <script src="js/data-loader.js"></script>
-    <script src="js/charts.js"></script>
-    <script src="js/map.js"></script>
-    <script src="js/app.js"></script>
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <h3>Moyenne/Jour</h3>
+                <i class="kpi-icon fas fa-calendar-day"></i>
+              </div>
+              <div class="kpi-value text-warning" id="avgParJourKPI">0</div>
+              <div class="kpi-subtitle">Parcelles par jour</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <h3>Top Topographe</h3>
+                <i class="kpi-icon fas fa-medal"></i>
+              </div>
+              <div class="kpi-value" id="topTopoKPI">-</div>
+              <div class="kpi-subtitle">Plus productif</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <h3>Topographes Actifs</h3>
+                <i class="kpi-icon fas fa-users"></i>
+              </div>
+              <div class="kpi-value" id="activeTopoKPI">0</div>
+              <div class="kpi-subtitle">En activité</div>
+            </div>
+          </div>
+
+          <!-- Charts Topo -->
+          <div class="charts-grid">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Top 10 Topographes</h3>
+              </div>
+              <div class="chart-content">
+                <canvas id="topToposChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Totaux par Commune</h3>
+              </div>
+              <div class="chart-content">
+                <canvas id="topoCommuneChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Évolution Mensuelle</h3>
+              </div>
+              <div class="chart-content">
+                <canvas id="topoEvolutionChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Répartition Type</h3>
+              </div>
+              <div class="chart-content">
+                <canvas id="topoTypeDonut"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card large">
+              <div class="chart-header">
+                <h3>Timeline des Opérations</h3>
+              </div>
+              <div class="timeline-container" id="topoTimeline">
+                <!-- Dynamic timeline content -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Table Topo -->
+          <div class="table-container">
+            <div class="table-header">
+              <h3>Données complètes des levés topographiques</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-striped" id="topoTable">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Topographe</th>
+                    <th>Commune</th>
+                    <th>Champs</th>
+                    <th>Bâtis</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody id="topoTableBody">
+                  <!-- Dynamic content -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- JavaScript Libraries -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAahn7vI1lPBo6DPpg1Y1f2n6Xg==" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf-autotable.min.js" integrity="sha512-4H5N9R20I6S+HgNS7W2wArG2I/X8n0DYXz3pN2S7oY2f2H3K3K3K3K3K3K3K3K3K3K3K3K3K3K3K3K3K3K3K3==" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" integrity="sha512-dfX5uYVXDAgXNFdN8dqD7bV17p5d31m4j6vJGSvQ4h3jk681eyqGLOUm0I4g3UnbrRJGgv3FIR5SmG4nl4fg==" crossorigin="anonymous"></script>
+
+  <!-- Application Scripts -->
+  <script src="js/data-loader.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
