@@ -212,6 +212,20 @@ class ProcasefDashboard {
         console.log('Statistiques calculées:', this.stats);
     }
 
+     // Add this method OUTSIDE of setupEventListeners, as a separate class method
+    validateDateRange() {
+        const dateDebut = document.getElementById('topoDateDebut')?.value;
+        const dateFin = document.getElementById('topoDateFin')?.value;
+        
+        if (dateDebut && dateFin && dateDebut > dateFin) {
+            this.showError('La date de début doit être antérieure à la date de fin');
+            // Reset la date de fin
+            document.getElementById('topoDateFin').value = '';
+            return false;
+        }
+        return true;
+    }
+    
     setupEventListeners() {
         console.log('Configuration des event listeners...');
         
@@ -225,16 +239,16 @@ class ProcasefDashboard {
                 }
             });
         });
-
+    
         // Sidebar toggle
         const sidebarToggle = document.getElementById('sidebarToggle');
         if (sidebarToggle) {
             sidebarToggle.addEventListener('click', () => this.toggleSidebar());
         }
-
+    
         // Font size controls
         this.setupFontSizeControls();
-
+    
         // Filters
         ['communeFilter', 'nicadFilter', 'deliberationFilter', 'postCommuneFilter', 'postGeomFilter'].forEach(filterId => {
             const filter = document.getElementById(filterId);
@@ -242,36 +256,16 @@ class ProcasefDashboard {
                 filter.addEventListener('change', () => this.applyFilters());
             }
         });
-
+    
         // Event listeners pour les filtres topo
-        ['topoCommuneFilter', 'topoTopographeFilter', 'topoDateDebut', 'topoDateFin'].forEach(filterId => {
+        ['topoCommuneFilter', 'topoTopographeFilter'].forEach(filterId => {
             const filter = document.getElementById(filterId);
             if (filter) {
                 filter.addEventListener('change', () => this.applyTopoFilters());
             }
         });
-
-        // Ajouter également l'event listener pour le bouton de reset
-        const clearDateBtn = document.getElementById('clearDateRange');
-        if (clearDateBtn) {
-            clearDateBtn.addEventListener('click', () => this.clearDateRange());
-        }
-
-             validateDateRange() {
-            const dateDebut = document.getElementById('topoDateDebut')?.value;
-            const dateFin = document.getElementById('topoDateFin')?.value;
-            
-            if (dateDebut && dateFin && dateDebut > dateFin) {
-                this.showError('La date de début doit être antérieure à la date de fin');
-                // Reset la date de fin
-                document.getElementById('topoDateFin').value = '';
-                return false;
-            }
-            return true;
-        }
-        
-        // 5. Modifier setupEventListeners() pour inclure la validation :
-        // Ajouter après la configuration des event listeners des dates :
+    
+        // Date filters with validation
         ['topoDateDebut', 'topoDateFin'].forEach(filterId => {
             const filter = document.getElementById(filterId);
             if (filter) {
@@ -282,7 +276,13 @@ class ProcasefDashboard {
                 });
             }
         });
-
+    
+        // Clear date range button
+        const clearDateBtn = document.getElementById('clearDateRange');
+        if (clearDateBtn) {
+            clearDateBtn.addEventListener('click', () => this.clearDateRange());
+        }
+    
         // Export buttons
         const exportParcellesBtn = document.getElementById('exportParcellesBtn');
         const exportPostBtn = document.getElementById('exportPostBtn');
@@ -295,15 +295,15 @@ class ProcasefDashboard {
         if (exportPostBtn) {
             exportPostBtn.addEventListener('click', () => this.exportPostData());
         }
-
+        
         if (exportTopoBtn) {
             exportTopoBtn.addEventListener('click', () => this.exportTopoData());
         }
-
+    
         // Window resize
         window.addEventListener('resize', () => this.handleResize());
     }
-
+    
     setupFontSizeControls() {
         // Charger la préférence sauvegardée
         try {
