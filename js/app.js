@@ -684,21 +684,27 @@ async exportGenreReport() {
 
         const hommes = this.data.repartitionGenre.find(r => r.genre === 'Homme');
         const femmes = this.data.repartitionGenre.find(r => r.genre === 'Femme');
-        const totalHommes = hommes ? hommes.total_nombre : 45576; // Fallback to image data
-        const totalFemmes = femmes ? femmes.total_nombre : 9332;  // Fallback to image data
+        const totalHommes = hommes ? hommes.total_nombre : 43576; // Utilise les données fournies
+        const totalFemmes = femmes ? femmes.total_nombre : 9332;  // Utilise les données fournies
         const total = totalHommes + totalFemmes;
 
-        // Find all genre-related chart canvases (adjust selector based on your IDs/classes)
-        const chartCanvases = document.querySelectorAll('.genre-chart'); // Update selector as needed
+        // Trouver tous les canvases de charts de genre (ajuster le sélecteur selon vos IDs)
+        const chartCanvases = document.querySelectorAll('.genre-chart'); // Remplacez par le bon sélecteur (ex. #genreGlobalChart)
         const chartImages = [];
         for (const canvas of chartCanvases) {
-            await new Promise(resolve => setTimeout(resolve, 200)); // Small delay for rendering
-            const chartImg = canvas.toDataURL('image/png');
-            chartImages.push(chartImg);
-            console.log('Chart Image Data:', chartImg); // Debug log
+            if (canvas.tagName === 'CANVAS') {
+                await new Promise(resolve => setTimeout(resolve, 500)); // Délai pour garantir le rendu
+                const chartImg = canvas.toDataURL('image/png');
+                console.log('Chart Image Data Length:', chartImg.length); // Vérifie la taille de l'image
+                if (chartImg.length > 100) { // Vérifie qu'il y a des données valides
+                    chartImages.push(chartImg);
+                } else {
+                    console.warn('Chart image capture failed for canvas:', canvas.id);
+                }
+            }
         }
 
-        // PDF generation
+        // Génération PDF
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
         doc.setFontSize(18);
@@ -706,18 +712,18 @@ async exportGenreReport() {
         doc.setFontSize(11);
         doc.text(`Généré le : ${new Date().toLocaleString('fr-FR')}`, 40, 60);
 
-        // Add all chart images with spacing
+        // Ajouter tous les graphiques avec espacement
         let currentY = 90;
         chartImages.forEach((img, index) => {
             doc.addImage(img, 'PNG', 180, currentY, 250, 250);
-            currentY += 260; // Space between charts
-            if (currentY > 700) { // Start new page if nearing bottom
+            currentY += 260; // Espacement entre les graphiques
+            if (currentY > 700) {
                 doc.addPage();
                 currentY = 90;
             }
         });
 
-        // Add table
+        // Ajouter le tableau
         doc.autoTable({
             head: [['Genre', 'Population', 'Pourcentage']],
             body: [
@@ -742,7 +748,7 @@ async exportGenreReport() {
         );
         doc.save('Rapport_Genre_PROCASEF.pdf');
 
-        // Word generation
+        // Génération Word
         let htmlForDocx = `
             <h1 style="font-family:Inter,sans-serif;color:#1E3A8A;">Rapport Genre – PROCASEF Boundou</h1>
             <p>Généré le : ${new Date().toLocaleString('fr-FR')}</p>
