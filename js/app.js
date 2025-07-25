@@ -734,12 +734,13 @@ class ProcasefDashboard {
             });
 
             doc.setFontSize(12);
+            const finalY = doc.lastAutoTable.finalY || 400;
             doc.text(
                 'Le graphe ci-dessus illustre la répartition globale par genre dans les inventaires PROCASEF. ' +
-                'On constate une nette prédominance masculine, liée aux systèmes coutumiers d'accès à la terre. ' +
-                'Une attention particulière devra être portée à l'inclusion foncière des femmes.',
+                'On constate une nette prédominance masculine, liée aux systèmes coutumiers d\'accès à la terre. ' +
+                'Une attention particulière devra être portée à l\'inclusion foncière des femmes.',
                 40,
-                doc.lastAutoTable.finalY + 30,
+                finalY + 30,
                 { maxWidth: 520 }
             );
 
