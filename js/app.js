@@ -688,29 +688,15 @@ async exportGenreReport() {
         const totalFemmes = femmes ? femmes.total_nombre : 9332;  // Fallback to image data
         const total = totalHommes + totalFemmes;
 
-        // Create and append hidden canvas
-        const hiddenCanvas = document.createElement('canvas');
-        const canvasId = 'tempGenreChart_' + Date.now();
-        hiddenCanvas.id = canvasId;
-        hiddenCanvas.width = 300;
-        hiddenCanvas.height = 300;
-        hiddenCanvas.style.display = 'none';
-        document.body.appendChild(hiddenCanvas);
-
-        // Create chart
-        const chart = window.chartManager.createDoughnut(canvasId, {
-            labels: ['Hommes', 'Femmes'],
-            datasets: [{
-                data: [totalHommes, totalFemmes],
-                backgroundColor: [this.colors.secondary, this.colors.primary],
-                borderWidth: 0
-            }]
-        }, { plugins: { legend: { display: false } }});
-
-        // Wait for chart to render
-        await new Promise(resolve => setTimeout(resolve, 500)); // Increased delay
-        const chartImg = hiddenCanvas.toDataURL('image/png');
-        console.log('Chart Image Data:', chartImg); // Debug log
+        // Find all genre-related chart canvases (adjust selector based on your IDs/classes)
+        const chartCanvases = document.querySelectorAll('.genre-chart'); // Update selector as needed
+        const chartImages = [];
+        for (const canvas of chartCanvases) {
+            await new Promise(resolve => setTimeout(resolve, 200)); // Small delay for rendering
+            const chartImg = canvas.toDataURL('image/png');
+            chartImages.push(chartImg);
+            console.log('Chart Image Data:', chartImg); // Debug log
+        }
 
         // PDF generation
         const { jsPDF } = window.jspdf;
@@ -719,8 +705,19 @@ async exportGenreReport() {
         doc.text('Rapport Genre – PROCASEF Boundou', 40, 40);
         doc.setFontSize(11);
         doc.text(`Généré le : ${new Date().toLocaleString('fr-FR')}`, 40, 60);
-        doc.addImage(chartImg, 'PNG', 180, 90, 250, 250);
 
+        // Add all chart images with spacing
+        let currentY = 90;
+        chartImages.forEach((img, index) => {
+            doc.addImage(img, 'PNG', 180, currentY, 250, 250);
+            currentY += 260; // Space between charts
+            if (currentY > 700) { // Start new page if nearing bottom
+                doc.addPage();
+                currentY = 90;
+            }
+        });
+
+        // Add table
         doc.autoTable({
             head: [['Genre', 'Population', 'Pourcentage']],
             body: [
@@ -728,15 +725,15 @@ async exportGenreReport() {
                 ['Femmes', totalFemmes.toLocaleString(), ((totalFemmes / total) * 100).toFixed(1) + ' %'],
                 ['Total', total.toLocaleString(), '100 %']
             ],
-            startY: 370,
+            startY: currentY + 20,
             headStyles: { fillColor: this.colors.primary },
             styles: { fontSize: 10, cellPadding: 4 }
         });
 
         doc.setFontSize(12);
-        const finalY = doc.lastAutoTable.finalY || 400;
+        const finalY = doc.lastAutoTable.finalY || (currentY + 250);
         doc.text(
-            'Le graphe ci-dessus illustre la répartition globale par genre dans les inventaires PROCASEF. ' +
+            'Les graphiques ci-dessus illustrent la répartition globale et détaillée par genre dans les inventaires PROCASEF. ' +
             'On constate une nette prédominance masculine, liée aux systèmes coutumiers d\'accès à la terre. ' +
             'Une attention particulière devra être portée à l\'inclusion foncière des femmes.',
             40,
@@ -746,10 +743,14 @@ async exportGenreReport() {
         doc.save('Rapport_Genre_PROCASEF.pdf');
 
         // Word generation
-        const htmlForDocx = `
+        let htmlForDocx = `
             <h1 style="font-family:Inter,sans-serif;color:#1E3A8A;">Rapport Genre – PROCASEF Boundou</h1>
             <p>Généré le : ${new Date().toLocaleString('fr-FR')}</p>
-            <img src="${chartImg}" width="300" alt="Graphique genre" />
+        `;
+        chartImages.forEach(img => {
+            htmlForDocx += `<img src="${img}" width="300" alt="Graphique genre" style="margin-bottom:15px;" />`;
+        });
+        htmlForDocx += `
             <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse;margin-top:15px;font-family:Inter,sans-serif;">
               <thead style="background:#D4A574;color:#fff;">
                 <tr><th>Genre</th><th>Population</th><th>Pourcentage</th></tr>
@@ -761,7 +762,7 @@ async exportGenreReport() {
               </tbody>
             </table>
             <p style="margin-top:15px;">
-              Le graphique illustre la répartition globale par genre. La faible représentation féminine souligne
+              Les graphiques illustrent la répartition globale et détaillée par genre. La faible représentation féminine souligne
               la nécessité d'actions ciblées pour renforcer l'accès des femmes à la propriété foncière.
             </p>
         `;
@@ -776,10 +777,6 @@ async exportGenreReport() {
         link.download = 'Rapport_Genre_PROCASEF.docx';
         link.click();
         URL.revokeObjectURL(url);
-
-        // Cleanup
-        chart.destroy();
-        if (hiddenCanvas.parentNode) hiddenCanvas.parentNode.removeChild(hiddenCanvas);
     } catch (err) {
         console.error('Erreur export genre :', err);
         this.showError('Échec de la génération du rapport genre.');
