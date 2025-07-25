@@ -1816,21 +1816,7 @@ class ProcasefDashboard {
     }
 }
 
-class DataLoader {
-    async loadData(path) {
-        try {
-            const response = await fetch(path);
-            if (!response.ok) {
-                throw new Error(`Erreur HTTP: ${response.status}`);
-            }
-            return await response.json();
-        } catch (error) {
-            console.error(`Erreur lors du chargement des données depuis ${path}:`, error);
-            throw error;
-        }
-    }
-}
-
+// MapManager reste inchangé
 class MapManager {
     constructor() {
         this.map = null;
@@ -1921,6 +1907,7 @@ class MapManager {
     }
 }
 
+// ChartManager reste inchangé  
 class ChartManager {
     constructor(colors) {
         this.colors = colors;
@@ -2120,6 +2107,7 @@ class ChartManager {
     }
 }
 
+// Initialisation au chargement du DOM
 window.addEventListener('DOMContentLoaded', () => {
     window.chartManager = new ChartManager({
         primary: '#D4A574',
