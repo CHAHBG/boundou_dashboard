@@ -1,4 +1,4 @@
-// PROCASEF Dashboard Application - Version complète corrigée
+// PROCASEF Dashboard Application - Version optimisée et corrigée
 class ProcasefDashboard {
     constructor() {
         // Palette de couleurs PROCASEF
@@ -12,7 +12,7 @@ class ProcasefDashboard {
             info: '#3B82F6',
             chartColors: ['#D4A574', '#1E3A8A', '#B8860B', '#10B981', '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6', '#EC4899', '#06B6D4']
         };
-        
+
         this.dataLoader = new DataLoader();
         this.charts = {};
         this.mapManager = null;
@@ -28,7 +28,7 @@ class ProcasefDashboard {
             rapportComplet: null,
             topoData: null
         };
-        
+
         this.currentSection = 'accueil';
         this.fontSize = 14;
         this.filteredParcelles = null;
@@ -38,17 +38,15 @@ class ProcasefDashboard {
             nicad: '',
             deliberation: ''
         };
-        
+
         this.init();
     }
 
-    // 🔴 AJOUT: Méthodes de loading manquantes
     showLoading() {
         const loadingEl = document.getElementById('loadingSpinner');
         if (loadingEl) {
             loadingEl.style.display = 'flex';
         } else {
-            // Créer un spinner si n'existe pas
             const spinner = document.createElement('div');
             spinner.id = 'loadingSpinner';
             spinner.innerHTML = `
@@ -74,18 +72,15 @@ class ProcasefDashboard {
         }
     }
 
-    // 🔴 AJOUT: Méthode toggleSidebar manquante
     toggleSidebar() {
         const sidebar = document.querySelector('.sidebar');
         const mainContent = document.querySelector('.main-content');
-        
         if (sidebar && mainContent) {
             sidebar.classList.toggle('collapsed');
             mainContent.classList.toggle('expanded');
         }
     }
 
-    // 🔴 AJOUT: Méthode updateElement manquante
     updateElement(elementId, value) {
         const element = document.getElementById(elementId);
         if (element) {
@@ -93,10 +88,8 @@ class ProcasefDashboard {
         }
     }
 
-    // 🔴 AJOUT: Méthode getRegionForCommune manquante
     getRegionForCommune(commune) {
         if (!this.data.parcelles || !Array.isArray(this.data.parcelles)) return 'N/A';
-        
         const parcelle = this.data.parcelles.find(p => p.commune === commune);
         return parcelle ? parcelle.region || 'N/A' : 'N/A';
     }
@@ -115,7 +108,6 @@ class ProcasefDashboard {
         this.hideLoading();
     }
 
-    // 🔴 AJOUT: Méthode showError
     showError(message) {
         const errorEl = document.createElement('div');
         errorEl.className = 'alert alert-danger alert-dismissible fade show';
@@ -128,8 +120,6 @@ class ProcasefDashboard {
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
         document.body.appendChild(errorEl);
-        
-        // Auto-remove after 5 seconds
         setTimeout(() => {
             if (errorEl.parentNode) {
                 errorEl.remove();
@@ -139,17 +129,14 @@ class ProcasefDashboard {
 
     async loadInitialData() {
         console.log('Chargement des données initiales...');
-        
         const loadPromises = [
             this.loadDataSafely('data/parcelles.json', 'parcelles'),
             this.loadDataSafely('data/Projections_2025.json', 'projections'),
             this.loadDataSafely('data/Repartition_genre.json', 'repartitionGenre')
         ];
-
         await Promise.allSettled(loadPromises);
     }
 
-    // 🔴 AJOUT: Méthode de chargement sécurisée
     async loadDataSafely(path, key) {
         try {
             this.data[key] = await this.dataLoader.loadData(path);
@@ -174,9 +161,8 @@ class ProcasefDashboard {
             this.communeStats = {};
             return;
         }
-    
+
         console.log('Calcul des statistiques...');
-        
         this.stats = {
             total: this.data.parcelles.length,
             nicad_oui: this.data.parcelles.filter(p => p.nicad === 'Oui').length,
@@ -187,8 +173,7 @@ class ProcasefDashboard {
                 .filter(p => p.superficie && !isNaN(parseFloat(p.superficie)))
                 .reduce((sum, p) => sum + parseFloat(p.superficie), 0)
         };
-    
-        // Stats par commune
+
         this.communeStats = {};
         this.data.parcelles.forEach(parcelle => {
             const commune = parcelle.commune;
@@ -200,7 +185,6 @@ class ProcasefDashboard {
                     superficie: 0
                 };
             }
-            
             this.communeStats[commune].total++;
             if (parcelle.nicad === 'Oui') this.communeStats[commune].nicad_oui++;
             if (parcelle.deliberee === 'Oui') this.communeStats[commune].deliberees_oui++;
@@ -208,28 +192,23 @@ class ProcasefDashboard {
                 this.communeStats[commune].superficie += parseFloat(parcelle.superficie);
             }
         });
-    
+
         console.log('Statistiques calculées:', this.stats);
     }
 
-     // Add this method OUTSIDE of setupEventListeners, as a separate class method
     validateDateRange() {
         const dateDebut = document.getElementById('topoDateDebut')?.value;
         const dateFin = document.getElementById('topoDateFin')?.value;
-        
         if (dateDebut && dateFin && dateDebut > dateFin) {
             this.showError('La date de début doit être antérieure à la date de fin');
-            // Reset la date de fin
             document.getElementById('topoDateFin').value = '';
             return false;
         }
         return true;
     }
-    
+
     setupEventListeners() {
         console.log('Configuration des event listeners...');
-        
-        // Navigation
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', async (e) => {
                 e.preventDefault();
@@ -239,33 +218,28 @@ class ProcasefDashboard {
                 }
             });
         });
-    
-        // Sidebar toggle
+
         const sidebarToggle = document.getElementById('sidebarToggle');
         if (sidebarToggle) {
             sidebarToggle.addEventListener('click', () => this.toggleSidebar());
         }
-    
-        // Font size controls
+
         this.setupFontSizeControls();
-    
-        // Filters
+
         ['communeFilter', 'nicadFilter', 'deliberationFilter', 'postCommuneFilter', 'postGeomFilter'].forEach(filterId => {
             const filter = document.getElementById(filterId);
             if (filter) {
                 filter.addEventListener('change', () => this.applyFilters());
             }
         });
-    
-        // Event listeners pour les filtres topo
+
         ['topoCommuneFilter', 'topoTopographeFilter'].forEach(filterId => {
             const filter = document.getElementById(filterId);
             if (filter) {
                 filter.addEventListener('change', () => this.applyTopoFilters());
             }
         });
-    
-        // Date filters with validation
+
         ['topoDateDebut', 'topoDateFin'].forEach(filterId => {
             const filter = document.getElementById(filterId);
             if (filter) {
@@ -276,36 +250,30 @@ class ProcasefDashboard {
                 });
             }
         });
-    
-        // Clear date range button
+
         const clearDateBtn = document.getElementById('clearDateRange');
         if (clearDateBtn) {
             clearDateBtn.addEventListener('click', () => this.clearDateRange());
         }
-    
-        // Export buttons
+
         const exportParcellesBtn = document.getElementById('exportParcellesBtn');
         const exportPostBtn = document.getElementById('exportPostBtn');
         const exportTopoBtn = document.getElementById('exportTopoBtn');
-        
+
         if (exportParcellesBtn) {
             exportParcellesBtn.addEventListener('click', () => this.exportParcellesData());
         }
-        
         if (exportPostBtn) {
             exportPostBtn.addEventListener('click', () => this.exportPostData());
         }
-        
         if (exportTopoBtn) {
             exportTopoBtn.addEventListener('click', () => this.exportTopoData());
         }
-    
-        // Window resize
+
         window.addEventListener('resize', () => this.handleResize());
     }
-    
+
     setupFontSizeControls() {
-        // Charger la préférence sauvegardée
         try {
             const saved = localStorage.getItem('procasef-font-size');
             if (saved) {
@@ -322,7 +290,6 @@ class ProcasefDashboard {
         if (fontSlider) {
             fontSlider.value = this.fontSize;
             this.updateFontTooltip();
-            
             fontSlider.addEventListener('input', (e) => {
                 this.fontSize = parseInt(e.target.value);
                 this.updateFontSize();
@@ -355,7 +322,6 @@ class ProcasefDashboard {
             });
         }
 
-        // Appliquer la taille de police initiale
         this.updateFontSize();
     }
 
@@ -379,15 +345,13 @@ class ProcasefDashboard {
     }
 
     async navigateToSection(sectionId) {
-        // Éviter la navigation répétitive
         if (this.currentSection === sectionId) {
             console.log(`Déjà sur la section ${sectionId}, ignorer navigation`);
             return;
         }
 
-    console.log('Navigation vers la section:', sectionId);
-    
-        // Destruction sécurisée de la carte
+        console.log('Navigation vers la section:', sectionId);
+
         if (this.mapManager && this.mapManager.map && sectionId !== 'parcelles') {
             console.log('Destruction de la carte avant changement de section');
             try {
@@ -399,18 +363,15 @@ class ProcasefDashboard {
                 if (this.mapManager.markerCluster) this.mapManager.markerCluster = null;
             }
         }
-    
-        // Met à jour les éléments de navigation active
+
         document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
         const activeNavItem = document.querySelector(`[data-section="${sectionId}"]`);
         if (activeNavItem) activeNavItem.classList.add('active');
-    
-        // Affiche la bonne section et cache les autres
+
         document.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
         const targetSection = document.getElementById(`${sectionId}-section`);
         if (targetSection) targetSection.classList.add('active');
-    
-        // Changer le titre
+
         const titles = {
             'accueil': 'Dashboard PROCASEF',
             'parcelles': 'Répartition des Parcelles',
@@ -423,10 +384,8 @@ class ProcasefDashboard {
         };
         const pageTitle = document.getElementById('pageTitle');
         if (pageTitle) pageTitle.textContent = titles[sectionId] || titles.accueil;
-    
-        // Chargement données avant rendu
+
         await this.loadDataForSection(sectionId);
-    
         this.currentSection = sectionId;
         this.renderSection(sectionId);
     }
@@ -449,29 +408,27 @@ class ProcasefDashboard {
         if (!config) return;
 
         try {
-                this.showLoading(); 
-                
-                if (Array.isArray(config)) {
-                    const promises = config.map(c => this.loadDataSafely(c.path, c.key));
-                    await Promise.allSettled(promises);
-                } else {
-                    if (!this.data[config.key] || this.data[config.key].length === 0) {
-                        await this.loadDataSafely(config.path, config.key);
-                    }
+            this.showLoading();
+            if (Array.isArray(config)) {
+                const promises = config.map(c => this.loadDataSafely(c.path, c.key));
+                await Promise.allSettled(promises);
+            } else {
+                if (!this.data[config.key] || this.data[config.key].length === 0) {
+                    await this.loadDataSafely(config.path, config.key);
                 }
-        
-                // Actions spécifiques après chargement
-                if (sec === 'stats-topo') {
-                    this.filteredTopoData = this.data.topoData || [];
-                    this.populateTopoFilters();
-                }
-            } catch (error) {
-                console.error(`Erreur lors du chargement des données pour ${sec}:`, error);
-                this.showError(`Impossible de charger les données pour ${sec}`);
-            } finally {
-                this.hideLoading(); 
             }
+
+            if (sec === 'stats-topo') {
+                this.filteredTopoData = this.data.topoData || [];
+                this.populateTopoFilters();
+            }
+        } catch (error) {
+            console.error(`Erreur lors du chargement des données pour ${sec}:`, error);
+            this.showError(`Impossible de charger les données pour ${sec}`);
+        } finally {
+            this.hideLoading();
         }
+    }
 
     renderDashboard() {
         this.renderAccueil();
@@ -479,111 +436,92 @@ class ProcasefDashboard {
     }
 
     renderSection(sec) {
-        // IMPORTANT: Détruire tous les charts AVANT de rendre une nouvelle section
         this.destroyAllCharts();
-        
-        // Petit délai pour s'assurer que la destruction est complète
-        setTimeout(() => {
-            try {
-                const renderMethods = {
-                    'accueil': () => this.renderAccueil(),
-                    'parcelles': () => this.renderParcelles(),
-                    'etat-avancement': () => this.renderEtatAvancement(),
-                    'projections-2025': () => this.renderProjections(),
-                    'genre': () => this.renderGenre(),
-                    'rapport': () => this.renderRapport(),
-                    'stats-topo': () => this.renderStatsTopo(),
-                    'post-traitement': () => this.renderPostTraitement()
-                };
-    
-                const renderMethod = renderMethods[sec];
-                if (renderMethod) {
-                    renderMethod();
-                } else {
-                    console.warn(`Section inconnue: ${sec}`);
-                    this.renderAccueil();
-                }
-            } catch (error) {
-                console.error(`Erreur lors du rendu de la section ${sec}:`, error);
-                this.showError(`Erreur lors de l'affichage de la section ${sec}`);
+        try {
+            const renderMethods = {
+                'accueil': () => this.renderAccueil(),
+                'parcelles': () => this.renderParcelles(),
+                'etat-avancement': () => this.renderEtatAvancement(),
+                'projections-2025': () => this.renderProjections(),
+                'genre': () => this.renderGenre(),
+                'rapport': () => this.renderRapport(),
+                'stats-topo': () => this.renderStatsTopo(),
+                'post-traitement': () => this.renderPostTraitement()
+            };
+
+            const renderMethod = renderMethods[sec];
+            if (renderMethod) {
+                renderMethod();
+            } else {
+                console.warn(`Section inconnue: ${sec}`);
                 this.renderAccueil();
             }
-        }, 30); // Délai de 100ms pour la destruction
+        } catch (error) {
+            console.error(`Erreur lors du rendu de la section ${sec}:`, error);
+            this.showError(`Erreur lors de l'affichage de la section ${sec}`);
+            this.renderAccueil();
+        }
     }
 
     renderAccueil() {
         console.log('Rendu de la section Accueil');
         this.updateKPIs();
-        setTimeout(() => {
-            this.createTopCommunesChart();
-            this.createProjectionsChart();
-            this.createGenreGlobalChart();
-        }, 200);
+        this.createTopCommunesChart();
+        this.createProjectionsChart();
+        this.createGenreGlobalChart();
     }
 
     renderParcelles() {
         console.log('Rendu de la section Parcelles');
         this.populateFilters();
         this.initializeMap();
-        setTimeout(() => {
-            this.createRegionChart();
-            this.createNicadChart();
-            this.renderParcellesTable();
-        }, 200);
+        this.createRegionChart();
+        this.createNicadChart();
+        this.renderParcellesTable();
     }
 
     renderEtatAvancement() {
         this.updateProgressBar();
         this.populateEtatAvancementFilters();
-        
-        setTimeout(() => {
-            const dataArr = this.getFilteredEtatOperations();
-            const communes = dataArr.map(x => x.commune);
-            const etats = dataArr.map(x => x.etat_d_avancement || "Non défini");
+        const dataArr = this.getFilteredEtatOperations();
+        const communes = dataArr.map(x => x.commune);
+        const etats = dataArr.map(x => x.etat_d_avancement || "Non défini");
 
-            if (window.chartManager) {
-                window.chartManager.createEtatCommuneBarChart('etatCommuneBarChart', communes, etats);
+        if (window.chartManager) {
+            window.chartManager.createEtatCommuneBarChart('etatCommuneBarChart', communes, etats);
+            const etatCounts = dataArr.reduce((acc, op) => {
+                const key = op.etat_d_avancement?.trim() || "Non défini";
+                acc[key] = (acc[key] || 0) + 1;
+                return acc;
+            }, {});
+            window.chartManager.createEtatDonutChart(
+                'etatDonutChart',
+                Object.keys(etatCounts),
+                Object.values(etatCounts)
+            );
+        }
 
-                const etatCounts = dataArr.reduce((acc, op) => {
-                    const key = op.etat_d_avancement?.trim() || "Non défini";
-                    acc[key] = (acc[key] || 0) + 1;
-                    return acc;
-                }, {});
-                window.chartManager.createEtatDonutChart(
-                    'etatDonutChart',
-                    Object.keys(etatCounts),
-                    Object.values(etatCounts)
-                );
-            }
-
-            this.renderEtatTimeline();
-        }, 200);
+        this.renderEtatTimeline();
     }
 
     renderProjections() {
         console.log('Rendu de la section Projections');
         this.updateProjectionsKPIs();
-        setTimeout(() => {
-            this.createObjectifsChart();
-            this.renderPerformanceList();
-        }, 200);
+        this.createObjectifsChart();
+        this.renderPerformanceList();
     }
 
     renderGenre() {
         console.log('Rendu de la section Genre');
         this.updateGenreKPIs();
-        setTimeout(() => {
-            this.createGenreGlobalChart();
-            this.createGenreTrimestreChart();
-            this.createGenreCommuneChart();
-        }, 200);
+        this.createGenreGlobalChart();
+        this.createGenreTrimestreChart();
+        this.createGenreCommuneChart();
     }
 
     renderRapport() {
         console.log('Rendu de la section Rapport');
         const data = this.data.rapportComplet || {};
-
-        // KPIs synthèse globale
         const wrap = document.getElementById("rapportKpiGrid");
         if (wrap) {
             wrap.innerHTML = "";
@@ -602,7 +540,7 @@ class ProcasefDashboard {
             });
         }
 
-        setTimeout(() => this.renderRapportCharts(data), 200);
+        this.renderRapportCharts(data);
     }
 
     renderRapportCharts(data) {
@@ -610,13 +548,13 @@ class ProcasefDashboard {
             console.error('ChartManager non disponible');
             return;
         }
-    
+
         try {
             // Graphique sources
             const src = data["Détail par Source"] || [];
             if (src.length > 0) {
                 window.chartManager.createStackedBar("rapportSourceChart", {
-                    labels: src.map(s => s.source || 'N/A'),
+                    labels: src.map(s => s.source || 'Source inconnue'),
                     datasets: [
                         {
                             label: "Hommes",
@@ -631,7 +569,7 @@ class ProcasefDashboard {
                     ]
                 });
             }
-    
+
             // Mixed Top 10 Communes
             const communesData = (data["Analyse par Commune"] || [])
                 .sort((a, b) => (b.total || 0) - (a.total || 0))
@@ -639,29 +577,71 @@ class ProcasefDashboard {
             if (communesData.length > 0) {
                 window.chartManager.createMixedChart("rapportCommuneMixedChart", communesData);
             }
-    
+
             // Évolution temporelle
             const temporal = data["Analyse Temporelle"] || [];
             if (temporal.length > 0) {
                 window.chartManager.createTemporalChart("rapportTemporalChart", temporal);
             }
-    
-            // Polar par région - CORRECTION ICI
-            const regions = data["Tamba-Kédougou"] || [];
-            if (regions.length > 0 && window.chartManager.createPolarChart) {
-                window.chartManager.createPolarChart("rapportRegionPolarChart", regions);
-            } else if (regions.length > 0) {
-                // Fallback si createPolarChart n'existe pas
-                console.warn('createPolarChart non disponible, utilisation d\'un graphique donut');
-                window.chartManager.createDoughnut("rapportRegionPolarChart", {
-                    labels: regions.map(r => r.nom || r.region || 'N/A'),
+
+            // Graphique polaire par région
+            const regions = (data["Tamba-Kédougou"] || []).filter(r => r.nom || r.region);
+            if (regions.length > 0) {
+                window.chartManager.createPolarChart("rapportRegionPolarChart", {
+                    labels: regions.map(r => r.nom || r.region || 'Région inconnue'),
                     datasets: [{
                         data: regions.map(r => r.total || r.valeur || 0),
-                        backgroundColor: this.colors.chartColors
+                        backgroundColor: this.colors.chartColors.map(color => color + '80'),
+                        borderColor: '#ffffff',
+                        borderWidth: 2
+                    }]
+                }, {
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                font: { size: 12 },
+                                color: '#374151',
+                                generateLabels: chart => chart.data.labels.map((label, i) => ({
+                                    text: label,
+                                    fillStyle: chart.data.datasets[0].backgroundColor[i],
+                                    strokeStyle: chart.data.datasets[0].borderColor,
+                                    lineWidth: 2
+                                }))
+                            }
+                        }
+                    },
+                    scales: {
+                        r: {
+                            grid: {
+                                color: '#374151',
+                                lineWidth: 1,
+                                z: 1
+                            },
+                            ticks: {
+                                color: '#374151',
+                                backdropColor: 'transparent',
+                                z: 2
+                            },
+                            pointLabels: {
+                                color: '#374151',
+                                font: { size: 12 },
+                                z: 3
+                            }
+                        }
+                    }
+                });
+            } else {
+                console.warn('Aucune donnée régionale valide, utilisation d\'un graphique donut');
+                window.chartManager.createDoughnut("rapportRegionPolarChart", {
+                    labels: ['Aucune donnée'],
+                    datasets: [{
+                        data: [1],
+                        backgroundColor: [this.colors.error],
+                        borderWidth: 0
                     }]
                 });
             }
-            
         } catch (error) {
             console.error('Erreur lors du rendu des graphiques de rapport:', error);
             this.showError('Erreur lors de l\'affichage des graphiques du rapport');
@@ -671,53 +651,39 @@ class ProcasefDashboard {
     renderStatsTopo() {
         console.log('Rendu de la section Stats Topo');
         this.applyTopoFilters();
-        setTimeout(() => {
-            this.updateTopoKPIs();
-            this.createTopoCharts();
-            this.renderTopoTable();
-            this.renderTopoTimeline();
-        }, 200);
+        this.updateTopoKPIs();
+        this.createTopoCharts();
+        this.renderTopoTable();
+        this.renderTopoTimeline();
     }
 
-    // 🔴 AJOUT: Méthode renderPostTraitement manquante
     renderPostTraitement() {
         console.log('Rendu de la section Post-Traitement');
         this.populatePostFilters();
-        setTimeout(() => {
-            this.renderPostTraitementTable();
-            this.createPostCharts();
-        }, 200);
+        this.renderPostTraitementTable();
+        this.createPostCharts();
     }
 
-    // 🔴 AJOUT: Méthodes pour Post-Traitement
     populatePostFilters() {
-        // Populate filters for post-traitement section
         const communes = ['NDOGA BABACAR', 'BANDAFASSI', 'DIMBOLI', 'MISSIRAH', 'NETTEBOULOU'];
         const geometres = ['FALL Mamadou', 'DIALLO Aissatou', 'NDIAYE Ousmane'];
 
         const communeSelect = document.getElementById('postCommuneFilter');
         if (communeSelect) {
-            communeSelect.innerHTML = '<option value="">Toutes les communes</option>';
-            communes.forEach(commune => {
-                communeSelect.insertAdjacentHTML('beforeend', 
-                    `<option value="${commune}">${commune}</option>`);
-            });
+            communeSelect.innerHTML = '<option value="">Toutes les communes</option>' +
+                communes.map(commune => `<option value="${commune}">${commune}</option>`).join('');
         }
 
         const geomSelect = document.getElementById('postGeomFilter');
         if (geomSelect) {
-            geomSelect.innerHTML = '<option value="">Tous les géomètres</option>';
-            geometres.forEach(geom => {
-                geomSelect.insertAdjacentHTML('beforeend', 
-                    `<option value="${geom}">${geom}</option>`);
-            });
+            geomSelect.innerHTML = '<option value="">Tous les géomètres</option>' +
+                geometres.map(geom => `<option value="${geom}">${geom}</option>`).join('');
         }
     }
 
     createPostCharts() {
         if (!window.chartManager) return;
 
-        // Sample data for demonstration
         const postData = [
             { commune: 'NDOGA BABACAR', recues: 1250, traitees: 1180, taux: 94.4 },
             { commune: 'BANDAFASSI', recues: 980, traitees: 920, taux: 93.9 },
@@ -726,7 +692,6 @@ class ProcasefDashboard {
             { commune: 'NETTEBOULOU', recues: 650, traitees: 580, taux: 89.2 }
         ];
 
-        // Chart des taux de traitement
         window.chartManager.createBar('postTauxChart', {
             labels: postData.map(d => d.commune.substring(0, 12)),
             datasets: [{
@@ -741,18 +706,15 @@ class ProcasefDashboard {
         });
     }
 
-    // Méthodes pour les filtres et stats topo
     populateTopoFilters() {
         if (!this.data.topoData || !Array.isArray(this.data.topoData)) return;
-        
-        // 🔴 CORRECTION: Nettoyer et dédupliquer les communes
+
         const communes = [...new Set(
             this.data.topoData
                 .map(t => (t.commune || '').trim())
                 .filter(commune => commune !== '')
         )].sort();
-        
-        // 🔴 CORRECTION: Nettoyer et dédupliquer les topographes
+
         const topographes = [...new Set(
             this.data.topoData
                 .map(t => {
@@ -761,30 +723,22 @@ class ProcasefDashboard {
                     const fullName = `${prenom} ${nom}`.trim();
                     return fullName;
                 })
-                .filter(name => name !== '' && name.length > 1) // Éviter les noms vides ou trop courts
+                .filter(name => name !== '' && name.length > 1)
         )].sort();
-        
+
         console.log('Communes uniques trouvées:', communes.length);
         console.log('Topographes uniques trouvés:', topographes.length);
-        
-        // Populate commune filter
+
         const communeSelect = document.getElementById('topoCommuneFilter');
         if (communeSelect) {
-            communeSelect.innerHTML = '<option value="">Toutes les communes</option>';
-            communes.forEach(commune => {
-                communeSelect.insertAdjacentHTML('beforeend', 
-                    `<option value="${commune}">${commune}</option>`);
-            });
+            communeSelect.innerHTML = '<option value="">Toutes les communes</option>' +
+                communes.map(commune => `<option value="${commune}">${commune}</option>`).join('');
         }
-        
-        // Populate topographe filter
+
         const topoSelect = document.getElementById('topoTopographeFilter');
         if (topoSelect) {
-            topoSelect.innerHTML = '<option value="">Tous les topographes</option>';
-            topographes.forEach(topo => {
-                topoSelect.insertAdjacentHTML('beforeend', 
-                    `<option value="${topo}">${topo}</option>`);
-            });
+            topoSelect.innerHTML = '<option value="">Tous les topographes</option>' +
+                topographes.map(topo => `<option value="${topo}">${topo}</option>`).join('');
         }
     }
 
@@ -793,13 +747,13 @@ class ProcasefDashboard {
         const topoFilter = document.getElementById('topoTopographeFilter')?.value;
         const dateDebut = document.getElementById('topoDateDebut')?.value;
         const dateFin = document.getElementById('topoDateFin')?.value;
-        
+
         let filtered = this.data.topoData || [];
-        
+
         if (communeFilter) {
             filtered = filtered.filter(t => (t.commune || '').trim() === communeFilter);
         }
-        
+
         if (topoFilter) {
             filtered = filtered.filter(t => {
                 const prenom = (t.prenom || '').trim();
@@ -808,54 +762,39 @@ class ProcasefDashboard {
                 return fullName === topoFilter;
             });
         }
-        
-        // 🔴 NOUVEAU : Filtrage par plage de dates
+
         if (dateDebut || dateFin) {
             filtered = filtered.filter(t => {
                 const itemDate = t.date;
                 if (!itemDate) return false;
-                
                 let isInRange = true;
-                
                 if (dateDebut) {
                     isInRange = isInRange && (itemDate >= dateDebut);
                 }
-                
                 if (dateFin) {
                     isInRange = isInRange && (itemDate <= dateFin);
                 }
-                
                 return isInRange;
             });
         }
-        
+
         this.filteredTopoData = filtered;
-        
+
         if (this.currentSection === 'stats-topo') {
             this.updateTopoKPIs();
             this.renderTopoTable();
             this.renderTopoTimeline();
-            // Recréer les graphiques avec les nouvelles données filtrées
-            setTimeout(() => {
-                this.createTopoCharts();
-            }, 100);
+            this.createTopoCharts();
         }
     }
 
-    // 3. Ajouter cette nouvelle méthode pour effacer les dates :
     clearDateRange() {
         const dateDebut = document.getElementById('topoDateDebut');
         const dateFin = document.getElementById('topoDateFin');
-        
         if (dateDebut) dateDebut.value = '';
         if (dateFin) dateFin.value = '';
-        
-        // Réappliquer les filtres
         this.applyTopoFilters();
     }
-    
-    // 4. Optionnel : Ajouter une validation pour s'assurer que dateDebut <= dateFin
-   
 
     updateTopoKPIs() {
         const d = this.filteredTopoData || [];
@@ -864,17 +803,15 @@ class ProcasefDashboard {
         const total = d.reduce((s, x) => s + (x.totale_parcelles || 0), 0);
         const dates = [...new Set(d.map(x => x.date).filter(Boolean))];
         const avg = dates.length ? Math.round(total / dates.length) : 0;
-        
+
         this.updateKPI('totalChampsKPI', totalChamps);
         this.updateKPI('totalBatisKPI', totalBatis);
         this.updateKPI('totalTopoParcellesKPI', total);
         this.updateKPI('avgParJourKPI', avg);
-        
-        // Afficher la période filtrée
+
         const dateDebut = document.getElementById('topoDateDebut')?.value;
         const dateFin = document.getElementById('topoDateFin')?.value;
         let periode = '';
-        
         if (dateDebut && dateFin) {
             periode = `Du ${new Date(dateDebut).toLocaleDateString('fr-FR')} au ${new Date(dateFin).toLocaleDateString('fr-FR')}`;
         } else if (dateDebut) {
@@ -884,25 +821,22 @@ class ProcasefDashboard {
         } else {
             periode = 'Toute la période';
         }
-        
-        // Mettre à jour le titre de la section ou ajouter un indicateur
+
         const sectionHeader = document.querySelector('#stats-topo-section .section-description');
         if (sectionHeader) {
             sectionHeader.textContent = `Analyse détaillée des levés topographiques - ${periode}`;
         }
-        
-        // Topographe le plus actif
+
         const counts = {};
         d.forEach(x => {
             const prenom = (x.prenom || '').trim();
             const nom = (x.nom || '').trim();
             const name = `${prenom} ${nom}`.trim();
-            
             if (name && name.length > 1) {
                 counts[name] = (counts[name] || 0) + (x.totale_parcelles || 0);
             }
         });
-        
+
         const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
         this.updateKPI('topTopoKPI', top ? `${top[0]} (${top[1]})` : '-');
         this.updateKPI('activeTopoKPI', Object.keys(counts).length);
@@ -917,19 +851,13 @@ class ProcasefDashboard {
 
     createTopoCharts() {
         if (!window.chartManager) return;
-        
+
         console.log('📊 Création des graphiques topo avec données:', this.filteredTopoData.length, 'éléments');
-        
-        // Vérifier si les données contiennent des valeurs bâtis
-        const totalBatisCheck = this.filteredTopoData.reduce((s, x) => s + (x.batis || 0), 0);
-        console.log('Total bâtis dans les données:', totalBatisCheck);
-        
-        // 🔴 CORRECTION: Graphique des topographes avec champs ET bâtis
+
         const cleanTopoStats = this.filteredTopoData.reduce((acc, x) => {
             const prenom = (x.prenom || '').trim();
             const nom = (x.nom || '').trim();
             const cleanName = `${prenom} ${nom}`.trim();
-            
             if (cleanName && cleanName.length > 1) {
                 if (!acc[cleanName]) {
                     acc[cleanName] = { champs: 0, batis: 0, total: 0 };
@@ -940,23 +868,22 @@ class ProcasefDashboard {
             }
             return acc;
         }, {});
-        
+
         const topoStats = Object.entries(cleanTopoStats)
             .map(([name, stats]) => ({ name, ...stats }))
             .sort((a, b) => b.total - a.total)
             .slice(0, 10);
-        
-        // Graphique empilé pour les topographes
+
         if (topoStats.length > 0) {
             window.chartManager.createStackedBar('topToposChart', {
                 labels: topoStats.map(x => x.name.length > 15 ? x.name.substring(0, 12) + '...' : x.name),
                 datasets: [
-                    { 
+                    {
                         label: 'Champs',
                         data: topoStats.map(x => x.champs),
                         backgroundColor: this.colors.success
                     },
-                    { 
+                    {
                         label: 'Bâtis',
                         data: topoStats.map(x => x.batis),
                         backgroundColor: this.colors.secondary
@@ -964,8 +891,7 @@ class ProcasefDashboard {
                 ]
             });
         }
-        
-        // 🔴 CORRECTION: Graphique par commune avec debug
+
         const cleanCommuneStats = this.filteredTopoData.reduce((g, x) => {
             const commune = (x.commune || '').trim();
             if (commune && commune !== '') {
@@ -975,24 +901,22 @@ class ProcasefDashboard {
             }
             return g;
         }, {});
-        
-        console.log('Stats par commune:', cleanCommuneStats);
-        
+
         const communeStats = Object.entries(cleanCommuneStats)
             .map(([name, s]) => ({ name, champs: s.champs, batis: s.batis }))
             .filter(item => item.name !== '')
             .sort((a, b) => (b.champs + b.batis) - (a.champs + a.batis));
-        
+
         if (communeStats.length > 0) {
             window.chartManager.createStackedBar('topoCommuneChart', {
                 labels: communeStats.map(x => x.name.length > 12 ? x.name.substring(0, 12) + '...' : x.name),
                 datasets: [
-                    { 
+                    {
                         label: 'Champs',
                         data: communeStats.map(x => x.champs),
                         backgroundColor: this.colors.success
                     },
-                    { 
+                    {
                         label: 'Bâtis',
                         data: communeStats.map(x => x.batis),
                         backgroundColor: this.colors.secondary
@@ -1000,8 +924,7 @@ class ProcasefDashboard {
                 ]
             });
         }
-        
-        // 🔴 CORRECTION: Graphique d'évolution mensuelle avec meilleurs labels
+
         const monthly = [...Object.entries(this.filteredTopoData.reduce((m, x) => {
             const dateStr = x.date || '';
             const mKey = dateStr.length >= 7 ? dateStr.slice(0, 7) : 'Inconnu';
@@ -1010,29 +933,26 @@ class ProcasefDashboard {
             m[mKey].batis += x.batis || 0;
             return m;
         }, {}))].map(([month, s]) => ({ month, champs: s.champs, batis: s.batis }))
-          .filter(item => item.month !== 'Inconnu')
-          .sort((a, b) => a.month.localeCompare(b.month));
-        
-        console.log('Données mensuelles:', monthly);
-        
+            .filter(item => item.month !== 'Inconnu')
+            .sort((a, b) => a.month.localeCompare(b.month));
+
         if (monthly.length > 0) {
             window.chartManager.createLine('topoEvolutionChart', {
                 labels: monthly.map(x => {
                     const [year, month] = x.month.split('-');
-                    const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 
-                                      'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+                    const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
                     return `${monthNames[parseInt(month) - 1]} ${year}`;
                 }),
                 datasets: [
-                    { 
-                        label: 'Champs', 
+                    {
+                        label: 'Champs',
                         data: monthly.map(x => x.champs),
                         borderColor: this.colors.success,
                         backgroundColor: this.colors.success + '20',
                         tension: 0.4
                     },
-                    { 
-                        label: 'Bâtis', 
+                    {
+                        label: 'Bâtis',
                         data: monthly.map(x => x.batis),
                         borderColor: this.colors.secondary,
                         backgroundColor: this.colors.secondary + '20',
@@ -1040,15 +960,11 @@ class ProcasefDashboard {
                     }
                 ]
             });
-            
-            // 🔴 CORRECTION: Graphique donut type avec totaux corrects
+
             const totalChamps = this.filteredTopoData.reduce((s, x) => s + (x.champs || 0), 0);
             const totalBatis = this.filteredTopoData.reduce((s, x) => s + (x.batis || 0), 0);
-            
-            console.log('Totaux pour donut - Champs:', totalChamps, 'Bâtis:', totalBatis);
-            
+
             if (totalChamps > 0 || totalBatis > 0) {
-                // Utiliser createDoughnut si createTopoTypeDonutChart n'existe pas
                 if (window.chartManager.createTopoTypeDonutChart) {
                     window.chartManager.createTopoTypeDonutChart('topoTypeDonut', {
                         champs: totalChamps,
@@ -1068,13 +984,12 @@ class ProcasefDashboard {
             }
         }
     }
-    
+
     renderTopoTable() {
         const tbody = document.getElementById('topoTableBody');
         if (!tbody || !this.filteredTopoData) return;
-        
+
         tbody.innerHTML = '';
-        
         this.filteredTopoData.slice(0, 50).forEach(item => {
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -1092,21 +1007,20 @@ class ProcasefDashboard {
     renderTopoTimeline() {
         const container = document.getElementById('topoTimeline');
         if (!container || !this.filteredTopoData) return;
-        
+
         const groupedByDate = this.filteredTopoData.reduce((acc, item) => {
             const date = item.date || 'Date inconnue';
             if (!acc[date]) acc[date] = [];
             acc[date].push(item);
             return acc;
         }, {});
-        
+
         const timelineHTML = Object.entries(groupedByDate)
             .sort(([a], [b]) => b.localeCompare(a))
             .slice(0, 10)
             .map(([date, items]) => {
                 const totalParcelles = items.reduce((sum, item) => sum + (item.totale_parcelles || 0), 0);
                 const topographes = [...new Set(items.map(item => `${item.prenom} ${item.nom}`))];
-                
                 return `
                     <div class="timeline-item">
                         <div class="timeline-date">${date}</div>
@@ -1122,27 +1036,56 @@ class ProcasefDashboard {
                 `;
             })
             .join('');
-            
+
         container.innerHTML = timelineHTML;
     }
 
-    // Méthode createPolarChart manquante
-    createPolarChart(canvasId, regionData) {
-        if (!window.chartManager || !regionData) return;
-        
+    createPolarChart(canvasId, data) {
+        if (!window.chartManager || !data) return;
+
         window.chartManager.createPolar(canvasId, {
-            labels: regionData.map(r => r.nom || r.region),
+            labels: data.labels,
             datasets: [{
-                data: regionData.map(r => r.total || r.valeur || 0),
-                backgroundColor: this.colors.chartColors
+                data: data.datasets[0].data,
+                backgroundColor: data.datasets[0].backgroundColor,
+                borderColor: data.datasets[0].borderColor,
+                borderWidth: data.datasets[0].borderWidth
             }]
+        }, {
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        font: { size: 12 },
+                        color: '#374151'
+                    }
+                }
+            },
+            scales: {
+                r: {
+                    grid: {
+                        color: '#374151',
+                        lineWidth: 1,
+                        z: 1
+                    },
+                    ticks: {
+                        color: '#374151',
+                        backdropColor: 'transparent',
+                        z: 2
+                    },
+                    pointLabels: {
+                        color: '#374151',
+                        font: { size: 12 },
+                        z: 3
+                    }
+                }
+            }
         });
     }
-    
-    // Méthode createMixedChart manquante  
+
     createMixedChart(canvasId, communesData) {
         if (!window.chartManager || !communesData) return;
-        
+
         window.chartManager.createMixed(canvasId, {
             labels: communesData.map(c => c.commune || c.nom),
             datasets: [
@@ -1163,39 +1106,31 @@ class ProcasefDashboard {
         });
     }
 
-    // Gestion de la carte
     initializeMap() {
         console.log('Initialisation de la carte...');
-        
         if (!this.mapManager) {
             this.mapManager = new MapManager();
         }
-        
+
         if (this.mapManager.map) {
             console.log('Carte déjà initialisée, mise à jour des marqueurs seulement');
             this.updateMapMarkersFromStats();
             return this.mapManager.map;
         }
-        
+
         const mapInstance = this.mapManager.initMap('mapContainer');
-        
         if (mapInstance && this.communeStats) {
             console.log('Ajout des marqueurs des communes...');
             this.updateMapMarkersFromStats();
-            
-            setTimeout(() => {
-                this.mapManager.fitToMarkers();
-            }, 500);
+            this.mapManager.fitToMarkers();
         }
-        
+
         return mapInstance;
     }
 
     updateMapMarkersFromStats() {
         if (!this.mapManager || !this.mapManager.map || !this.communeStats) return;
-        
         this.mapManager.clearMarkers();
-        
         Object.entries(this.communeStats).forEach(([commune, stats]) => {
             this.mapManager.addCommuneMarker(commune, stats);
         });
@@ -1203,7 +1138,6 @@ class ProcasefDashboard {
 
     applyFilters() {
         console.log('Application des filtres');
-        
         if (this.currentSection !== 'parcelles') {
             this.renderSection(this.currentSection);
             return;
@@ -1213,20 +1147,19 @@ class ProcasefDashboard {
         const fComm = document.getElementById('communeFilter')?.value;
         const fNic = document.getElementById('nicadFilter')?.value;
         const fDel = document.getElementById('deliberationFilter')?.value;
-        
+
         if (fComm) data = data.filter(p => p.commune === fComm);
         if (fNic) data = data.filter(p => p.nicad === fNic);
         if (fDel) data = data.filter(p => p.deliberee === fDel);
-        
+
         this.filteredParcelles = data.length ? data : null;
-        
         this.updateMapWithFilteredData();
         this.renderParcellesTable();
     }
 
     updateMapWithFilteredData() {
         if (!this.mapManager?.map) return;
-        
+
         this.mapManager.clearMarkers();
         const stats = {};
         (this.filteredParcelles || this.data.parcelles || []).forEach(p => {
@@ -1237,25 +1170,24 @@ class ProcasefDashboard {
             if (p.deliberee === 'Oui') stats[c].deliberees_oui++;
             if (p.superficie) stats[c].superficie += parseFloat(p.superficie);
         });
-        
+
         Object.entries(stats).forEach(([c, s]) => this.mapManager.addCommuneMarker(c, s));
     }
 
-    // Mise à jour des KPIs
     updateKPIs() {
         if (!this.stats) return;
-    
+
         this.updateElement('totalParcelles', (this.stats.total || 0).toLocaleString());
         this.updateElement('parcellesNicad', (this.stats.nicad_oui || 0).toLocaleString());
         this.updateElement('parcellesDeliberees', (this.stats.deliberees_oui || 0).toLocaleString());
         this.updateElement('superficieTotale', (this.stats.superficie_totale || 0).toLocaleString(undefined, { maximumFractionDigits: 2 }));
-    
+
         const nicadPct = this.stats.total > 0 ? ((this.stats.nicad_oui / this.stats.total) * 100).toFixed(1) : 0;
         const delibPct = this.stats.total > 0 ? ((this.stats.deliberees_oui / this.stats.total) * 100).toFixed(1) : 0;
-    
+
         this.updateElement('percentageNicad', `${nicadPct}% avec NICAD`);
         this.updateElement('percentageDeliberees', `${delibPct}% délibérées`);
-    
+
         const OBJECTIF = 70000;
         const tauxRealisation = ((this.stats.total / OBJECTIF) * 100).toFixed(1);
         this.updateElement('tauxRealisation', `${tauxRealisation}%`);
@@ -1264,9 +1196,8 @@ class ProcasefDashboard {
     updateProgressBar() {
         const progressFill = document.getElementById('globalProgressFill');
         const progressText = document.getElementById('globalProgressText');
-        
         const taux = 47.80;
-        
+
         if (progressFill) {
             progressFill.style.width = taux + '%';
         }
@@ -1279,43 +1210,35 @@ class ProcasefDashboard {
         const OBJECTIF = 70000;
         const realise = (this.stats && this.stats.total) ? this.stats.total : 0;
         const performance = OBJECTIF > 0 ? ((realise / OBJECTIF) * 100).toFixed(1) : 0;
-    
+
         this.updateElement('objectif2025', OBJECTIF.toLocaleString());
         this.updateElement('realise2025', realise.toLocaleString());
         this.updateElement('performance2025', `${performance}%`);
     }
 
-
     updateGenreKPIs() {
         if (!this.data.repartitionGenre || !Array.isArray(this.data.repartitionGenre)) return;
-    
+
         const hommes = this.data.repartitionGenre.find(r => r.genre === 'Homme');
         const femmes = this.data.repartitionGenre.find(r => r.genre === 'Femme');
-        
+
         const hommesTotal = hommes ? hommes.total_nombre : 43576;
         const femmesTotal = femmes ? femmes.total_nombre : 9332;
         const total = hommesTotal + femmesTotal;
-    
+
         this.updateElement('hommesTotal', hommesTotal.toLocaleString());
         this.updateElement('femmesTotal', femmesTotal.toLocaleString());
         this.updateElement('hommesPercentage', `${total > 0 ? ((hommesTotal / total) * 100).toFixed(1) : 0}%`);
         this.updateElement('femmesPercentage', `${total > 0 ? ((femmesTotal / total) * 100).toFixed(1) : 0}%`);
     }
 
-    // Méthodes de création de graphiques
     createTopCommunesChart() {
-        if (!this.communeStats) return;
-    
-        // CORRECTION: Utiliser ChartManager au lieu de Chart.js directement
-        if (!window.chartManager) {
-            console.error('ChartManager non disponible');
-            return;
-        }
-    
+        if (!this.communeStats || !window.chartManager) return;
+
         const topCommunes = Object.entries(this.communeStats)
             .sort(([, a], [, b]) => b.total - a.total)
             .slice(0, 8);
-    
+
         const chartData = {
             labels: topCommunes.map(([commune]) => commune.substring(0, 15)),
             datasets: [{
@@ -1330,7 +1253,7 @@ class ProcasefDashboard {
                 borderRadius: 4
             }]
         };
-    
+
         const options = {
             plugins: {
                 title: {
@@ -1347,62 +1270,58 @@ class ProcasefDashboard {
                 }
             }
         };
-    
-        // Utiliser le ChartManager
+
         window.chartManager.createBar('topCommunesChart', chartData, options);
     }
 
     createProjectionsChart() {
-        if (!this.data.projections || !Array.isArray(this.data.projections)) return;
+        if (!this.data.projections || !Array.isArray(this.data.projections) || !window.chartManager) return;
 
-        const ctx = document.getElementById('projectionsChart');
-        if (!ctx) return;
+        const chartData = {
+            labels: this.data.projections.map(p => p.mois || p.periode || ''),
+            datasets: [{
+                label: 'Objectif',
+                data: this.data.projections.map(p => p.objectif_inventaires_mensuels || p.objectif || 8000),
+                borderColor: this.colors.secondary,
+                backgroundColor: this.colors.secondary + '20',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }, {
+                label: 'Réalisé',
+                data: this.data.projections.map(p => p.inventaires_mensuels_realises || p.realise || 0),
+                borderColor: this.colors.primary,
+                backgroundColor: this.colors.primary + '20',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        };
 
-        this.charts.projections = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: this.data.projections.map(p => p.mois || p.periode || ''),
-                datasets: [{
-                    label: 'Objectif',
-                    data: this.data.projections.map(p => p.objectif_inventaires_mensuels || p.objectif || 8000),
-                    borderColor: this.colors.secondary,
-                    backgroundColor: this.colors.secondary + '20',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4
-                }, {
-                    label: 'Réalisé',
-                    data: this.data.projections.map(p => p.inventaires_mensuels_realises || p.realise || 0),
-                    borderColor: this.colors.primary,
-                    backgroundColor: this.colors.primary + '20',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4
-                }]
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                }
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top'
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
+            scales: {
+                y: {
+                    beginAtZero: true
                 }
             }
-        });
+        };
+
+        window.chartManager.createLine('projectionsChart', chartData, options);
     }
 
-       createGenreGlobalChart() {
+    createGenreGlobalChart() {
         if (!this.data.repartitionGenre || !Array.isArray(this.data.repartitionGenre) || !window.chartManager) return;
-    
+
         const hommes = this.data.repartitionGenre.find(r => r.genre === 'Homme')?.total_nombre || 43576;
         const femmes = this.data.repartitionGenre.find(r => r.genre === 'Femme')?.total_nombre || 9332;
-    
+
         const chartData = {
             labels: ['Hommes', 'Femmes'],
             datasets: [{
@@ -1411,7 +1330,7 @@ class ProcasefDashboard {
                 borderWidth: 0
             }]
         };
-    
+
         const options = {
             plugins: {
                 title: {
@@ -1423,19 +1342,19 @@ class ProcasefDashboard {
                 }
             }
         };
-    
+
         window.chartManager.createDoughnut('genreGlobalChart', chartData, options);
     }
-    
+
     createRegionChart() {
         if (!this.data.parcelles || !window.chartManager) return;
-    
+
         const regionData = {};
         this.data.parcelles.forEach(parcelle => {
             const region = parcelle.region || 'Non définie';
             regionData[region] = (regionData[region] || 0) + 1;
         });
-    
+
         const chartData = {
             labels: Object.keys(regionData),
             datasets: [{
@@ -1444,7 +1363,7 @@ class ProcasefDashboard {
                 borderWidth: 0
             }]
         };
-    
+
         const options = {
             plugins: {
                 title: {
@@ -1456,15 +1375,12 @@ class ProcasefDashboard {
                 }
             }
         };
-    
+
         window.chartManager.createDoughnut('regionChart', chartData, options);
     }
 
     createNicadChart() {
-        if (!this.communeStats) return;
-
-        const ctx = document.getElementById('nicadChart');
-        if (!ctx) return;
+        if (!this.communeStats || !window.chartManager) return;
 
         const topCommunes = Object.entries(this.communeStats)
             .sort(([, a], [, b]) => b.total - a.total)
@@ -1475,43 +1391,43 @@ class ProcasefDashboard {
             percentage: stats.total > 0 ? ((stats.nicad_oui / stats.total) * 100) : 0
         }));
 
-        this.charts.nicad = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: nicadData.map(d => d.commune),
-                datasets: [{
-                    label: 'Taux NICAD (%)',
-                    data: nicadData.map(d => d.percentage),
-                    backgroundColor: nicadData.map(d => {
-                        if (d.percentage >= 60) return this.colors.success;
-                        if (d.percentage >= 40) return this.colors.warning;
-                        return this.colors.error;
-                    }),
-                    borderRadius: 4
-                }]
+        const chartData = {
+            labels: nicadData.map(d => d.commune),
+            datasets: [{
+                label: 'Taux NICAD (%)',
+                data: nicadData.map(d => d.percentage),
+                backgroundColor: nicadData.map(d => {
+                    if (d.percentage >= 60) return this.colors.success;
+                    if (d.percentage >= 40) return this.colors.warning;
+                    return this.colors.error;
+                }),
+                borderRadius: 4
+            }]
+        };
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                legend: {
+                    display: false
+                }
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'y',
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    x: {
-                        beginAtZero: true,
-                        max: 100
-                    }
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    max: 100
                 }
             }
-        });
+        };
+
+        window.chartManager.createBar('nicadChart', chartData, options);
     }
 
     createObjectifsChart() {
         if (!this.data.projections || !Array.isArray(this.data.projections) || !window.chartManager) return;
-    
+
         const chartData = {
             labels: this.data.projections.map(p => (p.mois || p.periode || '').split(' ')[0]),
             datasets: [{
@@ -1532,7 +1448,7 @@ class ProcasefDashboard {
                 tension: 0.4
             }]
         };
-    
+
         const options = {
             plugins: {
                 title: {
@@ -1549,112 +1465,99 @@ class ProcasefDashboard {
                 }
             }
         };
-    
+
         window.chartManager.createLine('objectifsChart', chartData, options);
     }
-    
+
     createGenreTrimestreChart() {
-        if (!this.data.genreTrimestre || !Array.isArray(this.data.genreTrimestre)) return;
+        if (!this.data.genreTrimestre || !Array.isArray(this.data.genreTrimestre) || !window.chartManager) return;
 
-        const ctx = document.getElementById('genreTrimestreChart');
-        if (!ctx) return;
+        const chartData = {
+            labels: this.data.genreTrimestre.map(g => g.periodetrimestrielle || g.periode || g.trimestre),
+            datasets: [{
+                label: 'Femmes',
+                data: this.data.genreTrimestre.map(g => g.femme),
+                backgroundColor: this.colors.primary,
+                borderRadius: 4
+            }, {
+                label: 'Hommes',
+                data: this.data.genreTrimestre.map(g => g.homme),
+                backgroundColor: this.colors.secondary,
+                borderRadius: 4
+            }]
+        };
 
-        this.charts.genreTrimestre = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: this.data.genreTrimestre.map(g => g.periodetrimestrielle || g.periode || g.trimestre),
-                datasets: [{
-                    label: 'Femmes',
-                    data: this.data.genreTrimestre.map(g => g.femme),
-                    backgroundColor: this.colors.primary,
-                    borderRadius: 4
-                }, {
-                    label: 'Hommes',
-                    data: this.data.genreTrimestre.map(g => g.homme),
-                    backgroundColor: this.colors.secondary,
-                    borderRadius: 4
-                }]
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                }
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top'
-                    }
+            scales: {
+                x: {
+                    stacked: true
                 },
-                scales: {
-                    x: {
-                        stacked: true
-                    },
-                    y: {
-                        stacked: true,
-                        beginAtZero: true
-                    }
+                y: {
+                    stacked: true,
+                    beginAtZero: true
                 }
             }
-        });
+        };
+
+        window.chartManager.createBar('genreTrimestreChart', chartData, options);
     }
 
     createGenreCommuneChart() {
-        if (!this.data.genreCommune || !Array.isArray(this.data.genreCommune)) return;
-
-        const ctx = document.getElementById('genreCommuneChart');
-        if (!ctx) return;
+        if (!this.data.genreCommune || !Array.isArray(this.data.genreCommune) || !window.chartManager) return;
 
         const topCommunes = this.data.genreCommune.slice(0, 10);
 
-        this.charts.genreCommune = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: topCommunes.map(g => (g.communesenegal || g.commune || '').substring(0, 12)),
-                datasets: [{
-                    label: 'Femmes',
-                    data: topCommunes.map(g => g.femme),
-                    backgroundColor: this.colors.primary,
-                    borderRadius: 4
-                }, {
-                    label: 'Hommes',
-                    data: topCommunes.map(g => g.homme),
-                    backgroundColor: this.colors.secondary,
-                    borderRadius: 4
-                }]
+        const chartData = {
+            labels: topCommunes.map(g => (g.communesenegal || g.commune || '').substring(0, 12)),
+            datasets: [{
+                label: 'Femmes',
+                data: topCommunes.map(g => g.femme),
+                backgroundColor: this.colors.primary,
+                borderRadius: 4
+            }, {
+                label: 'Hommes',
+                data: topCommunes.map(g => g.homme),
+                backgroundColor: this.colors.secondary,
+                borderRadius: 4
+            }]
+        };
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                }
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top'
-                    }
+            scales: {
+                x: {
+                    stacked: true
                 },
-                scales: {
-                    x: {
-                        stacked: true
-                    },
-                    y: {
-                        stacked: true,
-                        beginAtZero: true
-                    }
+                y: {
+                    stacked: true,
+                    beginAtZero: true
                 }
             }
-        });
+        };
+
+        window.chartManager.createBar('genreCommuneChart', chartData, options);
     }
 
     createTemporalChart(canvasId, temporalData) {
-    if (!temporalData || !Array.isArray(temporalData)) {
-        console.warn('Données temporelles invalides');
-        return null;
-    }
+        if (!temporalData || !Array.isArray(temporalData) || !window.chartManager) {
+            console.warn('Données temporelles invalides');
+            return;
+        }
 
-    const canvas = this.prepareCanvas(canvasId);
-    if (!canvas) return null;
-    
-    const ctx = canvas.getContext('2d');
-    
-    const config = {
-        type: 'line',
-        data: {
+        const chartData = {
             labels: temporalData.map(d => d.periode || d.date || ''),
             datasets: [{
                 label: 'Évolution',
@@ -1669,11 +1572,10 @@ class ProcasefDashboard {
                 pointBorderWidth: 2,
                 pointRadius: 5
             }]
-        },
-        options: {
-            ...this.defaultConfig,
+        };
+
+        const options = {
             plugins: {
-                ...this.defaultConfig.plugins,
                 title: {
                     display: true,
                     text: 'Évolution Temporelle',
@@ -1716,20 +1618,11 @@ class ProcasefDashboard {
                     }
                 }
             }
-        }
-    };
-    
-    try {
-        this.charts[canvasId] = new Chart(ctx, config);
-        console.log(`📈 Graphique temporel ${canvasId} créé avec succès`);
-        return this.charts[canvasId];
-    } catch (error) {
-        console.error(`❌ Erreur lors de la création du graphique temporel ${canvasId}:`, error);
-        return null;
-    }
-}
+        };
 
-    // Méthodes pour les filtres d'état d'avancement
+        window.chartManager.createLine(canvasId, chartData, options);
+    }
+
     populateEtatAvancementFilters() {
         const arr = this.data.etatOperations || [];
         const regions = [...new Set(arr.map(e => e.region).filter(Boolean))].sort();
@@ -1741,7 +1634,7 @@ class ProcasefDashboard {
             const sel = document.getElementById(selectId);
             if (!sel) return;
             const prevValue = sel.value;
-            sel.innerHTML = `<option value="">${allLabel}</option>` + 
+            sel.innerHTML = `<option value="">${allLabel}</option>` +
                 options.map(o => `<option value="${o}">${o}</option>`).join('');
             sel.value = prevValue;
             sel.onchange = () => this.renderEtatAvancement();
@@ -1758,20 +1651,20 @@ class ProcasefDashboard {
         const e = document.getElementById('etatFilterEtat')?.value;
         const c = document.getElementById('communeFilterEtat')?.value;
         const csig = document.getElementById('csigFilterEtat')?.value;
-        
+
         let arr = this.data.etatOperations || [];
         if (r) arr = arr.filter(x => x.region === r);
         if (e) arr = arr.filter(x => x.etat_d_avancement === e);
         if (c) arr = arr.filter(x => x.commune === c);
         if (csig) arr = arr.filter(x => x.csig === csig);
-        
+
         return arr;
     }
 
     renderEtatTimeline() {
         const container = document.getElementById('etatTimeline');
         if (!container) return;
-        
+
         const dataArr = this.getFilteredEtatOperations();
         container.innerHTML = dataArr.map(x => `
             <div class="timeline-item ${x.etat_d_avancement?.toLowerCase().includes('terminé') ? 'completed' : 
@@ -1788,15 +1681,12 @@ class ProcasefDashboard {
         `).join('');
     }
 
-    // Méthodes de rendu des tableaux
     renderParcellesTable() {
         const tbody = document.getElementById('parcellesTableBody');
         if (!tbody) return;
 
         tbody.innerHTML = '';
-
         const src = this.filteredParcelles ? this.buildAgg(this.filteredParcelles) : this.communeStats;
-        
         if (!src) return;
 
         const communeData = Object.entries(src)
@@ -1811,7 +1701,6 @@ class ProcasefDashboard {
         communeData.forEach(item => {
             const row = document.createElement('tr');
             const region = this.getRegionForCommune(item.commune);
-            
             row.innerHTML = `
                 <td>${item.commune}</td>
                 <td>${region}</td>
@@ -1832,7 +1721,6 @@ class ProcasefDashboard {
                 </td>
                 <td class="text-end">${item.superficie.toFixed(2)} ha</td>
             `;
-            
             tbody.appendChild(row);
         });
     }
@@ -1855,7 +1743,6 @@ class ProcasefDashboard {
         if (!tbody) return;
 
         tbody.innerHTML = '';
-
         const postData = [
             { commune: 'NDOGA BABACAR', recues: 1250, traitees: 1180, taux: 94.4, statut: 'Conforme' },
             { commune: 'BANDAFASSI', recues: 980, traitees: 920, taux: 93.9, statut: 'Conforme' },
@@ -1887,53 +1774,45 @@ class ProcasefDashboard {
     }
 
     renderPerformanceList() {
-    const container = document.getElementById('performanceList');
-    if (!container || !this.data.projections) return;
-    
-    container.innerHTML = '';
-    
-    this.data.projections.forEach((item, index) => {
-        const objectif = item.objectif_inventaires_mensuels || item.objectif || 8000;
-        const realise = item.inventaires_mensuels_realises || item.realise || 0;
-        const performance = objectif > 0 ? ((realise / objectif) * 100).toFixed(1) : 0;
-        const periode = item.mois || item.periode || `Période ${index + 1}`;
-        
-        const performanceClass = performance >= 100 ? 'success' : 
-                               performance >= 80 ? 'warning' : 'danger';
-        
-        const listItem = document.createElement('div');
-        listItem.className = 'performance-item list-group-item d-flex justify-content-between align-items-center';
-        listItem.innerHTML = `
-            <div>
-                <strong>${periode}</strong>
-                <br>
-                <small class="text-muted">
-                    Réalisé: ${realise.toLocaleString()} / Objectif: ${objectif.toLocaleString()}
-                </small>
-            </div>
-            <span class="badge bg-${performanceClass} rounded-pill">${performance}%</span>
-        `;
-        
-        container.appendChild(listItem);
-    });
-}
-    
+        const container = document.getElementById('performanceList');
+        if (!container || !this.data.projections) return;
 
-    // Utility methods
-       populateFilters() {
+        container.innerHTML = '';
+        this.data.projections.forEach((item, index) => {
+            const objectif = item.objectif_inventaires_mensuels || item.objectif || 8000;
+            const realise = item.inventaires_mensuels_realises || item.realise || 0;
+            const performance = objectif > 0 ? ((realise / objectif) * 100).toFixed(1) : 0;
+            const periode = item.mois || item.periode || `Période ${index + 1}`;
+
+            const performanceClass = performance >= 100 ? 'success' :
+                                    performance >= 80 ? 'warning' : 'danger';
+
+            const listItem = document.createElement('div');
+            listItem.className = 'performance-item list-group-item d-flex justify-content-between align-items-center';
+            listItem.innerHTML = `
+                <div>
+                    <strong>${periode}</strong>
+                    <br>
+                    <small class="text-muted">
+                        Réalisé: ${realise.toLocaleString()} / Objectif: ${objectif.toLocaleString()}
+                    </small>
+                </div>
+                <span class="badge bg-${performanceClass} rounded-pill">${performance}%</span>
+            `;
+            container.appendChild(listItem);
+        });
+    }
+
+    populateFilters() {
         if (!this.communeStats) return;
 
-        // Populate commune filter
         const commSelect = document.getElementById('communeFilter');
         if (commSelect) {
-            commSelect.innerHTML = '<option value="">Toutes les communes</option>';
-            Object.keys(this.communeStats).sort().forEach(commune => {
-                commSelect.insertAdjacentHTML('beforeend',
-                    `<option value="${commune}">${commune}</option>`);
-            });
+            commSelect.innerHTML = '<option value="">Toutes les communes</option>' +
+                Object.keys(this.communeStats).sort().map(commune =>
+                    `<option value="${commune}">${commune}</option>`).join('');
         }
 
-        // Populate NICAD filter
         const nicadSelect = document.getElementById('nicadFilter');
         if (nicadSelect) {
             nicadSelect.innerHTML = `
@@ -1943,7 +1822,6 @@ class ProcasefDashboard {
             `;
         }
 
-        // Populate délibération filter
         const delibSelect = document.getElementById('deliberationFilter');
         if (delibSelect) {
             delibSelect.innerHTML = `
@@ -1954,138 +1832,247 @@ class ProcasefDashboard {
         }
     }
 
+    generateTableHTML(data, columns, title) {
+        const currentDate = new Date().toLocaleString('fr-FR');
+        return `
+            <!DOCTYPE html>
+            <html lang="fr">
+            <head>
+                <meta charset="UTF-8">
+                <title>${title}</title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    .header { text-align: center; margin-bottom: 20px; }
+                    .table-container { max-width: 100%; overflow-x: auto; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th, td { padding: 10px; text-align: left; border: 1px solid #dee2e6; }
+                    th { background-color: ${this.colors.primary}; color: white; }
+                    tr:nth-child(even) { background-color: #f9fafb; }
+                    .footer { margin-top: 20px; text-align: center; color: #6b7280; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>${title}</h1>
+                    <p>Généré le : ${currentDate}</p>
+                </div>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                ${columns.map(col => `<th>${col}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.map(row => `
+                                <tr>
+                                    ${columns.map(col => `<td>${row[col] || '-'}</td>`).join('')}
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="footer">
+                    <p>Rapport généré par l'application PROCASEF Dashboard</p>
+                </div>
+            </body>
+            </html>
+        `;
+    }
+
     exportParcellesData() {
         const data = this.filteredParcelles || this.data.parcelles || [];
-        const csvContent = this.convertToCSV(
-            data.map(p => ({
-                Commune: p.commune,
-                Région: p.region,
-                NICAD: p.nicad,
-                Délibérée: p.deliberee,
-                Superficie: p.superficie
-            }))
-        );
-        this.downloadCSV(csvContent, 'parcelles_export.csv');
+        if (!data.length) {
+            this.showError('Aucune donnée à exporter');
+            return;
+        }
+
+        const formattedData = data.map(p => ({
+            Commune: p.commune || '-',
+            Région: p.region || '-',
+            NICAD: p.nicad || '-',
+            Délibérée: p.deliberee || '-',
+            Superficie: p.superficie ? `${parseFloat(p.superficie).toFixed(2)} ha` : '-'
+        }));
+
+        const columns = ['Commune', 'Région', 'NICAD', 'Délibérée', 'Superficie'];
+        const title = 'Rapport des Parcelles PROCASEF';
+        const htmlContent = this.generateTableHTML(formattedData, columns, title);
+
+        // Téléchargement HTML
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Rapport_Parcelles_PROCASEF.html';
+        a.click();
+        URL.revokeObjectURL(url);
+
+        // Téléchargement PDF
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(18);
+            doc.text(title, 20, 20);
+            doc.setFontSize(12);
+            doc.text(`Généré le : ${new Date().toLocaleString('fr-FR')}`, 20, 30);
+
+            doc.autoTable({
+                head: [columns],
+                body: formattedData.map(row => columns.map(col => row[col])),
+                startY: 40,
+                theme: 'grid',
+                headStyles: { fillColor: this.colors.primary },
+                styles: { fontSize: 10, cellPadding: 2 },
+                alternateRowStyles: { fillColor: '#f9fafb' }
+            });
+
+                        doc.text('Rapport généré par l\'application PROCASEF Dashboard', 20, doc.lastAutoTable.finalY + 10);
+            doc.save('Rapport_Parcelles_PROCASEF.pdf');
+        } catch (error) {
+            console.error('Erreur lors de la génération du PDF:', error);
+            this.showError('Erreur lors de la génération du PDF. Le fichier HTML a été téléchargé.');
+        }
     }
 
     exportPostData() {
-        // Assuming post data is stored similarly
-        const postData = this.data.postTraitement || [];
-        const csvContent = this.convertToCSV(postData);
-        this.downloadCSV(csvContent, 'post_traitement_export.csv');
+        const data = [
+            { commune: 'NDOGA BABACAR', recues: 1250, traitees: 1180, taux: 94.4, statut: 'Conforme' },
+            { commune: 'BANDAFASSI', recues: 980, traitees: 920, taux: 93.9, statut: 'Conforme' },
+            { commune: 'DIMBOLI', recues: 845, traitees: 790, taux: 93.5, statut: 'Conforme' },
+            { commune: 'MISSIRAH', recues: 720, traitees: 650, taux: 90.3, statut: 'Attention' },
+            { commune: 'NETTEBOULOU', recues: 650, traitees: 580, taux: 89.2, statut: 'Attention' }
+        ];
+
+        const formattedData = data.map(p => ({
+            Commune: p.commune,
+            'Parcelles Reçues': p.recues.toLocaleString(),
+            'Parcelles Traitées': p.traitees.toLocaleString(),
+            'Taux (%)': p.taux.toFixed(1),
+            Statut: p.statut
+        }));
+
+        const columns = ['Commune', 'Parcelles Reçues', 'Parcelles Traitées', 'Taux (%)', 'Statut'];
+        const title = 'Rapport de Post-Traitement PROCASEF';
+        const htmlContent = this.generateTableHTML(formattedData, columns, title);
+
+        // Téléchargement HTML
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Rapport_PostTraitement_PROCASEF.html';
+        a.click();
+        URL.revokeObjectURL(url);
+
+        // Téléchargement PDF
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(18);
+            doc.text(title, 20, 20);
+            doc.setFontSize(12);
+            doc.text(`Généré le : ${new Date().toLocaleString('fr-FR')}`, 20, 30);
+
+            doc.autoTable({
+                head: [columns],
+                body: formattedData.map(row => columns.map(col => row[col])),
+                startY: 40,
+                theme: 'grid',
+                headStyles: { fillColor: this.colors.primary },
+                styles: { fontSize: 10, cellPadding: 2 },
+                alternateRowStyles: { fillColor: '#f9fafb' }
+            });
+
+            doc.text('Rapport généré par l\'application PROCASEF Dashboard', 20, doc.lastAutoTable.finalY + 10);
+            doc.save('Rapport_PostTraitement_PROCASEF.pdf');
+        } catch (error) {
+            console.error('Erreur lors de la génération du PDF:', error);
+            this.showError('Erreur lors de la génération du PDF. Le fichier HTML a été téléchargé.');
+        }
     }
 
     exportTopoData() {
         const data = this.filteredTopoData || this.data.topoData || [];
-        const csvContent = this.convertToCSV(
-            data.map(t => ({
-                Date: t.date,
-                Topographe: `${t.prenom} ${t.nom}`,
-                Commune: t.commune,
-                Champs: t.champs,
-                Bâtis: t.batis,
-                Total: t.totale_parcelles
-            }))
-        );
-        this.downloadCSV(csvContent, 'topo_export.csv');
-    }
-
-    convertToCSV(objArray) {
-        if (!objArray || !Array.isArray(objArray) || objArray.length === 0) {
-            console.warn('Données d\'export vides ou invalides');
-            return 'Aucune donnée à exporter';
+        if (!data.length) {
+            this.showError('Aucune donnée à exporter');
+            return;
         }
-        
-        try {
-            const keys = Object.keys(objArray[0]);
-            const header = keys.join(',') + '\n';
-            
-            const rows = objArray.map(item =>
-                keys.map(k => {
-                    const value = item[k];
-                    // Gérer les valeurs null/undefined
-                    const safeValue = (value !== null && value !== undefined) ? 
-                        value.toString().replace(/"/g, '""') : '';
-                    return `"${safeValue}"`;
-                }).join(',')
-            ).join('\n');
-            
-            return header + rows;
-        } catch (error) {
-            console.error('Erreur lors de la conversion CSV:', error);
-            return 'Erreur lors de l\'export';
-        }
-    }
 
-    downloadCSV(csvContent, filename) {
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
+        const formattedData = data.map(t => ({
+            Date: t.date || '-',
+            Topographe: `${t.prenom || ''} ${t.nom || ''}`.trim() || '-',
+            Commune: t.commune || '-',
+            Champs: (t.champs || 0).toLocaleString(),
+            Bâtis: (t.batis || 0).toLocaleString(),
+            Total: (t.totale_parcelles || 0).toLocaleString()
+        }));
+
+        const columns = ['Date', 'Topographe', 'Commune', 'Champs', 'Bâtis', 'Total'];
+        const title = 'Rapport Topographique PROCASEF';
+        const htmlContent = this.generateTableHTML(formattedData, columns, title);
+
+        // Téléchargement HTML
+        const blob = new Blob([htmlContent], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', filename);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Rapport_Topographique_PROCASEF.html';
+        a.click();
+        URL.revokeObjectURL(url);
 
-    handleResize() {
-        // Re-render charts on resize for responsiveness
-        if (this.currentSection) {
-            this.renderSection(this.currentSection);
+        // Téléchargement PDF
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(18);
+            doc.text(title, 20, 20);
+            doc.setFontSize(12);
+            doc.text(`Généré le : ${new Date().toLocaleString('fr-FR')}`, 20, 30);
+
+            doc.autoTable({
+                head: [columns],
+                body: formattedData.map(row => columns.map(col => row[col])),
+                startY: 40,
+                theme: 'grid',
+                headStyles: { fillColor: this.colors.primary },
+                styles: { fontSize: 10, cellPadding: 2 },
+                alternateRowStyles: { fillColor: '#f9fafb' }
+            });
+
+            doc.text('Rapport généré par l\'application PROCASEF Dashboard', 20, doc.lastAutoTable.finalY + 10);
+            doc.save('Rapport_Topographique_PROCASEF.pdf');
+        } catch (error) {
+            console.error('Erreur lors de la génération du PDF:', error);
+            this.showError('Erreur lors de la génération du PDF. Le fichier HTML a été téléchargé.');
         }
     }
 
-destroyAllCharts() {
-        // Utiliser le ChartManager pour la destruction
+    destroyAllCharts() {
         if (window.chartManager) {
             window.chartManager.destroyAll();
         }
-        
-        // Nettoyer notre registre local aussi
-        Object.values(this.charts).forEach(chart => {
-            try {
-                if (chart && typeof chart.destroy === 'function') {
-                    chart.destroy();
-                }
-            } catch (e) {
-                console.warn('Erreur destruction chart local:', e);
+        Object.keys(this.charts).forEach(chartId => {
+            const chart = this.charts[chartId];
+            if (chart && typeof chart.destroy === 'function') {
+                chart.destroy();
             }
         });
         this.charts = {};
     }
-} 
+
+    handleResize() {
+        if (window.chartManager) {
+            window.chartManager.resizeAll();
+        }
+        if (this.mapManager && this.mapManager.map) {
+            this.mapManager.map.invalidateSize();
+        }
+    }
+}
 
 // Initialisation de l'application
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Initialisation de PROCASEF Dashboard...');
-    
-    // Vérifier que tous les modules requis sont chargés
-    if (typeof DataLoader === 'undefined') {
-        console.error('❌ DataLoader non trouvé');
-        return;
-    }
-    
-    if (typeof MapManager === 'undefined') {
-        console.error('❌ MapManager non trouvé');
-        return;
-    }
-    
-    if (!window.chartManager) {
-        console.error('❌ ChartManager non trouvé');
-        return;
-    }
-    
-    // Créer l'instance du dashboard
-    try {
-        window.dashboard = new ProcasefDashboard();
-        console.log('✅ Dashboard PROCASEF initialisé avec succès');
-    } catch (error) {
-        console.error('❌ Erreur lors de l\'initialisation du dashboard:', error);
-    }
+document.addEventListener('DOMContentLoaded', () => {
+    window.procasefDashboard = new Date(ProcasefDashboard());
 });
-
-// Export pour utilisation en module si nécessaire
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = ProcasefDashboard;
-}
