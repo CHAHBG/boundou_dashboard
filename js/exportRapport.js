@@ -788,58 +788,103 @@ function generateStrategicRecommendations(reportData) {
  * @returns {string[][]} Données du tableau
  */
 function getEnhancedTableDataForChart(section, reportData, formatNumber) {
-    switch (section) {
-      case 'Détail par Source': {
-        const sourceData = reportData['Détail par Source'] || [];
-        if (!sourceData.length) return [['Source/Genre', 'Nombre', 'Pourcentage'], ['Aucune donnée', '0', '0%']];
-        let table = [['Source/Genre', 'Bénéficiaires', 'Pourcentage']];
-        sourceData.forEach(item => {
-          table.push([`${item.source} - Hommes`, formatNumber(item.hommes), `${(item.hommes_1 || 0).toFixed(1)}%`]);
-          table.push([`${item.source} - Femmes`, formatNumber(item.femmes), `${(item.femmes_1 || 0).toFixed(2)}%`]);
-        });
-        return table;
-      case 'Analyse par Commune': {
-        const communeData = reportData['Analyse par Commune'] || [];
-        if (!communeData.length) return [['Commune', 'Population', '% Femmes'], ['Aucune donnée', '0', '0%']];
-        let table = [['Commune', 'Population Totale', '% Femmes', 'Rang Genre']];
-        const sortedCommunes = communeData.sort((a, b) => (b.femme_pourcentage || 0) - (a.femme_pourcentage || 0)))
-        .slice(1, 10);
-        sortedCommunes.forEach((item, index) => {
-          const emoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}°`;
-          table.push([item.communesenegal || item.commune || 'N/A'], formatNumber(item.total), `${(item.femme_pourcentage || 0).toFixed(1)}%`, emoji]);
-        });
-        return table;
+  switch (section) {
+    case 'Détail par Source': {
+      const sourceData = reportData['Détail par Source'] || [];
+      if (!sourceData.length) {
+        return [['Source/Genre', 'Nombre', 'Pourcentage'], ['Aucune donnée', '0', '0%']];
       }
-      case 'Analyse Temporelle': {
-        const temporalData = reportData['Analyse Temporelle'] || [];
-        if (!temporalData.length) return [['Période', 'Hommes', 'Femmes', 'Évolution'], ['Aucune donnée', '0', '0', '-']];
-        let table = [['Période', 'Hommes', 'Femmes', '% Femmes', 'Tendance']];
-        temporalData.forEach((item, index) => {
-          let tendance = '-';
-          if (index > 0) {
-            const prev = temporalData[index - 1].femme_pourcentage || 0;
-            const curr = item.femme_pourcentage || 0;
-            tendance = curr > prev ? `📈 +${curr - prev.toFixed(1)}` : curr < prev ? `📉 ${curr - prev.toFixed(1)}` : '➡️ =';
-          }
-          table.push([item.periode || 'N/A', formatNumber(item.homme), formatNumber(item.femme), `${(item.femme_pourcentage || 0).toFixed(1)}%`, tendance]);
-        });
-        return table;
+      let table = [['Source/Genre', 'Bénéficiaires', 'Pourcentage']];
+      sourceData.forEach(item => {
+        table.push([
+          `${item.source} - Hommes`,
+          formatNumber(item.hommes),
+          `${(item.hommes_1 || 0).toFixed(1)}%`
+        ]);
+        table.push([
+          `${item.source} - Femmes`,
+          formatNumber(item.femmes),
+          `${(item.femmes_1 || 0).toFixed(1)}%` // Corrigé de toFixed(2) à toFixed(1) pour cohérence
+        ]);
+      });
+      return table;
+    }
+    case 'Analyse par Commune': {
+      const communeData = reportData['Analyse par Commune'] || [];
+      if (!communeData.length) {
+        return [['Commune', 'Population', '% Femmes'], ['Aucune donnée', '0', '0%']];
       }
-      case 'Tamba-Kédougou': {
-        const regionData = reportData['Tamba-Kédougou'] || [];
-        if (!regionData.length) return [['Région', 'Population', '% Femmes'], ['Aucune donnée', '0', '0%']];
-        let table = [['Région', 'Population Totale', '% Femmes', 'Évaluation']];
-        regionData.forEach(item => {
-          const pourcentage = item.femme_pourcentage || 0;
-          const evaluation = pourcentage >= 40 ? '🟢 Excellent' : pourcentage >= 25 ? '🟡 Moyen' : pourcentage >= 15 ? '🟠 Faible' : '🔴 Critique';
-          table.push([item.region || item.nom || 'N/A', formatNumber(item.total), `${pourcentage.toFixed(1)}%`, evaluation]);
-        });
-        return table;
-      default:
-        return [['Indicateur', 'Valeur'], ['Aucune donnée disponible', '-']];
+      let table = [['Commune', 'Population Totale', '% Femmes', 'Rang Genre']];
+      const sortedCommunes = communeData
+        .sort((a, b) => (b.femme_pourcentage || 0) - (a.femme_pourcentage || 0))
+        .slice(0, 10); // Corrigé de slice(1, 10) à slice(0, 10) pour inclure le premier élément
+      sortedCommunes.forEach((item, index) => {
+        const emoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}°`;
+        table.push([
+          item.communesenegal || item.commune || 'N/A',
+          formatNumber(item.total),
+          `${(item.femme_pourcentage || 0).toFixed(1)}%`,
+          emoji
+        ]);
+      });
+      return table;
+    }
+    case 'Analyse Temporelle': {
+      const temporalData = reportData['Analyse Temporelle'] || [];
+      if (!temporalData.length) {
+        return [['Période', 'Hommes', 'Femmes', 'Évolution'], ['Aucune donnée', '0', '0', '-']];
       }
+      let table = [['Période', 'Hommes', 'Femmes', '% Femmes', 'Tendance']];
+      temporalData.forEach((item, index) => {
+        let tendance = '-';
+        if (index > 0) {
+          const prev = temporalData[index - 1].femme_pourcentage || 0;
+          const curr = item.femme_pourcentage || 0;
+          tendance = curr > prev
+            ? `📈 +${(curr - prev).toFixed(1)}`
+            : curr < prev
+            ? `📉 ${(curr - prev).toFixed(1)}`
+            : '➡️ =';
+        }
+        table.push([
+          item.periode || 'N/A',
+          formatNumber(item.homme),
+          formatNumber(item.femme),
+          `${(item.femme_pourcentage || 0).toFixed(1)}%`,
+          tendance
+        ]);
+      });
+      return table;
+    }
+    case 'Tamba-Kédougou': {
+      const regionData = reportData['Tamba-Kédougou'] || [];
+      if (!regionData.length) {
+        return [['Région', 'Population', '% Femmes'], ['Aucune donnée', '0', '0%']];
+      }
+      let table = [['Région', 'Population Totale', '% Femmes', 'Évaluation']];
+      regionData.forEach(item => {
+        const pourcentage = item.femme_pourcentage || 0;
+        const evaluation = pourcentage >= 40
+          ? '🟢 Excellent'
+          : pourcentage >= 25
+          ? '🟡 Moyen'
+          : pourcentage >= 15
+          ? '🟠 Faible'
+          : '🔴 Critique';
+        table.push([
+          item.region || item.nom || 'N/A',
+          formatNumber(item.total),
+          `${pourcentage.toFixed(1)}%`,
+          evaluation
+        ]);
+      });
+      return table;
+    }
+    default: {
+      return [['Indicateur', 'Valeur'], ['Aucune donnée disponible', '-']];
     }
   }
+}
 
   /**
    * Ajoute des pieds de page modernes
