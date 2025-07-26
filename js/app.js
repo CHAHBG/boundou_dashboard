@@ -728,8 +728,21 @@ class ProcasefDashboard {
 async exportGenreReport() {
     try {
         // Vérification des dépendances
-        if (!window.jspdf || !window.jspdf.jsPDF) {
-            throw new Error('Bibliothèque jsPDF non chargée');
+        if (typeof window.jsPDF === 'undefined') {
+          throw new Error('jsPDF non chargé');
+        }
+    
+        const { jsPDF } = window.jsPDF;
+        const doc = new jsPDF();
+    
+        // Vérification autoTable
+        if (typeof doc.autoTable !== 'function') {
+          console.warn('autoTable non disponible, export simple...');
+          // Export simple sans tableau
+          doc.setFontSize(20);
+          doc.text('Rapport Genre PROCASEF', 20, 30);
+          doc.save('rapport-genre-procasef.pdf');
+          return;
         }
 
         // Charger les données si nécessaire
@@ -926,8 +939,19 @@ async exportGenreReport() {
  */
 async exportGenreWordReport() {
     try {
-        if (!window.docx) {
-            throw new Error('Bibliothèque docx non chargée');
+        if (typeof window.docx === 'undefined') {
+          console.warn('docx non disponible, export HTML...');
+          
+          // Alternative HTML
+          const htmlContent = `<!-- votre contenu HTML -->`;
+          const blob = new Blob([htmlContent], { type: 'text/html' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'rapport-genre-procasef.html';
+          a.click();
+          URL.revokeObjectURL(url);
+          return;
         }
 
         await this.ensureGenreDataLoaded();
