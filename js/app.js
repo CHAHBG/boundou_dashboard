@@ -694,56 +694,44 @@ class ProcasefDashboard {
         this.createPostCharts();
     }
     
-// ================= DEBUT DES AJOUTS ====================================
+// ================= VERSION OPTIMISÉE - EXPORT PDF/WORD ====================================
 
 /**
  * Version optimisée de l'exportation PDF du rapport genre
  * @returns {Promise<void>}
  */
+async exportBothReports() {
+    try {
+        console.log('Starting dual export (PDF and Word)...');
 
-    async exportBothReports() {
-        try {
-            console.log('Starting dual export (PDF and Word)...');
+        // Export PDF
+        console.log('Exporting PDF...');
+        await this.exportGenreReport();
+        console.log('PDF export completed.');
 
-            // Export PDF
-            console.log('Exporting PDF...');
-            await this.exportGenreReport();
-            console.log('PDF export completed.');
+        // Small delay to ensure PDF download completes
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
-            // Small delay to ensure PDF download completes
-            await new Promise(resolve => setTimeout(resolve, 1000));
+        // Export Word
+        console.log('Exporting Word...');
+        await this.exportGenreWordReport();
+        console.log('Word export completed.');
 
-            // Export Word
-            console.log('Exporting Word...');
-            await this.exportGenreWordReport();
-            console.log('Word export completed.');
-
-            alert('✅ Les rapports PDF et Word ont été générés avec succès !');
-        } catch (err) {
-            console.error('Error during dual export:', err);
-            alert(`❌ Erreur lors de l'exportation : ${err.message}\nVérifiez la console pour plus de détails.`);
-        }
+        alert('✅ Les rapports PDF et Word ont été générés avec succès !');
+    } catch (err) {
+        console.error('Error during dual export:', err);
+        alert(`❌ Erreur lors de l'exportation : ${err.message}\nVérifiez la console pour plus de détails.`);
     }
-    
+}
+
 async exportGenreReport() {
     try {
         // Vérification des dépendances
         if (typeof window.jsPDF === 'undefined') {
-          throw new Error('jsPDF non chargé');
+            throw new Error('jsPDF non chargé');
         }
-    
+
         const { jsPDF } = window.jsPDF;
-        const doc = new jsPDF();
-    
-        // Vérification autoTable
-        if (typeof doc.autoTable !== 'function') {
-          console.warn('autoTable non disponible, export simple...');
-          // Export simple sans tableau
-          doc.setFontSize(20);
-          doc.text('Rapport Genre PROCASEF', 20, 30);
-          doc.save('rapport-genre-procasef.pdf');
-          return;
-        }
 
         // Charger les données si nécessaire
         if (!this.data?.rapportComplet || !Object.keys(this.data.rapportComplet).length) {
@@ -799,11 +787,22 @@ async exportGenreReport() {
             }
         }
 
-        // Création du PDF
-        const doc = new window.jspdf.jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const pageHeight = doc.internal.pageSize.getHeight();
-        const margin = this.MARGINS.DEFAULT;
+        // Création du PDF - CORRECTION: une seule déclaration de doc
+        const pdfDoc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+        
+        // Vérification autoTable
+        if (typeof pdfDoc.autoTable !== 'function') {
+            console.warn('autoTable non disponible, export simple...');
+            // Export simple sans tableau
+            pdfDoc.setFontSize(20);
+            pdfDoc.text('Rapport Genre PROCASEF', 20, 30);
+            pdfDoc.save('rapport-genre-procasef.pdf');
+            return;
+        }
+
+        const pageWidth = pdfDoc.internal.pageSize.getWidth();
+        const pageHeight = pdfDoc.internal.pageSize.getHeight();
+        const margin = this.MARGINS?.DEFAULT || 40;
         const contentWidth = pageWidth - 2 * margin;
 
         // Fonction de formatage des nombres
@@ -842,22 +841,32 @@ async exportGenreReport() {
         const cleanedReportData = cleanDataObject(reportData);
 
         // Page de couverture
-        this.createCoverPage(doc, pageWidth, pageHeight, margin);
+        this.createCoverPage(pdfDoc, pageWidth, pageHeight, margin);
 
         // Page de synthèse
-        doc.addPage();
-        let currentY = this.createSynthesisPage(doc, cleanedReportData, pageWidth, pageHeight, margin, formatNumber);
+        pdfDoc.addPage();
+        let currentY = this.createSynthesisPage(pdfDoc, cleanedReportData, pageWidth, pageHeight, margin, formatNumber);
 
         // Ajout des graphiques
         for (const chartData of chartImages) {
-            doc.addPage();
+            pdfDoc.addPage();
             currentY = 50;
 
-            doc.setFillColor(...this.COLORS.PRIMARY);
-            doc.rect(margin, currentY - 10, contentWidth, 35, 'F');
-            doc.setFontSize(this.FONT_SIZES.TITLE);
-            doc.setTextColor(255, 255, 255);
-            doc.text(chartData.title, margin + this.MARGINS.TEXT, currentY + 15);
+            const colors = this.COLORS || {
+                PRIMARY: [41, 128, 185],
+                SECONDARY: [52, 73, 94],
+                NEUTRAL: [149, 165, 166],
+                BACKGROUND: [236, 240, 241],
+                SUCCESS: [39, 174, 96],
+                WARNING: [243, 156, 18],
+                DANGER: [231, 76, 60]
+            };
+
+            pdfDoc.setFillColor(...colors.PRIMARY);
+            pdfDoc.rect(margin, currentY - 10, contentWidth, 35, 'F');
+            pdfDoc.setFontSize(this.FONT_SIZES?.TITLE || 16);
+            pdfDoc.setTextColor(255, 255, 255);
+            pdfDoc.text(chartData.title, margin + (this.MARGINS?.TEXT || 10), currentY + 15);
             currentY += 50;
 
             const maxGraphWidth = contentWidth * 0.85;
@@ -870,52 +879,52 @@ async exportGenreReport() {
             }
 
             const graphX = (pageWidth - graphWidth) / 2;
-            doc.setDrawColor(...this.COLORS.NEUTRAL);
-            doc.setLineWidth(1);
-            doc.rect(graphX - 5, currentY - 5, graphWidth + 10, graphHeight + 10);
-            doc.addImage(chartData.image, 'PNG', graphX, currentY, graphWidth, graphHeight);
+            pdfDoc.setDrawColor(...colors.NEUTRAL);
+            pdfDoc.setLineWidth(1);
+            pdfDoc.rect(graphX - 5, currentY - 5, graphWidth + 10, graphHeight + 10);
+            pdfDoc.addImage(chartData.image, 'PNG', graphX, currentY, graphWidth, graphHeight);
             currentY += graphHeight + 25;
 
             const tableData = this.getEnhancedTableDataForChart(chartData.section, cleanedReportData, formatNumber);
             if (tableData.length > 1) {
-                doc.autoTable({
+                pdfDoc.autoTable({
                     head: [tableData[0]],
                     body: tableData.slice(1),
                     startY: currentY,
                     margin: { left: margin, right: margin },
                     headStyles: {
-                        fillColor: this.COLORS.SECONDARY,
+                        fillColor: colors.SECONDARY,
                         textColor: [255, 255, 255],
-                        fontSize: this.FONT_SIZES.BODY,
+                        fontSize: this.FONT_SIZES?.BODY || 10,
                         halign: 'center',
                         fontStyle: 'bold',
                     },
                     styles: {
-                        fontSize: this.FONT_SIZES.BODY,
+                        fontSize: this.FONT_SIZES?.BODY || 10,
                         cellPadding: 8,
-                        lineColor: this.COLORS.NEUTRAL,
+                        lineColor: colors.NEUTRAL,
                         lineWidth: 0.5,
                         overflow: 'linebreak',
                     },
-                    alternateRowStyles: { fillColor: this.COLORS.BACKGROUND },
+                    alternateRowStyles: { fillColor: colors.BACKGROUND },
                     columnStyles: { 1: { halign: 'right' }, 2: { halign: 'center' } },
                 });
-                currentY = doc.lastAutoTable.finalY + 30;
+                currentY = pdfDoc.lastAutoTable.finalY + 30;
             }
 
-            this.addSectionAnalysis(doc, chartData.section, cleanedReportData, currentY, margin, contentWidth, formatNumber);
+            this.addSectionAnalysis(pdfDoc, chartData.section, cleanedReportData, currentY, margin, contentWidth, formatNumber);
         }
 
         // Page de recommandations
-        doc.addPage();
-        this.createRecommendationsPage(doc, cleanedReportData, pageWidth, pageHeight, margin, formatNumber);
+        pdfDoc.addPage();
+        this.createRecommendationsPage(pdfDoc, cleanedReportData, pageWidth, pageHeight, margin, formatNumber);
 
         // Pieds de page
-        this.addAdvancedFooters(doc, pageWidth, pageHeight, margin);
+        this.addAdvancedFooters(pdfDoc, pageWidth, pageHeight, margin);
 
         // Sauvegarde
         const fileName = `Rapport_Genre_PROCASEF_${new Date().toISOString().slice(0, 10)}.pdf`;
-        doc.save(fileName);
+        pdfDoc.save(fileName);
 
         alert(`🎉 Rapport généré avec succès !\n\n📈 ${chartImages.length} graphiques inclus\n💾 Fichier: ${fileName}`);
 
@@ -940,18 +949,18 @@ async exportGenreReport() {
 async exportGenreWordReport() {
     try {
         if (typeof window.docx === 'undefined') {
-          console.warn('docx non disponible, export HTML...');
-          
-          // Alternative HTML
-          const htmlContent = `<!-- votre contenu HTML -->`;
-          const blob = new Blob([htmlContent], { type: 'text/html' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = 'rapport-genre-procasef.html';
-          a.click();
-          URL.revokeObjectURL(url);
-          return;
+            console.warn('docx non disponible, export HTML...');
+            
+            // Alternative HTML
+            const htmlContent = this.generateHTMLReport();
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'rapport-genre-procasef.html';
+            a.click();
+            URL.revokeObjectURL(url);
+            return;
         }
 
         await this.ensureGenreDataLoaded();
@@ -986,7 +995,12 @@ async exportGenreWordReport() {
 
         const cleanedReportData = cleanDataObject(reportData);
 
-        const doc = new window.docx.Document({
+        const colors = this.COLORS || {
+            PRIMARY: [41, 128, 185],
+            SECONDARY: [52, 73, 94]
+        };
+
+        const wordDoc = new window.docx.Document({
             creator: 'PROCASEF Dashboard',
             title: 'Rapport Genre - PROCASEF Boundou',
             description: 'Analyse de la répartition genre dans le programme PROCASEF',
@@ -998,7 +1012,7 @@ async exportGenreWordReport() {
                         basedOn: 'Normal',
                         next: 'Normal',
                         quickFormat: true,
-                        run: { size: 28, bold: true, color: this.COLORS.PRIMARY.map(c => c.toString(16).padStart(2, '0')).join('') },
+                        run: { size: 28, bold: true, color: colors.PRIMARY.map(c => c.toString(16).padStart(2, '0')).join('') },
                         paragraph: { spacing: { after: 300 } },
                     },
                     {
@@ -1007,7 +1021,7 @@ async exportGenreWordReport() {
                         basedOn: 'Normal',
                         next: 'Normal',
                         quickFormat: true,
-                        run: { size: 20, bold: true, color: this.COLORS.SECONDARY.map(c => c.toString(16).padStart(2, '0')).join('') },
+                        run: { size: 20, bold: true, color: colors.SECONDARY.map(c => c.toString(16).padStart(2, '0')).join('') },
                         paragraph: { spacing: { before: 240, after: 120 } },
                     },
                 ],
@@ -1017,11 +1031,11 @@ async exportGenreWordReport() {
                 children: [
                     new window.docx.Paragraph({
                         alignment: window.docx.AlignmentType.CENTER,
-                        children: [new window.docx.TextRun({ text: 'RAPPORT GENRE', bold: true, size: 32, color: this.COLORS.PRIMARY.map(c => c.toString(16).padStart(2, '0')).join('') })],
+                        children: [new window.docx.TextRun({ text: 'RAPPORT GENRE', bold: true, size: 32, color: colors.PRIMARY.map(c => c.toString(16).padStart(2, '0')).join('') })],
                     }),
                     new window.docx.Paragraph({
                         alignment: window.docx.AlignmentType.CENTER,
-                        children: [new window.docx.TextRun({ text: 'PROCASEF Boundou', size: 24, color: this.COLORS.SECONDARY.map(c => c.toString(16).padStart(2, '0')).join('') })],
+                        children: [new window.docx.TextRun({ text: 'PROCASEF Boundou', size: 24, color: colors.SECONDARY.map(c => c.toString(16).padStart(2, '0')).join('') })],
                     }),
                     new window.docx.Paragraph({
                         alignment: window.docx.AlignmentType.CENTER,
@@ -1040,7 +1054,7 @@ async exportGenreWordReport() {
             }],
         });
 
-        const blob = await window.docx.Packer.toBlob(doc);
+        const blob = await window.docx.Packer.toBlob(wordDoc);
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -1065,6 +1079,86 @@ async exportGenreWordReport() {
 }
 
 /**
+ * Génère un rapport HTML comme alternative
+ * @returns {string} Contenu HTML
+ */
+generateHTMLReport() {
+    const reportData = this.data?.rapportComplet || {};
+    const globalStats = reportData['Synthèse Globale'] || [];
+    const hommes = Number(globalStats.find(item => item.indicateur === 'Hommes')?.valeur) || 43576;
+    const femmes = Number(globalStats.find(item => item.indicateur === 'Femmes')?.valeur) || 9332;
+    const total = hommes + femmes;
+    const femmesPourcentage = ((femmes / total) * 100).toFixed(1);
+
+    return `
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Rapport Genre PROCASEF</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+            .header { text-align: center; margin-bottom: 40px; }
+            .title { color: #2980b9; font-size: 28px; font-weight: bold; }
+            .subtitle { color: #34495e; font-size: 20px; margin: 10px 0; }
+            .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 30px 0; }
+            .stat-card { background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #2980b9; }
+            .stat-value { font-size: 24px; font-weight: bold; color: #2c3e50; }
+            .stat-label { color: #7f8c8d; font-size: 14px; }
+            .section { margin: 30px 0; }
+            .section-title { color: #2980b9; font-size: 18px; font-weight: bold; margin-bottom: 15px; }
+            .alert { background: #fef9e7; border: 1px solid #f39c12; padding: 15px; border-radius: 5px; margin: 20px 0; }
+            .recommendations { background: #eaf4fd; padding: 20px; border-radius: 8px; }
+            .footer { text-align: center; margin-top: 50px; color: #7f8c8d; font-size: 12px; }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1 class="title">RAPPORT GENRE</h1>
+            <h2 class="subtitle">PROCASEF Boundou</h2>
+            <p>Généré le ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">📊 SYNTHÈSE EXÉCUTIVE</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">${total.toLocaleString('fr-FR')}</div>
+                    <div class="stat-label">Total Bénéficiaires</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${femmes.toLocaleString('fr-FR')}</div>
+                    <div class="stat-label">Femmes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${femmesPourcentage}%</div>
+                    <div class="stat-label">Pourcentage Femmes</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert">
+            <strong>🔍 ANALYSE AUTOMATIQUE:</strong><br>
+            ${this.generateWordAnalysis(reportData)}
+        </div>
+
+        <div class="section recommendations">
+            <h2 class="section-title">🎯 RECOMMANDATIONS</h2>
+            ${this.generateStrategicRecommendations(reportData).map((rec, i) => 
+                `<h3>${i + 1}. ${rec.title}</h3><p>${rec.description}</p>`
+            ).join('')}
+        </div>
+
+        <div class="footer">
+            <p>PROCASEF Dashboard - Rapport Genre Automatisé</p>
+            <p>Contact: procasef@example.com | www.procasef.com</p>
+        </div>
+    </body>
+    </html>`;
+}
+
+/**
  * Crée une page de couverture moderne
  * @param {Object} doc - Instance jsPDF
  * @param {number} pageWidth - Largeur de la page
@@ -1072,6 +1166,7 @@ async exportGenreWordReport() {
  * @param {number} margin - Marge
  */
 createCoverPage(doc, pageWidth, pageHeight, margin) {
+    // Gradient de fond
     const gradientSteps = 50;
     for (let i = 0; i < gradientSteps; i++) {
         const alpha = i / gradientSteps;
@@ -1080,22 +1175,26 @@ createCoverPage(doc, pageWidth, pageHeight, margin) {
         doc.rect(0, i * (pageHeight / gradientSteps), pageWidth, pageHeight / gradientSteps, 'F');
     }
 
+    // Titre principal
     doc.setFontSize(28);
     doc.setTextColor(255, 255, 255);
     const mainTitle = 'RAPPORT GENRE';
     const mainTitleWidth = doc.getTextWidth(mainTitle);
     doc.text(mainTitle, (pageWidth - mainTitleWidth) / 2, 200);
 
+    // Sous-titre
     doc.setFontSize(20);
     const subTitle = 'PROCASEF Boundou';
     const subTitleWidth = doc.getTextWidth(subTitle);
     doc.text(subTitle, (pageWidth - subTitleWidth) / 2, 240);
 
+    // Date
     doc.setFontSize(14);
     const dateText = `Généré le ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
     const dateWidth = doc.getTextWidth(dateText);
     doc.text(dateText, (pageWidth - dateWidth) / 2, 400);
 
+    // Version
     doc.setFontSize(12);
     doc.setTextColor(220, 220, 220);
     const versionText = 'Version 2.0 - Analyse Avancée';
@@ -1116,30 +1215,43 @@ createCoverPage(doc, pageWidth, pageHeight, margin) {
 createSynthesisPage(doc, reportData, pageWidth, pageHeight, margin, formatNumber) {
     let currentY = 50;
 
-    doc.setFillColor(...this.COLORS.SECONDARY);
+    const colors = this.COLORS || {
+        PRIMARY: [41, 128, 185],
+        SECONDARY: [52, 73, 94],
+        NEUTRAL: [149, 165, 166],
+        BACKGROUND: [236, 240, 241],
+        SUCCESS: [39, 174, 96],
+        DANGER: [231, 76, 60]
+    };
+
+    // En-tête de section
+    doc.setFillColor(...colors.SECONDARY);
     doc.rect(margin, currentY - 10, pageWidth - 2 * margin, 35, 'F');
-    doc.setFontSize(this.FONT_SIZES.TITLE);
+    doc.setFontSize(this.FONT_SIZES?.TITLE || 16);
     doc.setTextColor(255, 255, 255);
-    doc.text('📊 SYNTHÈSE EXÉCUTIVE', margin + this.MARGINS.TEXT, currentY + 15);
+    doc.text('📊 SYNTHÈSE EXÉCUTIVE', margin + (this.MARGINS?.TEXT || 10), currentY + 15);
     currentY += 60;
 
+    // Calcul des statistiques
     const globalStats = reportData['Synthèse Globale'] || [];
     const hommes = Number(globalStats.find(item => item.indicateur === 'Hommes')?.valeur) || 43576;
     const femmes = Number(globalStats.find(item => item.indicateur === 'Femmes')?.valeur) || 9332;
     const total = hommes + femmes;
     const femmesPourcentage = ((femmes / total) * 100).toFixed(1);
 
-    this.createKPICard(doc, margin, currentY, 'TOTAL BÉNÉFICIAIRES', formatNumber(total), this.COLORS.PRIMARY);
-    this.createKPICard(doc, margin + 180, currentY, 'FEMMES', formatNumber(femmes), this.COLORS.DANGER);
-    this.createKPICard(doc, margin + 360, currentY, '% FEMMES', `${femmesPourcentage}%`, this.COLORS.SUCCESS);
+    // Cartes KPI
+    this.createKPICard(doc, margin, currentY, 'TOTAL BÉNÉFICIAIRES', formatNumber(total), colors.PRIMARY);
+    this.createKPICard(doc, margin + 180, currentY, 'FEMMES', formatNumber(femmes), colors.DANGER);
+    this.createKPICard(doc, margin + 360, currentY, '% FEMMES', `${femmesPourcentage}%`, colors.SUCCESS);
     currentY += 100;
 
-    doc.setFontSize(this.FONT_SIZES.SUBTITLE);
-    doc.setTextColor(...this.COLORS.PRIMARY);
+    // Analyse automatique
+    doc.setFontSize(this.FONT_SIZES?.SUBTITLE || 14);
+    doc.setTextColor(...colors.PRIMARY);
     doc.text('🔍 ANALYSE AUTOMATIQUE', margin, currentY);
     currentY += 25;
 
-    doc.setFontSize(this.FONT_SIZES.BODY);
+    doc.setFontSize(this.FONT_SIZES?.BODY || 10);
     doc.setTextColor(0, 0, 0);
     const analysis = this.generateGenderAnalysis(hommes, femmes, femmesPourcentage);
     const analysisLines = doc.splitTextToSize(analysis, pageWidth - 2 * margin);
@@ -1159,14 +1271,26 @@ createSynthesisPage(doc, reportData, pageWidth, pageHeight, margin, formatNumber
  * @param {number[]} color - Couleur RGB
  */
 createKPICard(doc, x, y, title, value, color) {
-    doc.setFillColor(...this.COLORS.BACKGROUND);
+    const colors = this.COLORS || {
+        BACKGROUND: [236, 240, 241],
+        NEUTRAL: [149, 165, 166]
+    };
+
+    // Fond de la carte
+    doc.setFillColor(...colors.BACKGROUND);
     doc.roundedRect(x, y, 160, 80, 5, 5, 'F');
+    
+    // Ligne de couleur en haut
     doc.setDrawColor(...color);
     doc.setLineWidth(3);
     doc.line(x, y, x + 160, y);
-    doc.setFontSize(this.FONT_SIZES.BODY);
-    doc.setTextColor(...this.COLORS.NEUTRAL);
+    
+    // Titre
+    doc.setFontSize(this.FONT_SIZES?.BODY || 10);
+    doc.setTextColor(...colors.NEUTRAL);
     doc.text(title, x + 10, y + 20);
+    
+    // Valeur
     doc.setFontSize(20);
     doc.setTextColor(0, 0, 0);
     doc.text(value, x + 10, y + 50);
@@ -1315,7 +1439,7 @@ createWordRecommendations(reportData) {
  * @param {string} femmesPourcentage - Pourcentage de femmes
  * @returns {string} Analyse textuelle
  */
-generateGenderAnalysis(hombres, femmes, femmesPourcentage) {
+generateGenderAnalysis(hommes, femmes, femmesPourcentage) {
     const pourcentage = parseFloat(femmesPourcentage) || 0;
     if (pourcentage < 20) {
         return `⚠️ ALERTE : Représentation féminine critiquement faible (${pourcentage.toFixed(1)}%). Action corrective urgente requise.`;
@@ -1338,12 +1462,17 @@ generateGenderAnalysis(hombres, femmes, femmesPourcentage) {
  * @param {Function} formatNumber - Fonction de formatage
  */
 addSectionAnalysis(doc, section, reportData, startY, margin, contentWidth, formatNumber) {
-    doc.setFillColor(...this.COLORS.BACKGROUND);
+    const colors = this.COLORS || {
+        PRIMARY: [41, 128, 185],
+        BACKGROUND: [236, 240, 241]
+    };
+
+    doc.setFillColor(...colors.BACKGROUND);
     doc.rect(margin, startY, contentWidth, 2, 'F');
-    doc.setFontSize(this.FONT_SIZES.SUBTITLE);
-    doc.setTextColor(...this.COLORS.PRIMARY);
+    doc.setFontSize(this.FONT_SIZES?.SUBTITLE || 14);
+    doc.setTextColor(...colors.PRIMARY);
     doc.text('💡 ANALYSE & INSIGHTS', margin, startY + 25);
-    doc.setFontSize(this.FONT_SIZES.BODY);
+    doc.setFontSize(this.FONT_SIZES?.BODY || 10);
     doc.setTextColor(0, 0, 0);
     const analysis = this.generateSectionAnalysis(section, reportData);
     const analysisLines = doc.splitTextToSize(analysis, contentWidth - 20);
@@ -1425,11 +1554,17 @@ generateSectionAnalysis(section, reportData) {
 createRecommendationsPage(doc, reportData, pageWidth, pageHeight, margin, formatNumber) {
     let currentY = 50;
 
-    doc.setFillColor(...this.COLORS.PRIMARY);
+    const colors = this.COLORS || {
+        PRIMARY: [41, 128, 185],
+        SECONDARY: [52, 73, 94]
+    };
+
+    // En-tête de section
+    doc.setFillColor(...colors.PRIMARY);
     doc.rect(margin, currentY - 10, pageWidth - 2 * margin, 35, 'F');
-    doc.setFontSize(this.FONT_SIZES.TITLE);
+    doc.setFontSize(this.FONT_SIZES?.TITLE || 16);
     doc.setTextColor(255, 255, 255);
-    doc.text('🎯 RECOMMANDATIONS STRATÉGIQUES', margin + this.MARGINS.TEXT, currentY + 15);
+    doc.text('🎯 RECOMMANDATIONS STRATÉGIQUES', margin + (this.MARGINS?.TEXT || 10), currentY + 15);
     currentY += 60;
 
     const recommendations = this.generateStrategicRecommendations(reportData);
@@ -1439,17 +1574,21 @@ createRecommendationsPage(doc, reportData, pageWidth, pageHeight, margin, format
             currentY = 50;
         }
 
-        doc.setFillColor(...this.COLORS.SECONDARY);
+        // Numéro de recommandation
+        doc.setFillColor(...colors.SECONDARY);
         doc.circle(margin + 10, currentY + 5, 8, 'F');
-        doc.setFontSize(this.FONT_SIZES.BODY);
+        doc.setFontSize(this.FONT_SIZES?.BODY || 10);
         doc.setTextColor(255, 255, 255);
         doc.text((index + 1).toString(), margin + 7, currentY + 8);
-        doc.setFontSize(this.FONT_SIZES.SUBTITLE);
-        doc.setTextColor(...this.COLORS.PRIMARY);
+        
+        // Titre de la recommandation
+        doc.setFontSize(this.FONT_SIZES?.SUBTITLE || 14);
+        doc.setTextColor(...colors.PRIMARY);
         doc.text(rec.title, margin + 30, currentY + 8);
         currentY += 20;
 
-        doc.setFontSize(this.FONT_SIZES.BODY);
+        // Description
+        doc.setFontSize(this.FONT_SIZES?.BODY || 10);
         doc.setTextColor(0, 0, 0);
         const descLines = doc.splitTextToSize(rec.description, pageWidth - 2 * margin - 40);
         doc.text(descLines, margin + 30, currentY);
@@ -1617,107 +1756,42 @@ getEnhancedTableDataForChart(section, reportData, formatNumber) {
  * @param {number} margin - Marge
  */
 addAdvancedFooters(doc, pageWidth, pageHeight, margin) {
+    const colors = this.COLORS || {
+        NEUTRAL: [149, 165, 166]
+    };
+
     const totalPages = doc.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
-        doc.setDrawColor(...this.COLORS.NEUTRAL);
+        
+        // Ligne de séparation
+        doc.setDrawColor(...colors.NEUTRAL);
         doc.setLineWidth(0.5);
         doc.line(margin, pageHeight - 40, pageWidth - margin, pageHeight - 40);
-        doc.setFontSize(this.FONT_SIZES.SMALL);
-        doc.setTextColor(...this.COLORS.NEUTRAL);
+        
+        // Informations du pied de page
+        doc.setFontSize(this.FONT_SIZES?.SMALL || 8);
+        doc.setTextColor(...colors.NEUTRAL);
+        
+        // Titre à gauche
         doc.text('PROCASEF Dashboard - Rapport Genre Automatisé', margin, pageHeight - 25);
+        
+        // Date au centre
         const dateText = `Généré le ${new Date().toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`;
         const dateWidth = doc.getTextWidth(dateText);
         doc.text(dateText, (pageWidth - dateWidth) / 2, pageHeight - 25);
+        
+        // Numéro de page à droite
         const pageText = `${i}/${totalPages}`;
         const pageTextWidth = doc.getTextWidth(pageText);
         doc.text(pageText, pageWidth - margin - pageTextWidth, pageHeight - 25);
-        doc.setFontSize(this.FONT_SIZES.SMALL - 1);
+        
+        // Contact au centre en bas
+        doc.setFontSize((this.FONT_SIZES?.SMALL || 8) - 1);
         const contactText = 'Contact: procasef@example.com | www.procasef.com';
         const contactWidth = doc.getTextWidth(contactText);
         doc.text(contactText, (pageWidth - contactWidth) / 2, pageHeight - 10);
     }
-}
-
-/**
- * Génère des alertes basées sur les seuils
- * @param {Object} reportData - Données nettoyées
- * @returns {Object[]} Liste des alertes
- */
-generateAlerts(reportData) {
-    const alerts = [];
-    const globalStats = reportData['Synthèse Globale'] || [];
-    const femmes = Number(globalStats.find(item => item.indicateur === 'Femmes')?.valeur) || 0;
-    const total = Number(globalStats.find(item => item.indicateur === 'Total Personnes')?.valeur) || 1;
-    const femmesPourcentage = (femmes / total) * 100;
-
-    if (femmesPourcentage < 15) {
-        alerts.push({
-            level: 'CRITIQUE',
-            icon: '🚨',
-            message: 'Représentation féminine extrêmement faible - Action immédiate requise',
-            color: this.COLORS.DANGER,
-        });
-    } else if (femmesPourcentage < 25) {
-        alerts.push({
-            level: 'ATTENTION',
-            icon: '⚠️',
-            message: 'Représentation féminine insuffisante - Renforcement nécessaire',
-            color: this.COLORS.WARNING,
-        });
-    }
-
-    const temporalData = reportData['Analyse Temporelle'] || [];
-    if (temporalData.length >= 2) {
-        const dernier = temporalData[temporalData.length - 1];
-        const precedent = temporalData[temporalData.length - 2];
-        if ((dernier.femme_pourcentage || 0) < (precedent.femme_pourcentage || 0)) {
-            alerts.push({
-                level: 'TENDANCE',
-                icon: '📉',
-                message: 'Régression de la participation féminine détectée',
-                color: this.COLORS.DANGER,
-            });
-        }
-    }
-
-    return alerts;
-}
-
-/**
- * Ajoute une section d'alertes au rapport
- * @param {Object} doc - Instance jsPDF
- * @param {Object} reportData - Données nettoyées
- * @param {number} startY - Position Y
- * @param {number} margin - Marge
- * @param {number} contentWidth - Largeur du contenu
- * @returns {number} Nouvelle position Y
- */
-addAlertsSection(doc, reportData, startY, margin, contentWidth) {
-    const alerts = this.generateAlerts(reportData);
-
-    if (!alerts.length) {
-        doc.setFillColor(220, 252, 180);
-        doc.rect(margin, startY, contentWidth, 40, 'F');
-        doc.setFontSize(this.FONT_SIZES.BODY);
-        doc.setTextColor(...this.colors.success);
-        doc.text('✅ AUCUNE ALERTE CRITIQUE DÉTECTÉE', margin + 10, startY + 25);
-        return startY + 50;
-    }
-
-    let currentY = startY;
-    for (const alert of alerts) {
-        doc.setFillColor(alert.color[0], alert.color[1], alert.color[2], 0.2);
-        doc.rect(margin, currentY, contentWidth, 35, 'F');
-        doc.setFillColor(...alert.color);
-        doc.rect(margin, currentY, 5, 35, 'F');
-        doc.setFontSize(this.FONT_SIZES.BODY);
-        doc.setTextColor(...alert.color);
-        doc.text(`${alert.icon || '⚠'} ${alert.level}: ${alert.message}`, margin + 10, currentY + 22);
-        currentY += 45;
-    }
-
-    return currentY + 10;
 }
 
 /**
@@ -1731,10 +1805,11 @@ async ensureGenreDataLoaded() {
         { path: 'data/Repartition_genre.json', key: 'repartitionGenre' },
         { path: 'data/rapport_complet.json', key: 'rapportComplet' }
     ].map(c => this.loadDataSafely(c.path, c.key));
+    
     await Promise.allSettled(dataPromises);
 }
 
-// ================= FIN DES AJOUTS ====================================
+// ================= FIN DU CODE OPTIMISÉ ====================================
     populatePostFilters() {
         const communes = ['NDOGA BABACAR', 'BANDAFASSI', 'DIMBOLI', 'MISSIRAH', 'NETTEBOULOU'];
         const geometres = ['FALL Mamadou', 'DIALLO Aissatou', 'NDIAYE Ousmane'];
