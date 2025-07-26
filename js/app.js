@@ -2211,7 +2211,7 @@ addAdvancedFooters(doc, pageWidth, pageHeight, margin) {
         
         // Contact au centre en bas
         doc.setFontSize((this.FONT_SIZES?.SMALL || 8) - 1);
-        const contactText = 'Contact: procasef@example.com | www.procasef.com';
+        const contactText = 'Contact: cheikhabgn@gmail.com | www.procasef.com';
         const contactWidth = doc.getTextWidth(contactText);
         doc.text(contactText, (pageWidth - contactWidth) / 2, pageHeight - 10);
     }
@@ -2429,7 +2429,7 @@ generateAlerts(reportData) {
         alerts.push({
             type: 'CRITIQUE',
             title: 'Représentation féminine critiquement faible',
-            description: `Seulement ${femmesPourcentage.toFixed(1)}% de femmes bénéficiaires. Action immédiate requise.`,
+            description: `Seulement ${femmesPourcentage.toFixed(1)}% de femmes bénéficiaires.`,
             priority: 1,
             icon: '🚨'
         });
