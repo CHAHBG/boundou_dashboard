@@ -929,11 +929,14 @@ ${chartImages.map(c => `  ✓ ${c.title}`).join('\n')}
  */
 async exportGenreReport() {
     try {
-        await this.ensureGenreDataLoaded();
-
-        // Charger rapport_complet.json si pas déjà fait
+        // Vérifier ou charger les données nécessaires
         if (!this.data.rapportComplet || Object.keys(this.data.rapportComplet).length === 0) {
-            await this.loadDataSafely('data/rapport_complet.json', 'rapportComplet');
+            console.log('Chargement des données du rapport...');
+            try {
+                await this.loadDataSafely('data/rapport_complet.json', 'rapportComplet');
+            } catch (error) {
+                console.warn('Impossible de charger rapport_complet.json, utilisation des données existantes');
+            }
         }
 
         const reportData = this.data.rapportComplet || {};
@@ -1165,7 +1168,22 @@ ${chartImages.map(c => `  ✓ ${c.title}`).join('\n')}
 
     } catch (err) {
         console.error('❌ Erreur export genre :', err);
-        this.showError('Échec de la génération du rapport genre. Vérifiez la console pour plus de détails.');
+        
+        // Message d'erreur plus informatif
+        let errorMsg = 'Échec de la génération du rapport genre.\n\n';
+        
+        if (err.message && err.message.includes('jsPDF')) {
+            errorMsg += '❌ Bibliothèque jsPDF non trouvée.\n';
+            errorMsg += 'Assurez-vous que jsPDF est chargée dans votre page.';
+        } else if (err.message && err.message.includes('Canvas')) {
+            errorMsg += '❌ Impossible de capturer les graphiques.\n';
+            errorMsg += 'Vérifiez que les graphiques sont affichés sur la page.';
+        } else {
+            errorMsg += `Erreur: ${err.message}\n`;
+            errorMsg += 'Vérifiez la console pour plus de détails.';
+        }
+        
+        alert(errorMsg);
     }
 }
 
@@ -1379,7 +1397,18 @@ async exportGenreWordReport() {
 
     } catch (err) {
         console.error('❌ Erreur export Word :', err);
-        alert('Erreur lors de la génération du rapport Word. Vérifiez que la bibliothèque docx est chargée.');
+        
+        let errorMsg = 'Erreur lors de la génération du rapport Word.\n\n';
+        
+        if (err.message && err.message.includes('docx')) {
+            errorMsg += '❌ Bibliothèque docx non trouvée.\n';
+            errorMsg += 'Assurez-vous que la bibliothèque docx est chargée dans votre page.';
+        } else {
+            errorMsg += `Erreur: ${err.message}\n`;
+            errorMsg += 'Vérifiez la console pour plus de détails.';
+        }
+        
+        alert(errorMsg);
     }
 }
 
