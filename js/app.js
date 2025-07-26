@@ -935,7 +935,7 @@ async exportGenreReport() {
         let errorMsg = 'Échec de la génération du rapport PDF.\n\n';
         if (err.message.includes('jsPDF')) {
             errorMsg += '❌ Bibliothèque jsPDF non trouvée.\nAssurez-vous que jsPDF est chargé.';
-        } else if (err..includes('Canvas')) {
+        } else if (err.includes('Canvas')) {
             errorMsg += '❌ Impossible de capturer les graphiques.\nVérifiez que les graphiques sont affichés.';
         } else {
             errorMsg += `Erreur: ${err.message}\nVérifiez la console pour plus de détails.`;
