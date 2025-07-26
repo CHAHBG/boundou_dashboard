@@ -2,7 +2,7 @@
 class ProcasefDashboard {
     constructor() {
         // Palette de couleurs PROCASEF
-        this.colors = {
+       this.colors = {
             primary: '#D4A574',
             secondary: '#1E3A8A',
             accent: '#B8860B',
@@ -11,6 +11,30 @@ class ProcasefDashboard {
             error: '#EF4444',
             info: '#3B82F6',
             chartColors: ['#D4A574', '#1E3A8A', '#B8860B', '#10B981', '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6', '#EC4899', '#06B6D4']
+        };
+
+        // Constantes globales pour une meilleure maintenabilité
+        this.COLORS = {
+            PRIMARY: [30, 58, 138], // Bleu principal
+            SECONDARY: [212, 165, 116], // Orange doux
+            SUCCESS: [5, 150, 105], // Vert
+            WARNING: [245, 158, 11], // Jaune
+            DANGER: [220, 38, 38], // Rouge
+            NEUTRAL: [100, 100, 100], // Gris
+            BACKGROUND: [248, 250, 252], // Fond clair
+        };
+
+        this.MARGINS = {
+            DEFAULT: 30,
+            TABLE: 20,
+            TEXT: 15,
+        };
+
+        this.FONT_SIZES = {
+            TITLE: 18,
+            SUBTITLE: 14,
+            BODY: 10,
+            SMALL: 8,
         };
 
         this.dataLoader = new DataLoader();
@@ -671,30 +695,6 @@ class ProcasefDashboard {
         this.createPostCharts();
     }
     // ================= DEBUT DES AJOUTS ====================================
-
-    // Constantes globales pour une meilleure maintenabilité
-const COLORS = {
-  PRIMARY: [30, 58, 138], // Bleu principal
-  SECONDARY: [212, 165, 116], // Orange doux
-  SUCCESS: [5, 150, 105], // Vert
-  WARNING: [245, 158, 11], // Jaune
-  DANGER: [220, 38, 38], // Rouge
-  NEUTRAL: [100, 100, 100], // Gris
-  BACKGROUND: [248, 250, 252], // Fond clair
-};
-
-const MARGINS = {
-  DEFAULT: 30,
-  TABLE: 20,
-  TEXT: 15,
-};
-
-const FONT_SIZES = {
-  TITLE: 18,
-  SUBTITLE: 14,
-  BODY: 10,
-  SMALL: 8,
-};
 
 /**
  * Version optimisée de l'exportation PDF du rapport genre
