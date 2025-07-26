@@ -711,7 +711,7 @@ async exportBothReports() {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     console.log('Exporting Word...');
-    await this.;
+    await this.exportGenreWordReport();
     console.log('Word export completed.');
 
     alert('✅ Les rapports PDF et Word ont été générés avec succès !');
