@@ -3261,22 +3261,52 @@ async ensureGenreDataLoaded() {
 
 // Initialisation de l'application
 document.addEventListener('DOMContentLoaded', () => {
-  // Check for critical dependencies
-    const dependencies = {
-        jsPDF: typeof window.jspdf !== 'undefined' && typeof window.jspdf.jsPDF === 'function',
-        docx: typeof window.docx !== 'undefined' || typeof docx !== 'undefined',
-        Chart: typeof Chart !== 'undefined'
-    };
+  console.log('DOM loaded, initializing PROCASEF application...');
+  
+  // Vérification des dépendances critiques
+  const dependencies = {
+    jsPDF: typeof window.jspdf !== 'undefined' && typeof window.jspdf.jsPDF === 'function',
+    docx: typeof window.docx !== 'undefined' || typeof docx !== 'undefined',
+    Chart: typeof Chart !== 'undefined'
+  };
+  
   console.log('Dependencies check:', dependencies);
-
+  
+  // Au lieu d'arrêter complètement, on initialise l'app et on gère les erreurs par fonctionnalité
+  let hasWarnings = false;
+  
   if (!dependencies.jsPDF) {
-    console.error('jsPDF is not loaded. Please ensure the jsPDF library is included.');
-    alert('Erreur : jsPDF non chargé. Vérifiez que la bibliothèque est incluse.');
-    return;
+    console.warn('jsPDF is not loaded. PDF export will be disabled.');
+    hasWarnings = true;
   }
+  
   if (!dependencies.docx) {
-    console.error('docx is not loaded. Please ensure the docx library is included.');
-    alert('Erreur : docx non chargé. Vérifiez que la bibliothèque est incluse.');
-    return;
+    console.warn('docx is not loaded. Word export will be disabled.');
+    hasWarnings = true;
+  }
+  
+  if (!dependencies.Chart) {
+    console.warn('Chart.js is not loaded. Charts will be disabled.');
+    hasWarnings = true;
+  }
+  
+  // Afficher un avertissement si certaines fonctionnalités seront limitées
+  if (hasWarnings) {
+    console.warn('Some features will be limited due to missing dependencies.');
+    // Optionnel : afficher une notification discrète à l'utilisateur
+    showDependencyWarning();
+  }
+  
+  // Initialiser l'application même si certaines dépendances manquent
+  try {
+    const dashboard = new ProcasefDashboard();
+    console.log('PROCASEF Dashboard initialized successfully');
+    
+    // Stocker l'instance globalement pour le debugging
+    window.procasefDashboard = dashboard;
+    
+  } catch (error) {
+    console.error('Failed to initialize PROCASEF Dashboard:', error);
+    showInitializationError(error);
   }
 });
