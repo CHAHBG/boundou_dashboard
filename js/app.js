@@ -754,9 +754,7 @@ async exportGenreReport() {
             }
         }
 
-        const reportData = this.data?.rapportComplet || {};
-        console.log('Données du rapport:', reportData);
-
+        
         // Configurations des graphiques
         const chartConfigs = [
             { id: 'rapportSourceChart', title: 'Détail par Source', section: 'Détail par Source' },
