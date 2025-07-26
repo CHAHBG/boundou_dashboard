@@ -294,16 +294,15 @@ class ProcasefDashboard {
             exportTopoBtn.addEventListener('click', () => this.exportTopoData());
         }
 
-        // =================== AJOUT #1 – BIND EVENT LISTENER ===================
-        // Nouveau bouton d'export genre
+    // =================== MODIFIED EVENT LISTENER ===================
+        // Updated to call exportBothReports for both PDF and Word
         const exportGenreBtn = document.getElementById('exportGenreBtn');
         if (exportGenreBtn) {
-            exportGenreBtn.addEventListener('click', () => this.exportGenreReport());
+            exportGenreBtn.addEventListener('click', () => this.exportBothReports());
         }
-
+    
         window.addEventListener('resize', () => this.handleResize());
-    }
-
+}
     setupFontSizeControls() {
         try {
             const saved = localStorage.getItem('procasef-font-size');
@@ -701,6 +700,31 @@ class ProcasefDashboard {
  * Version optimisée de l'exportation PDF du rapport genre
  * @returns {Promise<void>}
  */
+
+    async exportBothReports() {
+        try {
+            console.log('Starting dual export (PDF and Word)...');
+
+            // Export PDF
+            console.log('Exporting PDF...');
+            await this.exportGenreReport();
+            console.log('PDF export completed.');
+
+            // Small delay to ensure PDF download completes
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // Export Word
+            console.log('Exporting Word...');
+            await this.exportGenreWordReport();
+            console.log('Word export completed.');
+
+            alert('✅ Les rapports PDF et Word ont été générés avec succès !');
+        } catch (err) {
+            console.error('Error during dual export:', err);
+            alert(`❌ Erreur lors de l'exportation : ${err.message}\nVérifiez la console pour plus de détails.`);
+        }
+    }
+    
 async exportGenreReport() {
     try {
         // Vérification des dépendances
