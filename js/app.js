@@ -690,6 +690,7 @@ async exportGenreReport() {
 
         // Load rapport_complet.json (assuming it's available in this.data)
         const reportData = this.data.rapport_complet || {};
+        console.log('Report Data:', reportData); // Debug: Check if data is loaded
 
         // Use only the "rapport" section charts
         const chartIds = [
@@ -713,12 +714,12 @@ async exportGenreReport() {
 
             if (canvas && canvas.tagName === 'CANVAS') {
                 await new Promise(resolve => setTimeout(resolve, 700)); // Wait for rendering
-                // Temporarily increase canvas resolution for HD quality
+                // Increase canvas resolution for HD quality
                 const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = canvas.width * 2; // Double width
-                tempCanvas.height = canvas.height * 2; // Double height
+                tempCanvas.width = canvas.width * 3; // Triple width
+                tempCanvas.height = canvas.height * 3; // Triple height
                 const tempContext = tempCanvas.getContext('2d');
-                tempContext.scale(2, 2); // Scale the drawing context
+                tempContext.scale(3, 3); // Scale the drawing context
                 tempContext.drawImage(canvas, 0, 0); // Draw the original canvas at higher resolution
                 const chartImg = tempCanvas.toDataURL('image/png', 1.0);
                 if (chartImg && chartImg.length > 100 && !chartImg.includes('data:,')) {
@@ -727,7 +728,7 @@ async exportGenreReport() {
                         title: chartTitles[i],
                         section: 'Rapport'
                     });
-                    console.log(`✅ Graphique capturé: ${chartId}`);
+                    console.log(`✅ Graphique capturé: ${chartId} with HD resolution`);
                 } else {
                     console.warn(`⚠️ Échec capture graphique: ${chartId} - Image vide ou invalide`);
                 }
@@ -769,6 +770,7 @@ async exportGenreReport() {
             styles: { fontSize: 11, cellPadding: 8, lineColor: [200, 200, 200], lineWidth: 0.5 },
             alternateRowStyles: { fillColor: [249, 250, 251] }
         });
+        console.log(`Global stats table added at Y: ${currentY}`);
 
         currentY = doc.lastAutoTable.finalY + 30;
 
@@ -777,6 +779,7 @@ async exportGenreReport() {
             if (currentY > 600) {
                 doc.addPage();
                 currentY = 50;
+                console.log(`New page added for ${chartData.title}`);
             }
 
             // Titre du graphique
@@ -784,37 +787,59 @@ async exportGenreReport() {
             doc.setTextColor(30, 58, 138);
             doc.text(chartData.title, 40, currentY);
             currentY += 20;
+            console.log(`${chartData.title} title added at Y: ${currentY}`);
 
             // Smaller graph size
             const imgWidth = 400;
             const imgHeight = 180;
             doc.addImage(chartData.image, 'PNG', 40, currentY, imgWidth, imgHeight);
             currentY += imgHeight + 20;
+            console.log(`${chartData.title} image added at Y: ${currentY}`);
 
             // Add table with actual data from rapport_complet.json
             let tableData = [['Indicateur', 'Valeur', 'Pourcentage']];
             if (chartData.title === 'Détail par Source') {
                 const sourceData = reportData['Détail par Source'] || [];
-                sourceData.forEach(item => {
-                    tableData.push([item.source + ' - Hommes', item.hommes.toLocaleString().replace(/\//g, ' '), item.hommes_1 + ' %']);
-                    tableData.push([item.source + ' - Femmes', item.femmes.toLocaleString().replace(/\//g, ' '), item.femmes_1 + ' %']);
-                });
+                console.log('Source Data:', sourceData); // Debug: Check source data
+                if (sourceData.length > 0) {
+                    sourceData.forEach(item => {
+                        tableData.push([item.source + ' - Hommes', item.hommes.toLocaleString().replace(/\//g, ' '), item.hommes_1 + ' %']);
+                        tableData.push([item.source + ' - Femmes', item.femmes.toLocaleString().replace(/\//g, ' '), item.femmes_1 + ' %']);
+                    });
+                } else {
+                    tableData.push(['No Data', '0', '0 %']); // Placeholder if no data
+                }
             } else if (chartData.title === 'Analyse Mixte Communes') {
                 const communeData = reportData['Analyse par Commune'] || [];
-                communeData.forEach(item => {
-                    tableData.push([item.communesenegal, item.total.toLocaleString().replace(/\//g, ' '), item.femme_pourcentage.toFixed(1) + ' %']);
-                });
+                console.log('Commune Data:', communeData); // Debug: Check commune data
+                if (communeData.length > 0) {
+                    communeData.forEach(item => {
+                        tableData.push([item.communesenegal, item.total.toLocaleString().replace(/\//g, ' '), item.femme_pourcentage.toFixed(1) + ' %']);
+                    });
+                } else {
+                    tableData.push(['No Data', '0', '0 %']); // Placeholder if no data
+                }
             } else if (chartData.title === 'Évolution Temporelle') {
                 const temporalData = reportData['Analyse Temporelle'] || [];
-                temporalData.forEach(item => {
-                    tableData.push([item.periode + ' - Hommes', item.homme.toLocaleString().replace(/\//g, ' '), item.homme_pourcentage.toFixed(1) + ' %']);
-                    tableData.push([item.periode + ' - Femmes', item.femme.toLocaleString().replace(/\//g, ' '), item.femme_pourcentage.toFixed(1) + ' %']);
-                });
+                console.log('Temporal Data:', temporalData); // Debug: Check temporal data
+                if (temporalData.length > 0) {
+                    temporalData.forEach(item => {
+                        tableData.push([item.periode + ' - Hommes', item.homme.toLocaleString().replace(/\//g, ' '), item.homme_pourcentage.toFixed(1) + ' %']);
+                        tableData.push([item.periode + ' - Femmes', item.femme.toLocaleString().replace(/\//g, ' '), item.femme_pourcentage.toFixed(1) + ' %']);
+                    });
+                } else {
+                    tableData.push(['No Data', '0', '0 %']); // Placeholder if no data
+                }
             } else if (chartData.title === 'Répartition Polaire par Région') {
                 const polarData = reportData['Tamba-Kédougou'] || [];
-                polarData.forEach(item => {
-                    tableData.push([item.region, item.total.toLocaleString().replace(/\//g, ' '), item.femme_pourcentage.toFixed(1) + ' %']);
-                });
+                console.log('Polar Data:', polarData); // Debug: Check polar data
+                if (polarData.length > 0) {
+                    polarData.forEach(item => {
+                        tableData.push([item.region, item.total.toLocaleString().replace(/\//g, ' '), item.femme_pourcentage.toFixed(1) + ' %']);
+                    });
+                } else {
+                    tableData.push(['No Data', '0', '0 %']); // Placeholder if no data
+                }
             }
 
             doc.autoTable({
@@ -825,6 +850,7 @@ async exportGenreReport() {
                 alternateRowStyles: { fillColor: [249, 250, 251] }
             });
             currentY = doc.lastAutoTable.finalY + 20;
+            console.log(`${chartData.title} table added at Y: ${currentY} with ${tableData.length - 1} rows`);
         });
 
         // Sauvegarder le PDF
