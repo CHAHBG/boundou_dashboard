@@ -711,7 +711,7 @@ async exportBothReports() {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     console.log('Exporting Word...');
-    await this.exportGenreWordReport();
+    await this.;
     console.log('Word export completed.');
 
     alert('✅ Les rapports PDF et Word ont été générés avec succès !');
@@ -961,8 +961,8 @@ async exportGenreWordReport() {
         if (typeof window.docx === 'undefined') {
             console.warn('docx non disponible, export HTML...');
             
-            // Alternative HTML
-            const htmlContent = this.generateHTMLReport();
+            // Alternative HTML avec graphiques
+            const htmlContent = await this.generateHTMLReportWithCharts();
             const blob = new Blob([htmlContent], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1005,10 +1005,37 @@ async exportGenreWordReport() {
 
         const cleanedReportData = cleanDataObject(reportData);
 
+        // CAPTURE DES GRAPHIQUES POUR WORD
+        const chartImages = await this.captureChartsForWord();
+
         const colors = this.COLORS || {
             PRIMARY: [41, 128, 185],
             SECONDARY: [52, 73, 94]
         };
+
+        // Conversion des images en base64 pour docx
+        const convertedImages = await Promise.all(
+            chartImages.map(async (chart) => {
+                try {
+                    // Convertir l'image canvas en format compatible docx
+                    const response = await fetch(chart.image);
+                    const blob = await response.blob();
+                    const arrayBuffer = await blob.arrayBuffer();
+                    
+                    return {
+                        ...chart,
+                        imageBuffer: arrayBuffer,
+                        width: Math.min(chart.originalWidth * 0.5, 400),
+                        height: Math.min(chart.originalHeight * 0.5, 300)
+                    };
+                } catch (error) {
+                    console.warn(`Erreur conversion image ${chart.title}:`, error);
+                    return null;
+                }
+            })
+        );
+
+        const validImages = convertedImages.filter(img => img !== null);
 
         const wordDoc = new window.docx.Document({
             creator: 'PROCASEF Dashboard',
@@ -1036,32 +1063,7 @@ async exportGenreWordReport() {
                     },
                 ],
             },
-            sections: [{
-                properties: {},
-                children: [
-                    new window.docx.Paragraph({
-                        alignment: window.docx.AlignmentType.CENTER,
-                        children: [new window.docx.TextRun({ text: 'RAPPORT GENRE', bold: true, size: 32, color: colors.PRIMARY.map(c => c.toString(16).padStart(2, '0')).join('') })],
-                    }),
-                    new window.docx.Paragraph({
-                        alignment: window.docx.AlignmentType.CENTER,
-                        children: [new window.docx.TextRun({ text: 'PROCASEF Boundou', size: 24, color: colors.SECONDARY.map(c => c.toString(16).padStart(2, '0')).join('') })],
-                    }),
-                    new window.docx.Paragraph({
-                        alignment: window.docx.AlignmentType.CENTER,
-                        children: [new window.docx.TextRun({ text: `Généré le ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`, size: 16, italics: true })],
-                    }),
-                    new window.docx.Paragraph({ children: [new window.docx.PageBreak()] }),
-                    new window.docx.Paragraph({ style: 'Heading1', children: [new window.docx.TextRun({ text: '📊 SYNTHÈSE EXÉCUTIVE' })] }),
-                    ...this.createWordStatsTable(cleanedReportData, formatNumber),
-                    new window.docx.Paragraph({ style: 'Heading2', children: [new window.docx.TextRun({ text: '🔍 ANALYSE AUTOMATIQUE' })] }),
-                    new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: this.generateWordAnalysis(cleanedReportData) })] }),
-                    ...this.createWordSectionContent(cleanedReportData, formatNumber),
-                    new window.docx.Paragraph({ children: [new window.docx.PageBreak()] }),
-                    new window.docx.Paragraph({ style: 'Heading1', children: [new window.docx.TextRun({ text: '🎯 RECOMMANDATIONS STRATÉGIQUES' })] }),
-                    ...this.createWordRecommendations(cleanedReportData),
-                ],
-            }],
+            sections: await this.createWordSectionsWithCharts(cleanedReportData, formatNumber, validImages, colors),
         });
 
         const blob = await window.docx.Packer.toBlob(wordDoc);
@@ -1074,123 +1076,367 @@ async exportGenreWordReport() {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        alert('✅ Rapport Word généré avec succès !');
+        alert(`✅ Rapport Word généré avec succès !\n📊 ${validImages.length} graphiques inclus`);
 
     } catch (err) {
         console.error('❌ Erreur export Word:', err);
-        let errorMsg = 'Erreur lors de la génération du rapport Word.\n\n';
-        if (err.message.includes('docx')) {
-            errorMsg += '❌ Bibliothèque docx non trouvée.\nAssurez-vous que la bibliothèque docx est chargée.';
-        } else {
-            errorMsg += `Erreur: ${err.message}\nVérifiez la console pour plus de détails.`;
+        
+        // Fallback vers HTML avec graphiques
+        console.log('Fallback vers export HTML...');
+        try {
+            const htmlContent = await this.generateHTMLReportWithCharts();
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'rapport-genre-procasef.html';
+            a.click();
+            URL.revokeObjectURL(url);
+            alert('⚠️ Export Word échoué, mais rapport HTML généré avec graphiques !');
+        } catch (htmlError) {
+            console.error('❌ Erreur export HTML:', htmlError);
+            alert('❌ Erreur lors de l\'exportation. Vérifiez la console.');
         }
-        alert(errorMsg);
     }
+}
+
+
+/**
+ * Capture les graphiques spécifiquement pour Word
+ */
+async captureChartsForWord() {
+    const chartConfigs = [
+        { id: 'rapportSourceChart', title: 'Détail par Source', section: 'Détail par Source' },
+        { id: 'rapportCommuneMixedChart', title: 'Analyse par Commune', section: 'Analyse par Commune' },
+        { id: 'rapportTemporalChart', title: 'Évolution Temporelle', section: 'Analyse Temporelle' },
+        { id: 'rapportRegionPolarChart', title: 'Répartition par Région', section: 'Tamba-Kédougou' },
+    ];
+
+    const chartImages = [];
+    
+    for (const config of chartConfigs) {
+        const canvas = document.getElementById(config.id);
+        if (canvas?.tagName === 'CANVAS') {
+            try {
+                await new Promise(resolve => setTimeout(resolve, 500)); // Attendre le rendu
+                
+                // Créer un canvas optimisé pour Word
+                const scale = 2;
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = canvas.width * scale;
+                tempCanvas.height = canvas.height * scale;
+                const tempContext = tempCanvas.getContext('2d');
+                
+                // Fond blanc pour Word
+                tempContext.fillStyle = 'white';
+                tempContext.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                
+                tempContext.scale(scale, scale);
+                tempContext.imageSmoothingEnabled = true;
+                tempContext.imageSmoothingQuality = 'high';
+                tempContext.drawImage(canvas, 0, 0);
+
+                const chartImg = tempCanvas.toDataURL('image/png', 0.9);
+                
+                if (chartImg && chartImg.length > 100 && !chartImg.includes('data:,')) {
+                    chartImages.push({
+                        image: chartImg,
+                        title: config.title,
+                        section: config.section,
+                        originalWidth: canvas.width,
+                        originalHeight: canvas.height,
+                    });
+                    console.log(`✅ Graphique capturé pour Word: ${config.id}`);
+                } else {
+                    console.warn(`⚠️ Échec capture Word: ${config.id}`);
+                }
+            } catch (error) {
+                console.error(`❌ Erreur capture ${config.id}:`, error);
+            }
+        } else {
+            console.warn(`⚠️ Canvas non trouvé: ${config.id}`);
+        }
+    }
+
+    return chartImages;
 }
 
 /**
- * Génère un rapport HTML comme alternative
- * @returns {string} Contenu HTML
+ * Crée les sections Word avec graphiques intégrés
  */
-generateHTMLReport() {
-  const reportData = this.data?.rapportComplet || {};
-  const globalStats = reportData['Synthèse Globale'] || [];
-  const hommes = Number(globalStats.find(item => item.indicateur === 'Hommes')?.valeur) || 43576;
-  const femmes = Number(globalStats.find(item => item.indicateur === 'Femmes')?.valeur) || 9332;
-  const total = hommes + femmes;
-  const femmesPourcentage = ((femmes / total) * 100).toFixed(1);
+async createWordSectionsWithCharts(cleanedReportData, formatNumber, chartImages, colors) {
+    const children = [
+        // Page de couverture
+        new window.docx.Paragraph({
+            alignment: window.docx.AlignmentType.CENTER,
+            children: [new window.docx.TextRun({ text: 'RAPPORT GENRE', bold: true, size: 32, color: colors.PRIMARY.map(c => c.toString(16).padStart(2, '0')).join('') })],
+        }),
+        new window.docx.Paragraph({
+            alignment: window.docx.AlignmentType.CENTER,
+            children: [new window.docx.TextRun({ text: 'PROCASEF Boundou', size: 24, color: colors.SECONDARY.map(c => c.toString(16).padStart(2, '0')).join('') })],
+        }),
+        new window.docx.Paragraph({
+            alignment: window.docx.AlignmentType.CENTER,
+            children: [new window.docx.TextRun({ text: `Généré le ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`, size: 16, italics: true })],
+        }),
+        new window.docx.Paragraph({ children: [new window.docx.PageBreak()] }),
+        
+        // Synthèse exécutive
+        new window.docx.Paragraph({ style: 'Heading1', children: [new window.docx.TextRun({ text: '📊 SYNTHÈSE EXÉCUTIVE' })] }),
+        ...this.createWordStatsTable(cleanedReportData, formatNumber),
+        
+        // Analyse automatique
+        new window.docx.Paragraph({ style: 'Heading2', children: [new window.docx.TextRun({ text: '🔍 ANALYSE AUTOMATIQUE' })] }),
+        new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: this.generateWordAnalysis(cleanedReportData) })] }),
+    ];
 
-  // Capture chart images
-  const chartConfigs = [
-    { id: 'rapportSourceChart', title: 'Détail par Source' },
-    { id: 'rapportCommuneMixedChart', title: 'Analyse par Commune' },
-    { id: 'rapportTemporalChart', title: 'Évolution Temporelle' },
-    { id: 'rapportRegionPolarChart', title: 'Répartition par Région' },
-  ];
+    // Ajouter chaque graphique avec son analyse
+    for (const chartImage of chartImages) {
+        // Nouvelle page pour chaque graphique
+        children.push(new window.docx.Paragraph({ children: [new window.docx.PageBreak()] }));
+        
+        // Titre de la section
+        children.push(
+            new window.docx.Paragraph({ 
+                style: 'Heading1', 
+                children: [new window.docx.TextRun({ text: `📊 ${chartImage.title}` })] 
+            })
+        );
 
-  let chartImages = '';
-  chartConfigs.forEach(config => {
-    const canvas = document.getElementById(config.id);
-    if (canvas?.tagName === 'CANVAS') {
-      const chartImg = canvas.toDataURL('image/png', 1.0);
-      chartImages += `
-        <div class="section">
-          <h2 class="section-title">${config.title}</h2>
-          <img src="${chartImg}" alt="${config.title}" style="max-width: 100%; margin: 20px 0;">
-        </div>`;
+        // Ajouter l'image si elle existe
+        if (chartImage.imageBuffer) {
+            try {
+                children.push(
+                    new window.docx.Paragraph({
+                        alignment: window.docx.AlignmentType.CENTER,
+                        children: [
+                            new window.docx.ImageRun({
+                                data: chartImage.imageBuffer,
+                                transformation: {
+                                    width: chartImage.width,
+                                    height: chartImage.height,
+                                },
+                            }),
+                        ],
+                    })
+                );
+                
+                // Légende du graphique
+                children.push(
+                    new window.docx.Paragraph({
+                        alignment: window.docx.AlignmentType.CENTER,
+                        children: [new window.docx.TextRun({ text: `Figure: ${chartImage.title}`, italics: true, size: 18 })],
+                    })
+                );
+            } catch (imageError) {
+                console.error(`❌ Erreur insertion image ${chartImage.title}:`, imageError);
+                children.push(
+                    new window.docx.Paragraph({
+                        children: [new window.docx.TextRun({ 
+                            text: `[Graphique ${chartImage.title} - Image non disponible]`, 
+                            italics: true, 
+                            color: '999999' 
+                        })],
+                    })
+                );
+            }
+        }
+
+        // Tableau de données pour cette section
+        const tableData = this.getEnhancedTableDataForChart(chartImage.section, cleanedReportData, formatNumber);
+        if (tableData.length > 1) {
+            children.push(this.createWordTableFromData(tableData));
+        }
+
+        // Analyse de la section
+        children.push(
+            new window.docx.Paragraph({ 
+                style: 'Heading2', 
+                children: [new window.docx.TextRun({ text: '💡 Analyse' })] 
+            })
+        );
+        children.push(
+            new window.docx.Paragraph({ 
+                children: [new window.docx.TextRun({ 
+                    text: this.generateSectionAnalysis(chartImage.section, cleanedReportData) 
+                })] 
+            })
+        );
     }
-  });
 
-  return `
-  <!DOCTYPE html>
-  <html lang="fr">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rapport Genre PROCASEF</title>
-    <style>
-      body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
-      .header { text-align: center; margin-bottom: 40px; }
-      .title { color: #2980b9; font-size: 28px; font-weight: bold; }
-      .subtitle { color: #34495e; font-size: 20px; margin: 10px 0; }
-      .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 30px 0; }
-      .stat-card { background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #2980b9; }
-      .stat-value { font-size: 24px; font-weight: bold; color: #2c3e50; }
-      .stat-label { color: #7f8c8d; font-size: 14px; }
-      .section { margin: 30px 0; }
-      .section-title { color: #2980b9; font-size: 18px; font-weight: bold; margin-bottom: 15px; }
-      .alert { background: #fef9e7; border: 1px solid #f39c12; padding: 15px; border-radius: 5px; margin: 20px 0; }
-      .recommendations { background: #eaf4fd; padding: 20px; border-radius: 8px; }
-      .footer { text-align: center; margin-top: 50px; color: #7f8c8d; font-size: 12px; }
-    </style>
-  </head>
-  <body>
-    <div class="header">
-      <h1 class="title">RAPPORT GENRE</h1>
-      <h2 class="subtitle">PROCASEF Boundou</h2>
-      <p>Généré le ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-    </div>
+    // Page de recommandations
+    children.push(new window.docx.Paragraph({ children: [new window.docx.PageBreak()] }));
+    children.push(new window.docx.Paragraph({ style: 'Heading1', children: [new window.docx.TextRun({ text: '🎯 RECOMMANDATIONS STRATÉGIQUES' })] }));
+    children.push(...this.createWordRecommendations(cleanedReportData));
 
-    <div class="section">
-      <h2 class="section-title">📊 SYNTHÈSE EXÉCUTIVE</h2>
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-value">${total.toLocaleString('fr-FR')}</div>
-          <div class="stat-label">Total Bénéficiaires</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">${femmes.toLocaleString('fr-FR')}</div>
-          <div class="stat-label">Femmes</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">${femmesPourcentage}%</div>
-          <div class="stat-label">Pourcentage Femmes</div>
-        </div>
-      </div>
-    </div>
-
-    ${chartImages}
-
-    <div class="alert">
-      <strong>🔍 ANALYSE AUTOMATIQUE:</strong><br>
-      ${this.generateWordAnalysis(reportData)}
-    </div>
-
-    <div class="section recommendations">
-      <h2 class="section-title">🎯 RECOMMANDATIONS</h2>
-      ${this.generateStrategicRecommendations(reportData).map((rec, i) => 
-        `<h3>${i + 1}. ${rec.title}</h3><p>${rec.description}</p>`
-      ).join('')}
-    </div>
-
-    <div class="footer">
-      <p>PROCASEF Dashboard - Rapport Genre Automatisé</p>
-      <p>Contact: procasef@example.com | www.procasef.com</p>
-    </div>
-  </body>
-  </html>`;
+    return [{ properties: {}, children }];
 }
 
+/**
+ * Crée un tableau Word à partir de données
+ */
+createWordTableFromData(tableData) {
+    if (!tableData || tableData.length < 2) return new window.docx.Paragraph({ text: '' });
+
+    const [headers, ...rows] = tableData;
+    
+    return new window.docx.Table({
+        rows: [
+            new window.docx.TableRow({
+                children: headers.map(header => 
+                    new window.docx.TableCell({ 
+                        children: [new window.docx.Paragraph({ 
+                            children: [new window.docx.TextRun({ text: header, bold: true })] 
+                        })] 
+                    })
+                ),
+            }),
+            ...rows.map(row => 
+                new window.docx.TableRow({
+                    children: row.map(cell => 
+                        new window.docx.TableCell({ 
+                            children: [new window.docx.Paragraph({ 
+                                children: [new window.docx.TextRun({ text: String(cell) })] 
+                            })] 
+                        })
+                    ),
+                })
+            ),
+        ],
+    });
+}
+
+/**
+ * Version améliorée du rapport HTML avec graphiques
+ */
+async generateHTMLReportWithCharts() {
+    const reportData = this.data?.rapportComplet || {};
+    const globalStats = reportData['Synthèse Globale'] || [];
+    const hommes = Number(globalStats.find(item => item.indicateur === 'Hommes')?.valeur) || 43576;
+    const femmes = Number(globalStats.find(item => item.indicateur === 'Femmes')?.valeur) || 9332;
+    const total = hommes + femmes;
+    const femmesPourcentage = ((femmes / total) * 100).toFixed(1);
+
+    // Capture des graphiques
+    const chartImages = await this.captureChartsForWord();
+    
+    let chartImagesHTML = '';
+    chartImages.forEach(chart => {
+        const tableData = this.getEnhancedTableDataForChart(chart.section, reportData, (v) => v?.toLocaleString?.('fr-FR') || v);
+        const tableHTML = this.generateHTMLTable(tableData);
+        
+        chartImagesHTML += `
+            <div class="section">
+                <h2 class="section-title">${chart.title}</h2>
+                <div class="chart-container">
+                    <img src="${chart.image}" alt="${chart.title}" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; margin: 20px 0;">
+                </div>
+                ${tableHTML}
+                <div class="analysis-box">
+                    <h3>💡 Analyse</h3>
+                    <p>${this.generateSectionAnalysis(chart.section, reportData)}</p>
+                </div>
+            </div>
+        `;
+    });
+
+    return `
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Rapport Genre PROCASEF</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+            .header { text-align: center; margin-bottom: 40px; }
+            .title { color: #2980b9; font-size: 28px; font-weight: bold; }
+            .subtitle { color: #34495e; font-size: 20px; margin: 10px 0; }
+            .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 30px 0; }
+            .stat-card { background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #2980b9; }
+            .stat-value { font-size: 24px; font-weight: bold; color: #2c3e50; }
+            .stat-label { color: #7f8c8d; font-size: 14px; }
+            .section { margin: 40px 0; page-break-inside: avoid; }
+            .section-title { color: #2980b9; font-size: 18px; font-weight: bold; margin-bottom: 15px; }
+            .chart-container { text-align: center; margin: 20px 0; }
+            .analysis-box { background: #f0f8ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2980b9; }
+            .alert { background: #fef9e7; border: 1px solid #f39c12; padding: 15px; border-radius: 5px; margin: 20px 0; }
+            .recommendations { background: #eaf4fd; padding: 20px; border-radius: 8px; }
+            .footer { text-align: center; margin-top: 50px; color: #7f8c8d; font-size: 12px; }
+            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; font-weight: bold; }
+            tr:nth-child(even) { background-color: #f9f9f9; }
+            @media print { .section { page-break-inside: avoid; } }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1 class="title">RAPPORT GENRE</h1>
+            <h2 class="subtitle">PROCASEF Boundou</h2>
+            <p>Généré le ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">📊 SYNTHÈSE EXÉCUTIVE</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">${total.toLocaleString('fr-FR')}</div>
+                    <div class="stat-label">Total Bénéficiaires</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${femmes.toLocaleString('fr-FR')}</div>
+                    <div class="stat-label">Femmes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${femmesPourcentage}%</div>
+                    <div class="stat-label">Pourcentage Femmes</div>
+                </div>
+            </div>
+        </div>
+
+        ${chartImagesHTML}
+
+        <div class="alert">
+            <strong>🔍 ANALYSE AUTOMATIQUE:</strong><br>
+            ${this.generateWordAnalysis(reportData)}
+        </div>
+
+        <div class="section recommendations">
+            <h2 class="section-title">🎯 RECOMMANDATIONS</h2>
+            ${this.generateStrategicRecommendations(reportData).map((rec, i) => 
+                `<h3>${i + 1}. ${rec.title}</h3><p>${rec.description}</p>`
+            ).join('')}
+        </div>
+
+        <div class="footer">
+            <p>PROCASEF Dashboard - Rapport Genre Automatisé</p>
+            <p>Contact: procasef@example.com | www.procasef.com</p>
+            <p>Rapport généré avec graphiques intégrés</p>
+        </div>
+    </body>
+    </html>`;
+}
+
+/**
+ * Génère un tableau HTML à partir de données
+ */
+generateHTMLTable(tableData) {
+    if (!tableData || tableData.length < 2) return '';
+    
+    const [headers, ...rows] = tableData;
+    
+    return `
+        <table>
+            <thead>
+                <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
+            </thead>
+            <tbody>
+                ${rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}
+            </tbody>
+        </table>
+    `;
+}
 /**
  * Crée une page de couverture moderne
  * @param {Object} doc - Instance jsPDF
