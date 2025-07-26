@@ -701,27 +701,25 @@ class ProcasefDashboard {
  * @returns {Promise<void>}
  */
 async exportBothReports() {
-    try {
-        console.log('Starting dual export (PDF and Word)...');
+  try {
+    console.log('Starting dual export (PDF and Word)...');
 
-        // Export PDF
-        console.log('Exporting PDF...');
-        await this.exportGenreReport();
-        console.log('PDF export completed.');
+    console.log('Exporting PDF...');
+    await this.exportGenreReport();
+    console.log('PDF export completed.');
 
-        // Small delay to ensure PDF download completes
-        await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-        // Export Word
-        console.log('Exporting Word...');
-        await this.exportGenreWordReport();
-        console.log('Word export completed.');
+    console.log('Exporting Word...');
+    await this.exportGenreWordReport();
+    console.log('Word export completed.');
 
-        alert('✅ Les rapports PDF et Word ont été générés avec succès !');
-    } catch (err) {
-        console.error('Error during dual export:', err);
-        alert(`❌ Erreur lors de l'exportation : ${err.message}\nVérifiez la console pour plus de détails.`);
-    }
+    alert('✅ Les rapports PDF et Word ont été générés avec succès !');
+  } catch (err) {
+    console.error('Error during dual export:', err);
+    alert(`❌ Erreur lors de l'exportation : ${err.message}\nVérifiez la console pour plus de détails.`);
+    throw err; // Stop execution to prevent misleading "completed" logs
+  }
 }
 
 async exportGenreReport() {
@@ -1083,79 +1081,102 @@ async exportGenreWordReport() {
  * @returns {string} Contenu HTML
  */
 generateHTMLReport() {
-    const reportData = this.data?.rapportComplet || {};
-    const globalStats = reportData['Synthèse Globale'] || [];
-    const hommes = Number(globalStats.find(item => item.indicateur === 'Hommes')?.valeur) || 43576;
-    const femmes = Number(globalStats.find(item => item.indicateur === 'Femmes')?.valeur) || 9332;
-    const total = hommes + femmes;
-    const femmesPourcentage = ((femmes / total) * 100).toFixed(1);
+  const reportData = this.data?.rapportComplet || {};
+  const globalStats = reportData['Synthèse Globale'] || [];
+  const hommes = Number(globalStats.find(item => item.indicateur === 'Hommes')?.valeur) || 43576;
+  const femmes = Number(globalStats.find(item => item.indicateur === 'Femmes')?.valeur) || 9332;
+  const total = hommes + femmes;
+  const femmesPourcentage = ((femmes / total) * 100).toFixed(1);
 
-    return `
-    <!DOCTYPE html>
-    <html lang="fr">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Rapport Genre PROCASEF</title>
-        <style>
-            body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
-            .header { text-align: center; margin-bottom: 40px; }
-            .title { color: #2980b9; font-size: 28px; font-weight: bold; }
-            .subtitle { color: #34495e; font-size: 20px; margin: 10px 0; }
-            .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 30px 0; }
-            .stat-card { background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #2980b9; }
-            .stat-value { font-size: 24px; font-weight: bold; color: #2c3e50; }
-            .stat-label { color: #7f8c8d; font-size: 14px; }
-            .section { margin: 30px 0; }
-            .section-title { color: #2980b9; font-size: 18px; font-weight: bold; margin-bottom: 15px; }
-            .alert { background: #fef9e7; border: 1px solid #f39c12; padding: 15px; border-radius: 5px; margin: 20px 0; }
-            .recommendations { background: #eaf4fd; padding: 20px; border-radius: 8px; }
-            .footer { text-align: center; margin-top: 50px; color: #7f8c8d; font-size: 12px; }
-        </style>
-    </head>
-    <body>
-        <div class="header">
-            <h1 class="title">RAPPORT GENRE</h1>
-            <h2 class="subtitle">PROCASEF Boundou</h2>
-            <p>Généré le ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-        </div>
+  // Capture chart images
+  const chartConfigs = [
+    { id: 'rapportSourceChart', title: 'Détail par Source' },
+    { id: 'rapportCommuneMixedChart', title: 'Analyse par Commune' },
+    { id: 'rapportTemporalChart', title: 'Évolution Temporelle' },
+    { id: 'rapportRegionPolarChart', title: 'Répartition par Région' },
+  ];
 
+  let chartImages = '';
+  chartConfigs.forEach(config => {
+    const canvas = document.getElementById(config.id);
+    if (canvas?.tagName === 'CANVAS') {
+      const chartImg = canvas.toDataURL('image/png', 1.0);
+      chartImages += `
         <div class="section">
-            <h2 class="section-title">📊 SYNTHÈSE EXÉCUTIVE</h2>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value">${total.toLocaleString('fr-FR')}</div>
-                    <div class="stat-label">Total Bénéficiaires</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${femmes.toLocaleString('fr-FR')}</div>
-                    <div class="stat-label">Femmes</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${femmesPourcentage}%</div>
-                    <div class="stat-label">Pourcentage Femmes</div>
-                </div>
-            </div>
-        </div>
+          <h2 class="section-title">${config.title}</h2>
+          <img src="${chartImg}" alt="${config.title}" style="max-width: 100%; margin: 20px 0;">
+        </div>`;
+    }
+  });
 
-        <div class="alert">
-            <strong>🔍 ANALYSE AUTOMATIQUE:</strong><br>
-            ${this.generateWordAnalysis(reportData)}
-        </div>
+  return `
+  <!DOCTYPE html>
+  <html lang="fr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapport Genre PROCASEF</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+      .header { text-align: center; margin-bottom: 40px; }
+      .title { color: #2980b9; font-size: 28px; font-weight: bold; }
+      .subtitle { color: #34495e; font-size: 20px; margin: 10px 0; }
+      .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 30px 0; }
+      .stat-card { background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #2980b9; }
+      .stat-value { font-size: 24px; font-weight: bold; color: #2c3e50; }
+      .stat-label { color: #7f8c8d; font-size: 14px; }
+      .section { margin: 30px 0; }
+      .section-title { color: #2980b9; font-size: 18px; font-weight: bold; margin-bottom: 15px; }
+      .alert { background: #fef9e7; border: 1px solid #f39c12; padding: 15px; border-radius: 5px; margin: 20px 0; }
+      .recommendations { background: #eaf4fd; padding: 20px; border-radius: 8px; }
+      .footer { text-align: center; margin-top: 50px; color: #7f8c8d; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1 class="title">RAPPORT GENRE</h1>
+      <h2 class="subtitle">PROCASEF Boundou</h2>
+      <p>Généré le ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+    </div>
 
-        <div class="section recommendations">
-            <h2 class="section-title">🎯 RECOMMANDATIONS</h2>
-            ${this.generateStrategicRecommendations(reportData).map((rec, i) => 
-                `<h3>${i + 1}. ${rec.title}</h3><p>${rec.description}</p>`
-            ).join('')}
+    <div class="section">
+      <h2 class="section-title">📊 SYNTHÈSE EXÉCUTIVE</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value">${total.toLocaleString('fr-FR')}</div>
+          <div class="stat-label">Total Bénéficiaires</div>
         </div>
+        <div class="stat-card">
+          <div class="stat-value">${femmes.toLocaleString('fr-FR')}</div>
+          <div class="stat-label">Femmes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${femmesPourcentage}%</div>
+          <div class="stat-label">Pourcentage Femmes</div>
+        </div>
+      </div>
+    </div>
 
-        <div class="footer">
-            <p>PROCASEF Dashboard - Rapport Genre Automatisé</p>
-            <p>Contact: procasef@example.com | www.procasef.com</p>
-        </div>
-    </body>
-    </html>`;
+    ${chartImages}
+
+    <div class="alert">
+      <strong>🔍 ANALYSE AUTOMATIQUE:</strong><br>
+      ${this.generateWordAnalysis(reportData)}
+    </div>
+
+    <div class="section recommendations">
+      <h2 class="section-title">🎯 RECOMMANDATIONS</h2>
+      ${this.generateStrategicRecommendations(reportData).map((rec, i) => 
+        `<h3>${i + 1}. ${rec.title}</h3><p>${rec.description}</p>`
+      ).join('')}
+    </div>
+
+    <div class="footer">
+      <p>PROCASEF Dashboard - Rapport Genre Automatisé</p>
+      <p>Contact: procasef@example.com | www.procasef.com</p>
+    </div>
+  </body>
+  </html>`;
 }
 
 /**
@@ -3228,5 +3249,22 @@ async ensureGenreDataLoaded() {
 
 // Initialisation de l'application
 document.addEventListener('DOMContentLoaded', () => {
-    window.procasefDashboard = new ProcasefDashboard();
+  // Check for critical dependencies
+  const dependencies = {
+    jsPDF: typeof window.jsPDF !== 'undefined',
+    docx: typeof window.docx !== 'undefined',
+    Chart: typeof window.Chart !== 'undefined',
+  };
+  console.log('Dependencies check:', dependencies);
+
+  if (!dependencies.jsPDF) {
+    console.error('jsPDF is not loaded. Please ensure the jsPDF library is included.');
+    alert('Erreur : jsPDF non chargé. Vérifiez que la bibliothèque est incluse.');
+    return;
+  }
+  if (!dependencies.docx) {
+    console.error('docx is not loaded. Please ensure the docx library is included.');
+    alert('Erreur : docx non chargé. Vérifiez que la bibliothèque est incluse.');
+    return;
+  }
 });
