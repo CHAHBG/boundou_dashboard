@@ -694,7 +694,7 @@ class ProcasefDashboard {
         this.createPostCharts();
     }
     
-// ================= VERSION OPTIMISÉE - EXPORT PDF/WORD ====================================
+// ================= VERSION OPTIMISÉE - EXPORT PDF/WORD CORRIGÉE ====================================
 
 /**
  * Version optimisée de l'exportation PDF du rapport genre
@@ -718,18 +718,22 @@ async exportBothReports() {
   } catch (err) {
     console.error('Error during dual export:', err);
     alert(`❌ Erreur lors de l'exportation : ${err.message}\nVérifiez la console pour plus de détails.`);
-    throw err; // Stop execution to prevent misleading "completed" logs
+    throw err;
   }
 }
 
 async exportGenreReport() {
     try {
-        // Vérification des dépendances
-        if (typeof window.jspdf === 'undefined') {
-            throw new Error('jsPDF non chargé');
+        // Vérification des dépendances - CORRECTION ICI
+        if (typeof window.jspdf === 'undefined' && typeof jsPDF === 'undefined') {
+            throw new Error('jsPDF non chargé. Assurez-vous que la bibliothèque jsPDF est incluse.');
         }
 
-        ; // Corrected to lowercase 'jspdf'
+        // Utiliser la bonne référence jsPDF - CORRECTION
+        const { jsPDF } = window.jspdf || window;
+        if (!jsPDF) {
+            throw new Error('jsPDF constructor non trouvé');
+        }
 
         // Charger les données si nécessaire
         if (!this.data?.rapportComplet || !Object.keys(this.data.rapportComplet).length) {
@@ -743,18 +747,6 @@ async exportGenreReport() {
         const reportData = this.data?.rapportComplet || {};
         console.log('Données du rapport:', reportData);
 
-        //;
-
-        // Charger les données si nécessaire
-        if (!this.data?.rapportComplet || !Object.keys(this.data.rapportComplet).length) {
-            try {
-                await this.loadDataSafely('data/rapport_complet.json', 'rapportComplet');
-            } catch (error) {
-                console.warn('Impossible de charger rapport_complet.json, utilisation des données existantes');
-            }
-        }
-
-        
         // Configurations des graphiques
         const chartConfigs = [
             { id: 'rapportSourceChart', title: 'Détail par Source', section: 'Détail par Source' },
@@ -768,7 +760,7 @@ async exportGenreReport() {
         for (const config of chartConfigs) {
             const canvas = document.getElementById(config.id);
             if (canvas?.tagName === 'CANVAS') {
-                await new Promise(resolve => setTimeout(resolve, 800)); // Attendre le rendu
+                await new Promise(resolve => setTimeout(resolve, 800));
                 const scale = 3;
                 const tempCanvas = document.createElement('canvas');
                 tempCanvas.width = canvas.width * scale;
@@ -797,7 +789,7 @@ async exportGenreReport() {
             }
         }
 
-        // Création du PDF - CORRECTION: une seule déclaration de doc
+        // Création du PDF - CORRECTION: utiliser jsPDF correctement
         const pdfDoc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
         
         // Vérification autoTable
@@ -819,9 +811,9 @@ async exportGenreReport() {
         const formatNumber = (value) => {
             if (value == null) return '0';
             const strValue = String(value)
-                .replace(/\s*\/\s*/g, '') // Supprimer les /
-                .replace(/[^\d\s,-]/g, '') // Garder chiffres, espaces, virgules, tirets
-                .replace(/\s+/g, ' ') // Normaliser espaces
+                .replace(/\s*\/\s*/g, '')
+                .replace(/[^\d\s,-]/g, '')
+                .replace(/\s+/g, ' ')
                 .trim();
             const numValue = parseFloat(strValue.replace(/\s/g, '').replace(',', '.'));
             return isNaN(numValue) ? strValue : numValue.toLocaleString('fr-FR');
@@ -835,8 +827,8 @@ async exportGenreReport() {
                 for (const [key, value] of Object.entries(obj)) {
                     cleaned[key] = typeof value === 'string'
                         ? value
-                            .replace(/\s*\/\s*/g, '') // Supprimer les /
-                            .replace(/[Ø=ÜÉ]/g, '') // Supprimer caractères bizarres
+                            .replace(/\s*\/\s*/g, '')
+                            .replace(/[Ø=ÜÉ]/g, '')
                             .replace(/\s+/g, ' ')
                             .trim()
                         : typeof value === 'object'
@@ -943,7 +935,7 @@ async exportGenreReport() {
         let errorMsg = 'Échec de la génération du rapport PDF.\n\n';
         if (err.message.includes('jsPDF')) {
             errorMsg += '❌ Bibliothèque jsPDF non trouvée.\nAssurez-vous que jsPDF est chargé.';
-        } else if (err.message.includes('Canvas')) {
+        } else if (err..includes('Canvas')) {
             errorMsg += '❌ Impossible de capturer les graphiques.\nVérifiez que les graphiques sont affichés.';
         } else {
             errorMsg += `Erreur: ${err.message}\nVérifiez la console pour plus de détails.`;
@@ -1017,7 +1009,6 @@ async exportGenreWordReport() {
         const convertedImages = await Promise.all(
             chartImages.map(async (chart) => {
                 try {
-                    // Convertir l'image canvas en format compatible docx
                     const response = await fetch(chart.image);
                     const blob = await response.blob();
                     const arrayBuffer = await blob.arrayBuffer();
@@ -1100,7 +1091,6 @@ async exportGenreWordReport() {
     }
 }
 
-
 /**
  * Capture les graphiques spécifiquement pour Word
  */
@@ -1118,9 +1108,8 @@ async captureChartsForWord() {
         const canvas = document.getElementById(config.id);
         if (canvas?.tagName === 'CANVAS') {
             try {
-                await new Promise(resolve => setTimeout(resolve, 500)); // Attendre le rendu
+                await new Promise(resolve => setTimeout(resolve, 500));
                 
-                // Créer un canvas optimisé pour Word
                 const scale = 2;
                 const tempCanvas = document.createElement('canvas');
                 tempCanvas.width = canvas.width * scale;
@@ -1437,6 +1426,7 @@ generateHTMLTable(tableData) {
         </table>
     `;
 }
+
 /**
  * Crée une page de couverture moderne
  * @param {Object} doc - Instance jsPDF
@@ -1644,54 +1634,6 @@ createWordStatsTable(reportData, formatNumber) {
         }),
         new window.docx.Paragraph({ text: '' }),
     ];
-}
-
-/**
- * Crée le contenu des sections pour Word
- * @param {Object} reportData - Données nettoyées
- * @param {Function} formatNumber - Fonction de formatage
- * @returns {Object[]} Éléments du document
- */
-createWordSectionContent(reportData, formatNumber) {
-    const content = [
-        new window.docx.Paragraph({ children: [new window.docx.PageBreak()] }),
-        new window.docx.Paragraph({ style: 'Heading1', children: [new window.docx.TextRun({ text: '📊 DÉTAIL PAR SOURCE' })] }),
-    ];
-
-    const sourceData = reportData['Détail par Source'] || [];
-    if (sourceData.length) {
-        content.push(
-            new window.docx.Table({
-                rows: [
-                    new window.docx.TableRow({
-                        children: [
-                            new window.docx.TableCell({ children: [new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: 'Source/Genre', bold: true })] })] }),
-                            new window.docx.TableCell({ children: [new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: 'Bénéficiaires', bold: true })] })] }),
-                            new window.docx.TableCell({ children: [new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: 'Pourcentage', bold: true })] })] }),
-                        ],
-                    }),
-                    ...sourceData.flatMap(item => [
-                        new window.docx.TableRow({
-                            children: [
-                                new window.docx.TableCell({ children: [new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: `${item.source} - Hommes` })] })] }),
-                                new window.docx.TableCell({ children: [new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: formatNumber(item.hommes) })] })] }),
-                                new window.docx.TableCell({ children: [new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: `${(item.hommes_1 || 0).toFixed(1)}%` })] })] }),
-                            ],
-                        }),
-                        new window.docx.TableRow({
-                            children: [
-                                new window.docx.TableCell({ children: [new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: `${item.source} - Femmes` })] })] }),
-                                new window.docx.TableCell({ children: [new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: formatNumber(item.femmes) })] })] }),
-                                new window.docx.TableCell({ children: [new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: `${(item.femmes_1 || 0).toFixed(1)}%` })] })] }),
-                            ],
-                        }),
-                    ]),
-                ],
-            })
-        );
-    }
-
-    return content;
 }
 
 /**
@@ -1938,30 +1880,6 @@ getEnhancedTableDataForChart(section, reportData, formatNumber) {
             let table = [['Source/Genre', 'Bénéficiaires', 'Pourcentage']];
             sourceData.forEach(item => {
                 table.push([
-                    `${item.source} - Hommes`,
-                    formatNumber(item.hommes),
-                    `${(item.hommes_1 || 0).toFixed(1)}%`
-                ]);
-                table.push([
-                    `${item.source} - Femmes`,
-                    formatNumber(item.femmes),
-                    `${(item.femmes_1 || 0).toFixed(1)}%`
-                ]);
-            });
-            return table;
-        }
-        case 'Analyse par Commune': {
-            const communeData = reportData['Analyse par Commune'] || [];
-            if (!communeData.length) {
-                return [['Commune', 'Population', '% Femmes'], ['Aucune donnée', '0', '0%']];
-            }
-            let table = [['Commune', 'Population Totale', '% Femmes', 'Rang Genre']];
-            const sortedCommunes = communeData
-                .sort((a, b) => (b.femme_pourcentage || 0) - (a.femme_pourcentage || 0))
-                .slice(0, 10);
-            sortedCommunes.forEach((item, index) => {
-                const emoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}°`;
-                table.push([
                     item.communesenegal || item.commune || 'N/A',
                     formatNumber(item.total),
                     `${(item.femme_pourcentage || 0).toFixed(1)}%`,
@@ -2088,23 +2006,237 @@ async ensureGenreDataLoaded() {
     await Promise.allSettled(dataPromises);
 }
 
-// ================= FIN DU CODE OPTIMISÉ ====================================
-    populatePostFilters() {
-        const communes = ['NDOGA BABACAR', 'BANDAFASSI', 'DIMBOLI', 'MISSIRAH', 'NETTEBOULOU'];
-        const geometres = ['FALL Mamadou', 'DIALLO Aissatou', 'NDIAYE Ousmane'];
+// ================= FONCTIONS UTILITAIRES SUPPLÉMENTAIRES ====================================
 
-        const communeSelect = document.getElementById('postCommuneFilter');
-        if (communeSelect) {
-            communeSelect.innerHTML = '<option value="">Toutes les communes</option>' +
-                communes.map(commune => `<option value="${commune}">${commune}</option>`).join('');
-        }
-
-        const geomSelect = document.getElementById('postGeomFilter');
-        if (geomSelect) {
-            geomSelect.innerHTML = '<option value="">Tous les géomètres</option>' +
-                geometres.map(geom => `<option value="${geom}">${geom}</option>`).join('');
-        }
+/**
+ * Vérifie la disponibilité de jsPDF avec différentes méthodes de chargement
+ * @returns {Object|null} Instance jsPDF ou null
+ */
+getJsPDFInstance() {
+    // Méthode 1: window.jspdf (version moderne)
+    if (typeof window.jspdf !== 'undefined' && window.jspdf.jsPDF) {
+        return window.jspdf.jsPDF;
     }
+    
+    // Méthode 2: jsPDF global (version classique)
+    if (typeof jsPDF !== 'undefined') {
+        return jsPDF;
+    }
+    
+    // Méthode 3: window.jsPDF
+    if (typeof window.jsPDF !== 'undefined') {
+        return window.jsPDF;
+    }
+    
+    return null;
+}
+
+/**
+ * Initialise les constantes de styles si elles n'existent pas
+ */
+initializeStyleConstants() {
+    if (!this.COLORS) {
+        this.COLORS = {
+            PRIMARY: [41, 128, 185],
+            SECONDARY: [52, 73, 94],
+            NEUTRAL: [149, 165, 166],
+            BACKGROUND: [236, 240, 241],
+            SUCCESS: [39, 174, 96],
+            WARNING: [243, 156, 18],
+            DANGER: [231, 76, 60],
+            TEXT: [44, 62, 80],
+            LIGHT: [189, 195, 199]
+        };
+    }
+    
+    if (!this.FONT_SIZES) {
+        this.FONT_SIZES = {
+            TITLE: 16,
+            SUBTITLE: 14,
+            BODY: 10,
+            SMALL: 8,
+            LARGE: 20
+        };
+    }
+    
+    if (!this.MARGINS) {
+        this.MARGINS = {
+            DEFAULT: 40,
+            TEXT: 10,
+            SECTION: 20
+        };
+    }
+}
+
+/**
+ * Génère un résumé exécutif détaillé
+ * @param {Object} reportData - Données du rapport
+ * @returns {string} Résumé exécutif
+ */
+generateExecutiveSummary(reportData) {
+    const globalStats = reportData['Synthèse Globale'] || [];
+    const hommes = Number(globalStats.find(item => item.indicateur === 'Hommes')?.valeur) || 0;
+    const femmes = Number(globalStats.find(item => item.indicateur === 'Femmes')?.valeur) || 0;
+    const total = hommes + femmes;
+    const femmesPourcentage = total > 0 ? ((femmes / total) * 100).toFixed(1) : 0;
+    
+    let summary = `Le programme PROCASEF Boundou compte actuellement ${total.toLocaleString('fr-FR')} bénéficiaires, `;
+    summary += `dont ${femmes.toLocaleString('fr-FR')} femmes (${femmesPourcentage}%) et ${hommes.toLocaleString('fr-FR')} hommes. `;
+    
+    if (femmesPourcentage < 20) {
+        summary += 'La représentation féminine est critiquement faible et nécessite des actions correctives immédiates.';
+    } else if (femmesPourcentage < 30) {
+        summary += 'La participation féminine demeure insuffisante par rapport aux standards internationaux.';
+    } else if (femmesPourcentage < 40) {
+        summary += 'Des progrès notables sont observés vers une meilleure inclusion genre.';
+    } else {
+        summary += 'L\'objectif de parité genre est en bonne voie d\'être atteint.';
+    }
+    
+    return summary;
+}
+
+/**
+ * Crée un diagnostic détaillé par section
+ * @param {string} section - Nom de la section
+ * @param {Object} reportData - Données du rapport
+ * @returns {Object} Diagnostic avec points forts et défis
+ */
+createSectionDiagnostic(section, reportData) {
+    const diagnostic = {
+        pointsForts: [],
+        defis: [],
+        recommandations: [],
+        indicateursClés: []
+    };
+    
+    switch (section) {
+        case 'Détail par Source':
+            const sourceData = reportData['Détail par Source'] || [];
+            if (sourceData.length) {
+                sourceData.forEach(source => {
+                    const femmesPct = source.femmes_1 || 0;
+                    if (femmesPct > 25) {
+                        diagnostic.pointsForts.push(`Source ${source.source}: bonne inclusion (${femmesPct.toFixed(1)}%)`);
+                    } else {
+                        diagnostic.defis.push(`Source ${source.source}: inclusion insuffisante (${femmesPct.toFixed(1)}%)`);
+                    }
+                });
+            }
+            break;
+            
+        case 'Analyse par Commune':
+            const communeData = reportData['Analyse par Commune'] || [];
+            if (communeData.length) {
+                const sorted = communeData.sort((a, b) => (b.femme_pourcentage || 0) - (a.femme_pourcentage || 0));
+                if (sorted.length > 0) {
+                    diagnostic.pointsForts.push(`${sorted[0].communesenegal || sorted[0].commune}: meilleure performance (${(sorted[0].femme_pourcentage || 0).toFixed(1)}%)`);
+                }
+                if (sorted.length > 1) {
+                    const derniere = sorted[sorted.length - 1];
+                    diagnostic.defis.push(`${derniere.communesenegal || derniere.commune}: nécessite un appui renforcé (${(derniere.femme_pourcentage || 0).toFixed(1)}%)`);
+                }
+            }
+            break;
+    }
+    
+    return diagnostic;
+}
+
+/**
+ * Ajoute des métadonnées au document PDF
+ * @param {Object} doc - Instance jsPDF
+ */
+addPDFMetadata(doc) {
+    doc.setProperties({
+        title: 'Rapport Genre PROCASEF Boundou',
+        subject: 'Analyse de la répartition genre dans le programme PROCASEF',
+        author: 'PROCASEF Dashboard',
+        keywords: 'genre, PROCASEF, inclusion, rapport, analyse',
+        creator: 'PROCASEF Dashboard - Système de Reporting Automatisé',
+        producer: 'jsPDF + autoTable'
+    });
+}
+
+/**
+ * Crée une table des matières pour le PDF
+ * @param {Object} doc - Instance jsPDF
+ * @param {Array} sections - Liste des sections
+ */
+createTableOfContents(doc, sections) {
+    const colors = this.COLORS || { PRIMARY: [41, 128, 185], SECONDARY: [52, 73, 94] };
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = this.MARGINS?.DEFAULT || 40;
+    let currentY = 80;
+    
+    // Titre de la table des matières
+    doc.setFontSize(this.FONT_SIZES?.TITLE || 16);
+    doc.setTextColor(...colors.PRIMARY);
+    doc.text('TABLE DES MATIÈRES', margin, currentY);
+    currentY += 40;
+    
+    // Liste des sections
+    doc.setFontSize(this.FONT_SIZES?.BODY || 10);
+    doc.setTextColor(0, 0, 0);
+    
+    sections.forEach((section, index) => {
+        const dotLine = '.'.repeat(Math.floor((pageWidth - margin * 2 - doc.getTextWidth(section.title) - doc.getTextWidth(section.page.toString())) / doc.getTextWidth('.')));
+        doc.text(`${section.title} ${dotLine} ${section.page}`, margin, currentY);
+        currentY += 20;
+    });
+}
+
+/**
+ * Génère des alertes basées sur les seuils critiques
+ * @param {Object} reportData - Données du rapport
+ * @returns {Array} Liste des alertes
+ */
+generateAlerts(reportData) {
+    const alerts = [];
+    const globalStats = reportData['Synthèse Globale'] || [];
+    const femmes = Number(globalStats.find(item => item.indicateur === 'Femmes')?.valeur) || 0;
+    const total = Number(globalStats.find(item => item.indicateur === 'Total Personnes')?.valeur) || 0;
+    const femmesPourcentage = total > 0 ? (femmes / total) * 100 : 0;
+    
+    // Alerte critique si moins de 15%
+    if (femmesPourcentage < 15) {
+        alerts.push({
+            type: 'CRITIQUE',
+            title: 'Représentation féminine critiquement faible',
+            description: `Seulement ${femmesPourcentage.toFixed(1)}% de femmes bénéficiaires. Action immédiate requise.`,
+            priority: 1,
+            icon: '🚨'
+        });
+    }
+    
+    // Alerte si moins de 25%
+    else if (femmesPourcentage < 25) {
+        alerts.push({
+            type: 'ATTENTION',
+            title: 'Objectif de parité non atteint',
+            description: `${femmesPourcentage.toFixed(1)}% de femmes. Objectif minimal de 30% non atteint.`,
+            priority: 2,
+            icon: '⚠️'
+        });
+    }
+    
+    // Vérifier les communes avec faible performance
+    const communeData = reportData['Analyse par Commune'] || [];
+    const communesFaibles = communeData.filter(c => (c.femme_pourcentage || 0) < 15);
+    if (communesFaibles.length > 0) {
+        alerts.push({
+            type: 'ATTENTION',
+            title: `${communesFaibles.length} commune(s) avec faible inclusion`,
+            description: `Communes nécessitant un appui renforcé: ${communesFaibles.map(c => c.communesenegal || c.commune).join(', ')}`,
+            priority: 2,
+            icon: '📍'
+        });
+    }
+    
+    return alerts.sort((a, b) => a.priority - b.priority);
+}
+
+// ================= FIN DU CODE OPTIMISÉ ET CORRIGÉ ====================================
 
     createPostCharts() {
         if (!window.chartManager) return;
