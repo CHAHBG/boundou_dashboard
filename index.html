@@ -637,7 +637,7 @@
     <script src="https://unpkg.com/jspdf-autotable@3.6.0/dist/jspdf.plugin.autotable.min.js"></script>
     
     <!-- Other libraries -->
-    <script src="https://unpkg.com/docx@9.0.0/build/index.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/9.0.0/docx.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
@@ -707,11 +707,14 @@
         console.log('Papa:', typeof Papa);
         console.log('L (Leaflet):', typeof L);
         console.log('docx:', typeof docx);
-        console.log('All window properties containing "pdf":', Object.keys(window).filter(key => key.toLowerCase().includes('pdf')));
+        console.log('window.docx:', typeof window.docx);
+        console.log('All window properties containing "docx":', Object.keys(window).filter(key => key.toLowerCase().includes('docx')));
+        console.log('All window properties containing "doc":', Object.keys(window).filter(key => key.toLowerCase().includes('doc')));
+        console.log('Available global properties:', Object.keys(window).filter(key => key.length > 3 && !key.startsWith('_')).slice(0, 20));
         
         // Check if scripts loaded successfully
-        const scripts = document.querySelectorAll('script[src*="jspdf"]');
-        console.log('jsPDF script tags found:', scripts.length);
+        const scripts = document.querySelectorAll('script[src*="jspdf"], script[src*="docx"]');
+        console.log('PDF/DOCX script tags found:', scripts.length);
         scripts.forEach((script, index) => {
             console.log(`Script ${index + 1}:`, script.src);
             console.log(`Script ${index + 1} loaded:`, !script.onerror);
