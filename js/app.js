@@ -1887,7 +1887,7 @@ createWordRecommendations(reportData) {
 generateGenderAnalysis(hommes, femmes, femmesPourcentage) {
     const pourcentage = parseFloat(femmesPourcentage) || 0;
     if (pourcentage < 20) {
-        return `⚠️ ALERTE : Représentation féminine critiquement faible (${pourcentage.toFixed(1)}%). Action corrective urgente requise.`;
+        return `⚠️ ALERTE : Représentation féminine critiquement faible (${pourcentage.toFixed(1)}%).`;
     } else if (pourcentage < 30) {
         return `📉 Représentation féminine insuffisante (${pourcentage.toFixed(1)}%). Efforts supplémentaires nécessaires.`;
     } else if (pourcentage < 40) {
@@ -1966,7 +1966,7 @@ generateSectionAnalysis(section, reportData) {
                 if (evolution > 0) {
                     return `Tendance positive : +${evolution.toFixed(1)}% entre ${precedent.periode} et ${recent.periode}. Maintenir la progression.`;
                 } else if (evolution < 0) {
-                    return `Tendance préoccupante : ${evolution.toFixed(1)}% entre ${precedent.periode} et ${recent.periode}. Actions correctives nécessaires.`;
+                    return `Tendance préoccupante : ${evolution.toFixed(1)}% entre ${precedent.periode} et ${recent.periode}.`;
                 }
                 return `Stabilité entre ${precedent.periode} et ${recent.periode}. Explorer de nouvelles stratégies.`;
             }
