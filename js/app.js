@@ -729,7 +729,7 @@ async exportGenreReport() {
             throw new Error('jsPDF non chargé');
         }
 
-        const { jsPDF } = window.jspdf; // Corrected to lowercase 'jspdf'
+        ; // Corrected to lowercase 'jspdf'
 
         // Charger les données si nécessaire
         if (!this.data?.rapportComplet || !Object.keys(this.data.rapportComplet).length) {
@@ -743,7 +743,7 @@ async exportGenreReport() {
         const reportData = this.data?.rapportComplet || {};
         console.log('Données du rapport:', reportData);
 
-        //const { jsPDF } = window.jsPDF;
+        //;
 
         // Charger les données si nécessaire
         if (!this.data?.rapportComplet || !Object.keys(this.data.rapportComplet).length) {
@@ -3262,11 +3262,11 @@ async ensureGenreDataLoaded() {
 // Initialisation de l'application
 document.addEventListener('DOMContentLoaded', () => {
   // Check for critical dependencies
-  const dependencies = {
-    jsPDF: typeof window.jsPDF !== 'undefined',
-    docx: typeof window.docx !== 'undefined',
-    Chart: typeof window.Chart !== 'undefined',
-  };
+    const dependencies = {
+        jsPDF: typeof window.jspdf !== 'undefined' && typeof window.jspdf.jsPDF === 'function',  // ✅ Correct
+        docx: typeof docx !== 'undefined',
+        Chart: typeof Chart !== 'undefined'
+    };
   console.log('Dependencies check:', dependencies);
 
   if (!dependencies.jsPDF) {
