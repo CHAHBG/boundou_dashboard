@@ -3263,8 +3263,8 @@ async ensureGenreDataLoaded() {
 document.addEventListener('DOMContentLoaded', () => {
   // Check for critical dependencies
     const dependencies = {
-        jsPDF: typeof window.jspdf !== 'undefined' && typeof window.jspdf.jsPDF === 'function',  // ✅ Correct
-        docx: typeof docx !== 'undefined',
+        jsPDF: typeof window.jspdf !== 'undefined' && typeof window.jspdf.jsPDF === 'function',
+        docx: typeof window.docx !== 'undefined' || typeof docx !== 'undefined',
         Chart: typeof Chart !== 'undefined'
     };
   console.log('Dependencies check:', dependencies);
