@@ -743,7 +743,7 @@ async exportGenreReport() {
         const reportData = this.data?.rapportComplet || {};
         console.log('Données du rapport:', reportData);
 
-        const { jsPDF } = window.jsPDF;
+        //const { jsPDF } = window.jsPDF;
 
         // Charger les données si nécessaire
         if (!this.data?.rapportComplet || !Object.keys(this.data.rapportComplet).length) {
