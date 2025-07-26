@@ -678,115 +678,383 @@ class ProcasefDashboard {
      * – Graphe donut Hommes/Femmes
      * – Explications textuelles
      */
+/**
+ * Exporte un rapport complet « Genre » en PDF et Word (.docx)
+ * – Statistiques globales
+ * – Tous les graphiques genre (global, trimestre, commune)
+ * – Explications textuelles
+ */
 async exportGenreReport() {
-        try {
-            await this.ensureGenreDataLoaded();
+    try {
+        await this.ensureGenreDataLoaded();
 
-            const hommes = this.data.repartitionGenre.find(r => r.genre === 'Homme');
-            const femmes = this.data.repartitionGenre.find(r => r.genre === 'Femme');
-            const totalHommes = hommes ? hommes.total_nombre : 43576;
-            const totalFemmes = femmes ? femmes.total_nombre : 9332;
-            const total = totalHommes + totalFemmes;
+        // S'assurer que tous les graphiques sont rendus en naviguant vers les sections
+        const currentSection = this.currentSection;
+        
+        // Naviguer vers genre pour s'assurer que les graphiques sont rendus
+        if (currentSection !== 'genre') {
+            await this.navigateToSection('genre');
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Attendre le rendu
+        }
+        
+        // Naviguer vers rapport pour les graphiques du rapport
+        await this.navigateToSection('rapport');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Naviguer vers parcelles pour le graphique régional
+        await this.navigateToSection('parcelles');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Revenir à la section genre
+        await this.navigateToSection('genre');
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-            // Capturer les images des graphiques
-            const chartCanvases = document.querySelectorAll('.genre-chart'); // Ajustez le sélecteur selon vos IDs (ex. #genreGlobalChart)
-            const chartImages = [];
-            for (const canvas of chartCanvases) {
-                if (canvas.tagName === 'CANVAS') {
-                    await new Promise(resolve => setTimeout(resolve, 500)); // Délai pour garantir le rendu
-                    const chartImg = canvas.toDataURL('image/png');
-                    if (chartImg.length > 100) { // Vérifie qu'il y a des données valides
-                        chartImages.push(chartImg);
+        const hommes = this.data.repartitionGenre.find(r => r.genre === 'Homme');
+        const femmes = this.data.repartitionGenre.find(r => r.genre === 'Femme');
+        const totalHommes = hommes ? hommes.total_nombre : 43576;
+        const totalFemmes = femmes ? femmes.total_nombre : 9332;
+        const total = totalHommes + totalFemmes;
+
+        // IDs réels des graphiques genre et connexes dans votre application
+        const chartIds = [
+            'genreGlobalChart',        // Graphique donut global genre
+            'genreTrimestreChart',     // Graphique par trimestre
+            'genreCommuneChart',       // Graphique par commune
+            'regionChart',             // Graphique répartition régionale
+            'topCommunesChart',        // Top communes (contexte)
+            'rapportSourceChart',      // Graphique sources du rapport
+            'rapportCommuneMixedChart', // Graphique mixte communes
+            'rapportTemporalChart',    // Évolution temporelle
+            'rapportRegionPolarChart'  // Graphique polaire régions
+        ];
+
+        // Capturer les images des graphiques
+        const chartImages = [];
+        const chartTitles = [
+            'Répartition Globale par Genre',
+            'Évolution par Trimestre', 
+            'Répartition par Commune (Top 10)',
+            'Répartition Régionale',
+            'Top Communes par Parcelles',
+            'Détail par Source',
+            'Analyse Mixte Communes',
+            'Évolution Temporelle',
+            'Répartition Polaire par Région'
+        ];
+
+        for (let i = 0; i < chartIds.length; i++) {
+            const chartId = chartIds[i];
+            
+            // Naviguer vers la section appropriée selon le graphique
+            if (chartId === 'regionChart' || chartId === 'topCommunesChart') {
+                if (this.currentSection !== 'parcelles') {
+                    await this.navigateToSection('parcelles');
+                    await new Promise(resolve => setTimeout(resolve, 800));
+                }
+            } else if (chartId.startsWith('rapport')) {
+                if (this.currentSection !== 'rapport') {
+                    await this.navigateToSection('rapport');
+                    await new Promise(resolve => setTimeout(resolve, 800));
+                }
+            } else if (chartId.startsWith('genre')) {
+                if (this.currentSection !== 'genre') {
+                    await this.navigateToSection('genre');
+                    await new Promise(resolve => setTimeout(resolve, 800));
+                }
+            }
+            
+            const canvas = document.getElementById(chartId);
+            
+            if (canvas && canvas.tagName === 'CANVAS') {
+                // Attendre que le graphique soit complètement rendu
+                await new Promise(resolve => setTimeout(resolve, 700));
+                
+                try {
+                    const chartImg = canvas.toDataURL('image/png', 1.0);
+                    if (chartImg && chartImg.length > 100 && !chartImg.includes('data:,')) {
+                        chartImages.push({
+                            image: chartImg,
+                            title: chartTitles[i] || `Graphique ${i + 1}`,
+                            section: chartId.startsWith('genre') ? 'Genre' : 
+                                    chartId.startsWith('rapport') ? 'Rapport' : 
+                                    chartId === 'regionChart' || chartId === 'topCommunesChart' ? 'Contexte' : 'Autre'
+                        });
+                        console.log(`✅ Graphique capturé: ${chartId}`);
                     } else {
-                        console.warn('Chart image capture failed for canvas:', canvas.id);
+                        console.warn(`⚠️ Échec capture graphique: ${chartId} - Image vide ou invalide`);
+                    }
+                } catch (error) {
+                    console.error(`❌ Erreur capture ${chartId}:`, error);
+                }
+            } else {
+                console.warn(`⚠️ Canvas non trouvé: ${chartId}`);
+                
+                // Essayer de trouver le graphique dans un conteneur parent
+                const container = document.querySelector(`#${chartId}`);
+                if (container) {
+                    const canvasInContainer = container.querySelector('canvas');
+                    if (canvasInContainer) {
+                        console.log(`🔄 Canvas trouvé dans conteneur pour: ${chartId}`);
+                        try {
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                            const chartImg = canvasInContainer.toDataURL('image/png', 1.0);
+                            if (chartImg && chartImg.length > 100 && !chartImg.includes('data:,')) {
+                                chartImages.push({
+                                    image: chartImg,
+                                    title: chartTitles[i] || `Graphique ${i + 1}`,
+                                    section: 'Récupéré'
+                                });
+                                console.log(`✅ Graphique récupéré depuis conteneur: ${chartId}`);
+                            }
+                        } catch (error) {
+                            console.error(`❌ Erreur capture conteneur ${chartId}:`, error);
+                        }
                     }
                 }
             }
+        }
 
-            // Génération PDF
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
-            doc.setFontSize(18);
-            doc.text('Rapport Genre – PROCASEF Boundou', 40, 40);
-            doc.setFontSize(11);
-            doc.text(`Généré le : ${new Date().toLocaleString('fr-FR')}`, 40, 60);
+        console.log(`📊 ${chartImages.length} graphiques capturés sur ${chartIds.length}`);
 
-            // Ajouter les graphiques au PDF
-            let currentY = 90;
-            chartImages.forEach((img, index) => {
-                doc.addImage(img, 'PNG', 40, currentY, 500, 250);
-                currentY += 260; // Espacement entre les graphiques
-                if (currentY > 700) {
+        // Génération PDF
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+        
+        // En-tête
+        doc.setFontSize(20);
+        doc.setTextColor(30, 58, 138); // Couleur bleu PROCASEF
+        doc.text('Rapport Genre – PROCASEF Boundou', 40, 50);
+        
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Généré le : ${new Date().toLocaleString('fr-FR')}`, 40, 70);
+
+        let currentY = 100;
+
+        // Ajouter le tableau des statistiques globales
+        doc.autoTable({
+            head: [['Indicateur', 'Valeur', 'Pourcentage']],
+            body: [
+                ['Hommes', totalHommes.toLocaleString(), ((totalHommes / total) * 100).toFixed(1) + ' %'],
+                ['Femmes', totalFemmes.toLocaleString(), ((totalFemmes / total) * 100).toFixed(1) + ' %'],
+                ['Total', total.toLocaleString(), '100 %']
+            ],
+            startY: currentY,
+            headStyles: { 
+                fillColor: [212, 165, 116], // Couleur primaire PROCASEF
+                textColor: [255, 255, 255],
+                fontSize: 12
+            },
+            styles: { 
+                fontSize: 11, 
+                cellPadding: 8,
+                lineColor: [200, 200, 200],
+                lineWidth: 0.5
+            },
+            alternateRowStyles: { fillColor: [249, 250, 251] }
+        });
+
+        currentY = doc.lastAutoTable.finalY + 30;
+
+        // Ajouter les graphiques au PDF par section
+        const sections = ['Genre', 'Contexte', 'Rapport', 'Autre'];
+        
+        sections.forEach(sectionName => {
+            const sectionCharts = chartImages.filter(chart => chart.section === sectionName);
+            if (sectionCharts.length === 0) return;
+            
+            // Vérifier si on a assez d'espace, sinon nouvelle page
+            if (currentY > 650) {
+                doc.addPage();
+                currentY = 50;
+            }
+            
+            // Titre de section
+            doc.setFontSize(16);
+            doc.setTextColor(184, 134, 11); // Couleur accent
+            doc.text(`${sectionName}`, 40, currentY);
+            currentY += 25;
+            
+            sectionCharts.forEach((chartData, index) => {
+                // Vérifier si on a assez d'espace, sinon nouvelle page
+                if (currentY > 600) {
                     doc.addPage();
-                    currentY = 90;
+                    currentY = 50;
+                }
+
+                // Titre du graphique
+                doc.setFontSize(13);
+                doc.setTextColor(30, 58, 138);
+                doc.text(chartData.title, 40, currentY);
+                currentY += 20;
+
+                // Ajouter l'image du graphique
+                try {
+                    doc.addImage(chartData.image, 'PNG', 40, currentY, 520, 240);
+                    currentY += 260;
+                } catch (error) {
+                    console.error('Erreur ajout image PDF:', error);
+                    doc.setFontSize(10);
+                    doc.setTextColor(255, 0, 0);
+                    doc.text(`Erreur lors de l'ajout du graphique: ${chartData.title}`, 40, currentY);
+                    currentY += 20;
                 }
             });
+        });
 
-            // Ajouter le tableau
-            doc.autoTable({
-                head: [['Genre', 'Population', 'Pourcentage']],
-                body: [
-                    ['Hommes', totalHommes.toLocaleString(), ((totalHommes / total) * 100).toFixed(1) + ' %'],
-                    ['Femmes', totalFemmes.toLocaleString(), ((totalFemmes / total) * 100).toFixed(1) + ' %'],
-                    ['Total', total.toLocaleString(), '100 %']
-                ],
-                startY: currentY + 20,
-                headStyles: { fillColor: this.colors.primary },
-                styles: { fontSize: 10, cellPadding: 4 }
-            });
-
-            doc.setFontSize(12);
-            const finalY = doc.lastAutoTable.finalY || (currentY + 250);
-            doc.text(
-                'Les graphiques ci-dessus illustrent la répartition globale et détaillée par genre dans les inventaires PROCASEF. ' +
-                'On constate une nette prédominance masculine, liée aux systèmes coutumiers d\'accès à la terre. ' +
-                'Une attention particulière devra être portée à l\'inclusion foncière des femmes.',
-                40,
-                finalY + 30,
-                { maxWidth: 520 }
-            );
-            doc.save('Rapport_Genre_PROCASEF.pdf');
-
-            // Génération Word
-            let htmlForDocx = `
-                <h1 style="font-family:Inter,sans-serif;color:#1E3A8A;">Rapport Genre – PROCASEF Boundou</h1>
-                <p>Généré le : ${new Date().toLocaleString('fr-FR')}</p>
-            `;
-            chartImages.forEach(img => {
-                htmlForDocx += `<img src="${img}" width="500" alt="Graphique genre" style="margin-bottom:15px;" />`;
-            });
-            htmlForDocx += `
-                <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse;margin-top:15px;font-family:Inter,sans-serif;">
-                  <thead style="background:#D4A574;color:#fff;">
-                    <tr><th>Genre</th><th>Population</th><th>Pourcentage</th></tr>
-                  </thead>
-                  <tbody>
-                    <tr><td>Hommes</td><td>${totalHommes.toLocaleString()}</td><td>${((totalHommes / total)*100).toFixed(1)} %</td></tr>
-                    <tr><td>Femmes</td><td>${totalFemmes.toLocaleString()}</td><td>${((totalFemmes / total)*100).toFixed(1)} %</td></tr>
-                    <tr><td><strong>Total</strong></td><td><strong>${total.toLocaleString()}</strong></td><td><strong>100 %</strong></td></tr>
-                  </tbody>
-                </table>
-                <p style="margin-top:15px;">
-                  Les graphiques illustrent la répartition globale et détaillée par genre. La faible représentation féminine souligne
-                  la nécessité d'actions ciblées pour renforcer l'accès des femmes à la propriété foncière.
-                </p>
-            `;
-            if (typeof window.htmlDocx === 'undefined') {
-                console.warn('html-docx-js non disponible, export .docx ignoré');
-                return;
-            }
-            const docxBlob = window.htmlDocx.asBlob(htmlForDocx, { orientation: 'portrait', margins: { top: 720 } });
-            const url = URL.createObjectURL(docxBlob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'Rapport_Genre_PROCASEF.docx';
-            link.click();
-            URL.revokeObjectURL(url);
-        } catch (err) {
-            console.error('Erreur export genre :', err);
-            this.showError('Échec de la génération du rapport genre.');
+        // Ajouter l'analyse textuelle
+        if (currentY > 600) {
+            doc.addPage();
+            currentY = 50;
         }
+
+        doc.setFontSize(14);
+        doc.setTextColor(30, 58, 138);
+        doc.text('Analyse et Recommandations', 40, currentY);
+        currentY += 25;
+
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
+        const analysisText = [
+            'Les données révèlent une forte disparité de genre dans l\'accès au foncier :',
+            '',
+            `• Les hommes représentent ${((totalHommes / total) * 100).toFixed(1)}% des bénéficiaires`,
+            `• Les femmes ne représentent que ${((totalFemmes / total) * 100).toFixed(1)}% des bénéficiaires`,
+            '',
+            'Cette répartition reflète les systèmes coutumiers d\'accès à la terre.',
+            'Des actions ciblées sont nécessaires pour renforcer l\'inclusion foncière des femmes.',
+            '',
+            'Recommandations :',
+            '• Sensibilisation sur les droits fonciers des femmes',
+            '• Accompagnement juridique spécifique',
+            '• Quotas minimums dans les attributions futures'
+        ];
+
+        analysisText.forEach(line => {
+            if (currentY > 750) {
+                doc.addPage();
+                currentY = 50;
+            }
+            doc.text(line, 40, currentY, { maxWidth: 520 });
+            currentY += 15;
+        });
+
+        // Sauvegarder le PDF
+        doc.save('Rapport_Genre_PROCASEF.pdf');
+
+        // Génération Word (si html-docx-js disponible)
+        if (typeof window.htmlDocx !== 'undefined') {
+            let htmlForDocx = `
+                <div style="font-family:Inter,sans-serif;">
+                    <h1 style="color:#1E3A8A;text-align:center;margin-bottom:20px;">
+                        Rapport Genre – PROCASEF Boundou
+                    </h1>
+                    <p style="text-align:center;color:#666;margin-bottom:30px;">
+                        Généré le : ${new Date().toLocaleString('fr-FR')}
+                    </p>
+                    
+                    <h2 style="color:#1E3A8A;margin-top:30px;">Statistiques Globales</h2>
+                    <table border="1" cellspacing="0" cellpadding="8" style="border-collapse:collapse;width:100%;margin-bottom:30px;">
+                        <thead style="background:#D4A574;color:#fff;">
+                            <tr>
+                                <th>Indicateur</th>
+                                <th>Valeur</th>
+                                <th>Pourcentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="background:#f9fafb;">
+                                <td>Hommes</td>
+                                <td>${totalHommes.toLocaleString()}</td>
+                                <td>${((totalHommes / total)*100).toFixed(1)} %</td>
+                            </tr>
+                            <tr>
+                                <td>Femmes</td>
+                                <td>${totalFemmes.toLocaleString()}</td>
+                                <td>${((totalFemmes / total)*100).toFixed(1)} %</td>
+                            </tr>
+                            <tr style="background:#f9fafb;font-weight:bold;">
+                                <td>Total</td>
+                                <td>${total.toLocaleString()}</td>
+                                <td>100 %</td>
+                            </tr>
+                        </tbody>
+                    </table>
+            `;
+
+            // Ajouter les graphiques au document Word par section
+            const sections = ['Genre', 'Contexte', 'Rapport'];
+            sections.forEach(sectionName => {
+                const sectionCharts = chartImages.filter(chart => chart.section === sectionName);
+                if (sectionCharts.length === 0) return;
+                
+                htmlForDocx += `<h2 style="color:#B8860B;margin-top:35px;border-bottom:2px solid #B8860B;padding-bottom:5px;">${sectionName}</h2>`;
+                
+                sectionCharts.forEach(chartData => {
+                    htmlForDocx += `
+                        <h3 style="color:#1E3A8A;margin-top:25px;margin-bottom:10px;">
+                            ${chartData.title}
+                        </h3>
+                        <div style="text-align:center;margin-bottom:25px;padding:10px;border:1px solid #e5e7eb;border-radius:8px;">
+                            <img src="${chartData.image}" style="max-width:100%;height:auto;" alt="${chartData.title}" />
+                        </div>
+                    `;
+                });
+            });
+
+            htmlForDocx += `
+                    <h2 style="color:#1E3A8A;margin-top:30px;">Analyse et Recommandations</h2>
+                    <p>Les données révèlent une forte disparité de genre dans l'accès au foncier, avec ${((totalHommes / total)*100).toFixed(1)}% d'hommes contre ${((totalFemmes / total)*100).toFixed(1)}% de femmes.</p>
+                    
+                    <h3 style="color:#1E3A8A;">Constats principaux :</h3>
+                    <ul>
+                        <li>Prédominance masculine liée aux systèmes coutumiers</li>
+                        <li>Faible représentation féminine nécessitant des actions ciblées</li>
+                        <li>Besoin de renforcement de l'inclusion foncière des femmes</li>
+                    </ul>
+                    
+                    <h3 style="color:#1E3A8A;">Recommandations :</h3>
+                    <ul>
+                        <li>Sensibilisation sur les droits fonciers des femmes</li>
+                        <li>Accompagnement juridique spécifique</li>
+                        <li>Quotas minimums dans les attributions futures</li>
+                    </ul>
+                </div>
+            `;
+
+            try {
+                const docxBlob = window.htmlDocx.asBlob(htmlForDocx, { 
+                    orientation: 'portrait', 
+                    margins: { top: 720, bottom: 720, left: 720, right: 720 } 
+                });
+                const url = URL.createObjectURL(docxBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'Rapport_Genre_PROCASEF.docx';
+                link.click();
+                URL.revokeObjectURL(url);
+                console.log('✅ Document Word généré avec succès');
+            } catch (docxError) {
+                console.error('❌ Erreur génération Word:', docxError);
+            }
+        } else {
+            console.warn('⚠️ html-docx-js non disponible, export .docx ignoré');
+        }
+
+        // Restaurer la section d'origine
+        if (currentSection !== this.currentSection) {
+            await this.navigateToSection(currentSection);
+        }
+
+        // Message de succès
+        const successMsg = `✅ Rapport genre exporté avec succès !\n📊 ${chartImages.length} graphiques inclus\n📄 Formats : PDF${typeof window.htmlDocx !== 'undefined' ? ' + Word' : ''}\n\nGraphiques inclus :\n${chartImages.map(c => `• ${c.title} (${c.section})`).join('\n')}`;
+        alert(successMsg);
+
+    } catch (err) {
+        console.error('❌ Erreur export genre :', err);
+        this.showError('Échec de la génération du rapport genre. Vérifiez la console pour plus de détails.');
     }
+}
 
 
     /** Charge à la volée les datasets genre si non déjà présents */
