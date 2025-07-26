@@ -725,9 +725,23 @@ async exportBothReports() {
 async exportGenreReport() {
     try {
         // Vérification des dépendances
-        if (typeof window.jsPDF === 'undefined') {
+        if (typeof window.jspdf === 'undefined') {
             throw new Error('jsPDF non chargé');
         }
+
+        const { jsPDF } = window.jspdf; // Corrected to lowercase 'jspdf'
+
+        // Charger les données si nécessaire
+        if (!this.data?.rapportComplet || !Object.keys(this.data.rapportComplet).length) {
+            try {
+                await this.loadDataSafely('data/rapport_complet.json', 'rapportComplet');
+            } catch (error) {
+                console.warn('Impossible de charger rapport_complet.json, utilisation des données existantes');
+            }
+        }
+
+        const reportData = this.data?.rapportComplet || {};
+        console.log('Données du rapport:', reportData);
 
         const { jsPDF } = window.jsPDF;
 
