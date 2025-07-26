@@ -1541,7 +1541,7 @@ async generateHTMLReportWithCharts() {
 
         <div class="footer">
             <p><strong>PROCASEF Dashboard - Rapport Genre Automatisé</strong></p>
-            <p>Contact: procasef@example.com | www.procasef.com</p>
+            <p>Contact: cheikhabgn@gmail.com | www.procasef.com</p>
             <p>Rapport généré avec graphiques intégrés - ${new Date().toLocaleString('fr-FR')}</p>
         </div>
     </body>
@@ -1718,7 +1718,7 @@ generateWordAnalysis(reportData) {
     const femmesPourcentage = ((femmes / total) * 100).toFixed(1);
 
     if (femmesPourcentage < 20) {
-        return `⚠️ ALERTE : Représentation féminine critiquement faible (${femmesPourcentage}%). Action corrective urgente requise.`;
+        return `⚠️ ALERTE : Représentation féminine critiquement faible (${femmesPourcentage}%).`;
     } else if (femmesPourcentage < 30) {
         return `📉 Représentation féminine insuffisante (${femmesPourcentage}%). Efforts supplémentaires nécessaires.`;
     } else if (femmesPourcentage < 40) {
