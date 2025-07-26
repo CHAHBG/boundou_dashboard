@@ -726,12 +726,11 @@ async exportBothReports() {
 
 async exportGenreReport() {
     try {
-        // Vérification des dépendances - CORRECTION ICI
+        // Vérification des dépendances
         if (typeof window.jspdf === 'undefined' && typeof jsPDF === 'undefined') {
             throw new Error('jsPDF non chargé. Assurez-vous que la bibliothèque jsPDF est incluse.');
         }
 
-        // Utiliser la bonne référence jsPDF - CORRECTION
         const { jsPDF } = window.jspdf || window;
         if (!jsPDF) {
             throw new Error('jsPDF constructor non trouvé');
@@ -757,23 +756,28 @@ async exportGenreReport() {
             { id: 'rapportRegionPolarChart', title: 'Répartition par Région', section: 'Tamba-Kédougou' },
         ];
 
-        // Capture des graphiques
+        // Capture des graphiques avec meilleure qualité
         const chartImages = [];
         for (const config of chartConfigs) {
             const canvas = document.getElementById(config.id);
             if (canvas?.tagName === 'CANVAS') {
                 await new Promise(resolve => setTimeout(resolve, 800));
-                const scale = 3;
+                const scale = 2; // Réduit pour éviter les images trop lourdes
                 const tempCanvas = document.createElement('canvas');
                 tempCanvas.width = canvas.width * scale;
                 tempCanvas.height = canvas.height * scale;
                 const tempContext = tempCanvas.getContext('2d');
+                
+                // Fond blanc pour meilleur contraste
+                tempContext.fillStyle = 'white';
+                tempContext.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                
                 tempContext.scale(scale, scale);
                 tempContext.imageSmoothingEnabled = true;
                 tempContext.imageSmoothingQuality = 'high';
                 tempContext.drawImage(canvas, 0, 0);
 
-                const chartImg = tempCanvas.toDataURL('image/png', 1.0);
+                const chartImg = tempCanvas.toDataURL('image/png', 0.9);
                 if (chartImg && chartImg.length > 100 && !chartImg.includes('data:,')) {
                     chartImages.push({
                         image: chartImg,
@@ -791,13 +795,11 @@ async exportGenreReport() {
             }
         }
 
-        // Création du PDF - CORRECTION: utiliser jsPDF correctement
+        // Création du PDF
         const pdfDoc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
         
-        // Vérification autoTable
         if (typeof pdfDoc.autoTable !== 'function') {
             console.warn('autoTable non disponible, export simple...');
-            // Export simple sans tableau
             pdfDoc.setFontSize(20);
             pdfDoc.text('Rapport Genre PROCASEF', 20, 30);
             pdfDoc.save('rapport-genre-procasef.pdf');
@@ -806,36 +808,48 @@ async exportGenreReport() {
 
         const pageWidth = pdfDoc.internal.pageSize.getWidth();
         const pageHeight = pdfDoc.internal.pageSize.getHeight();
-        const margin = this.MARGINS?.DEFAULT || 40;
+        const margin = 40;
         const contentWidth = pageWidth - 2 * margin;
 
-        // Fonction de formatage des nombres
+        // ✅ CORRECTION: Fonction de formatage améliorée pour PDF
         const formatNumber = (value) => {
-            if (value == null) return '0';
-            const strValue = String(value)
-                .replace(/\s*\/\s*/g, '')
-                .replace(/[^\d\s,-]/g, '')
-                .replace(/\s+/g, ' ')
+            if (value == null || value === '') return '0';
+            
+            // Nettoyer la valeur d'entrée
+            let cleanValue = String(value)
+                .replace(/[^\d.,\s-]/g, '') // Supprimer tous les caractères non numériques sauf , . - et espaces
+                .replace(/\s+/g, '') // Supprimer tous les espaces
                 .trim();
-            const numValue = parseFloat(strValue.replace(/\s/g, '').replace(',', '.'));
-            return isNaN(numValue) ? strValue : numValue.toLocaleString('fr-FR');
+            
+            // Convertir en nombre
+            const numValue = parseFloat(cleanValue.replace(',', '.'));
+            
+            if (isNaN(numValue)) {
+                return String(value).replace(/[^\w\s-]/g, ''); // Si pas un nombre, nettoyer juste les caractères spéciaux
+            }
+            
+            // Formatage français avec espaces comme séparateurs de milliers
+            return numValue.toLocaleString('fr-FR').replace(/\s/g, ' '); // S'assurer que les espaces sont normaux
         };
 
-        // Nettoyage des données
+        // ✅ CORRECTION: Nettoyage des données plus strict
         const cleanDataObject = (obj) => {
             if (Array.isArray(obj)) return obj.map(cleanDataObject);
             if (obj && typeof obj === 'object') {
                 const cleaned = {};
                 for (const [key, value] of Object.entries(obj)) {
-                    cleaned[key] = typeof value === 'string'
-                        ? value
-                            .replace(/\s*\/\s*/g, '')
-                            .replace(/[Ø=ÜÉ]/g, '')
-                            .replace(/\s+/g, ' ')
-                            .trim()
-                        : typeof value === 'object'
-                        ? cleanDataObject(value)
-                        : value;
+                    if (typeof value === 'string') {
+                        // Nettoyage plus agressif des caractères parasites
+                        cleaned[key] = value
+                            .replace(/[Ø=ÜÉ°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ]/g, '') // Supprimer caractères spéciaux
+                            .replace(/[^\w\s.,%-]/g, '') // Garder seulement lettres, chiffres, espaces, virgules, points, %, -
+                            .replace(/\s+/g, ' ') // Normaliser les espaces
+                            .trim();
+                    } else if (typeof value === 'object') {
+                        cleaned[key] = cleanDataObject(value);
+                    } else {
+                        cleaned[key] = value;
+                    }
                 }
                 return cleaned;
             }
@@ -851,12 +865,12 @@ async exportGenreReport() {
         pdfDoc.addPage();
         let currentY = this.createSynthesisPage(pdfDoc, cleanedReportData, pageWidth, pageHeight, margin, formatNumber);
 
-        // Ajout des graphiques
+        // Ajout des graphiques avec centrage amélioré
         for (const chartData of chartImages) {
             pdfDoc.addPage();
             currentY = 50;
 
-            const colors = this.COLORS || {
+            const colors = {
                 PRIMARY: [41, 128, 185],
                 SECONDARY: [52, 73, 94],
                 NEUTRAL: [149, 165, 166],
@@ -866,56 +880,73 @@ async exportGenreReport() {
                 DANGER: [231, 76, 60]
             };
 
+            // En-tête de section
             pdfDoc.setFillColor(...colors.PRIMARY);
             pdfDoc.rect(margin, currentY - 10, contentWidth, 35, 'F');
-            pdfDoc.setFontSize(this.FONT_SIZES?.TITLE || 16);
+            pdfDoc.setFontSize(16);
             pdfDoc.setTextColor(255, 255, 255);
-            pdfDoc.text(chartData.title, margin + (this.MARGINS?.TEXT || 10), currentY + 15);
+            pdfDoc.text(chartData.title, margin + 10, currentY + 15);
             currentY += 50;
 
-            const maxGraphWidth = contentWidth * 0.85;
-            const maxGraphHeight = 280;
-            let graphWidth = Math.min(maxGraphWidth, chartData.originalWidth * 0.8);
+            // ✅ CORRECTION: Graphique mieux centré et plus grand
+            const maxGraphWidth = contentWidth * 0.9; // Plus large
+            const maxGraphHeight = 350; // Plus haut
+            let graphWidth = Math.min(maxGraphWidth, chartData.originalWidth * 1.2); // Plus grand
             let graphHeight = (graphWidth / chartData.originalWidth) * chartData.originalHeight;
+            
             if (graphHeight > maxGraphHeight) {
                 graphHeight = maxGraphHeight;
                 graphWidth = (graphHeight / chartData.originalHeight) * chartData.originalWidth;
             }
 
+            // Centrage parfait
             const graphX = (pageWidth - graphWidth) / 2;
+            
+            // Bordure du graphique
             pdfDoc.setDrawColor(...colors.NEUTRAL);
             pdfDoc.setLineWidth(1);
             pdfDoc.rect(graphX - 5, currentY - 5, graphWidth + 10, graphHeight + 10);
+            
+            // Insertion du graphique
             pdfDoc.addImage(chartData.image, 'PNG', graphX, currentY, graphWidth, graphHeight);
-            currentY += graphHeight + 25;
+            currentY += graphHeight + 30;
 
+            // ✅ CORRECTION: Tableau centré et amélioré
             const tableData = this.getEnhancedTableDataForChart(chartData.section, cleanedReportData, formatNumber);
             if (tableData.length > 1) {
                 pdfDoc.autoTable({
                     head: [tableData[0]],
                     body: tableData.slice(1),
                     startY: currentY,
-                    margin: { left: margin, right: margin },
+                    margin: { left: margin + 20, right: margin + 20 }, // Marges réduites pour centrer
+                    tableWidth: 'auto', // Largeur automatique
                     headStyles: {
                         fillColor: colors.SECONDARY,
                         textColor: [255, 255, 255],
-                        fontSize: this.FONT_SIZES?.BODY || 10,
+                        fontSize: 11, // Plus gros
                         halign: 'center',
                         fontStyle: 'bold',
+                        cellPadding: 8,
                     },
                     styles: {
-                        fontSize: this.FONT_SIZES?.BODY || 10,
+                        fontSize: 10, // Plus gros
                         cellPadding: 8,
                         lineColor: colors.NEUTRAL,
                         lineWidth: 0.5,
                         overflow: 'linebreak',
+                        halign: 'center', // Centrer le contenu
                     },
                     alternateRowStyles: { fillColor: colors.BACKGROUND },
-                    columnStyles: { 1: { halign: 'right' }, 2: { halign: 'center' } },
+                    columnStyles: { 
+                        1: { halign: 'right' }, 
+                        2: { halign: 'center' },
+                        3: { halign: 'center' }
+                    },
                 });
-                currentY = pdfDoc.lastAutoTable.finalY + 30;
+                currentY = pdfDoc.lastAutoTable.finalY + 20;
             }
 
+            // Analyse de section
             this.addSectionAnalysis(pdfDoc, chartData.section, cleanedReportData, currentY, margin, contentWidth, formatNumber);
         }
 
@@ -935,8 +966,6 @@ async exportGenreReport() {
     } catch (err) {
         console.error('❌ Erreur export PDF:', err);
         let errorMsg = 'Échec de la génération du rapport PDF.\n\n';
-        
-        // ✅ CORRECTION: Vérification sécurisée des erreurs
         const errorMessage = err.message || String(err);
         
         if (errorMessage.includes('jsPDF')) {
@@ -950,7 +979,7 @@ async exportGenreReport() {
         }
         
         alert(errorMsg);
-        throw err; // ✅ Re-lancer l'erreur pour exportBothReports
+        throw err;
     }
 }
 
@@ -962,8 +991,6 @@ async exportGenreWordReport() {
     try {
         if (typeof window.docx === 'undefined') {
             console.warn('docx non disponible, export HTML...');
-            
-            // Alternative HTML avec graphiques
             const htmlContent = await this.generateHTMLReportWithCharts();
             const blob = new Blob([htmlContent], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
@@ -978,15 +1005,22 @@ async exportGenreWordReport() {
         await this.ensureGenreDataLoaded();
         const reportData = this.data?.rapportComplet || {};
 
+        // ✅ CORRECTION: Même fonction de formatage que pour PDF
         const formatNumber = (value) => {
-            if (value == null) return '0';
-            const strValue = String(value)
-                .replace(/\s*\/\s*/g, '')
-                .replace(/[^\d\s,-]/g, '')
-                .replace(/\s+/g, ' ')
+            if (value == null || value === '') return '0';
+            
+            let cleanValue = String(value)
+                .replace(/[^\d.,\s-]/g, '')
+                .replace(/\s+/g, '')
                 .trim();
-            const numValue = parseFloat(strValue.replace(/\s/g, '').replace(',', '.'));
-            return isNaN(numValue) ? strValue : numValue.toLocaleString('fr-FR');
+            
+            const numValue = parseFloat(cleanValue.replace(',', '.'));
+            
+            if (isNaN(numValue)) {
+                return String(value).replace(/[^\w\s-]/g, '');
+            }
+            
+            return numValue.toLocaleString('fr-FR').replace(/\s/g, ' ');
         };
 
         const cleanDataObject = (obj) => {
@@ -994,11 +1028,17 @@ async exportGenreWordReport() {
             if (obj && typeof obj === 'object') {
                 const cleaned = {};
                 for (const [key, value] of Object.entries(obj)) {
-                    cleaned[key] = typeof value === 'string'
-                        ? value.replace(/\s*\/\s*/g, '').replace(/[Ø=ÜÉ]/g, '').replace(/\s+/g, ' ').trim()
-                        : typeof value === 'object'
-                        ? cleanDataObject(value)
-                        : value;
+                    if (typeof value === 'string') {
+                        cleaned[key] = value
+                            .replace(/[Ø=ÜÉ°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ]/g, '')
+                            .replace(/[^\w\s.,%-]/g, '')
+                            .replace(/\s+/g, ' ')
+                            .trim();
+                    } else if (typeof value === 'object') {
+                        cleaned[key] = cleanDataObject(value);
+                    } else {
+                        cleaned[key] = value;
+                    }
                 }
                 return cleaned;
             }
@@ -1007,10 +1047,10 @@ async exportGenreWordReport() {
 
         const cleanedReportData = cleanDataObject(reportData);
 
-        // CAPTURE DES GRAPHIQUES POUR WORD
+        // Capture des graphiques pour Word
         const chartImages = await this.captureChartsForWord();
 
-        const colors = this.COLORS || {
+        const colors = {
             PRIMARY: [41, 128, 185],
             SECONDARY: [52, 73, 94]
         };
@@ -1026,8 +1066,8 @@ async exportGenreWordReport() {
                     return {
                         ...chart,
                         imageBuffer: arrayBuffer,
-                        width: Math.min(chart.originalWidth * 0.5, 400),
-                        height: Math.min(chart.originalHeight * 0.5, 300)
+                        width: 450, // ✅ CORRECTION: Taille fixe plus grande
+                        height: 300  // ✅ CORRECTION: Taille fixe plus grande
                     };
                 } catch (error) {
                     console.warn(`Erreur conversion image ${chart.title}:`, error);
@@ -1051,7 +1091,10 @@ async exportGenreWordReport() {
                         next: 'Normal',
                         quickFormat: true,
                         run: { size: 28, bold: true, color: colors.PRIMARY.map(c => c.toString(16).padStart(2, '0')).join('') },
-                        paragraph: { spacing: { after: 300 } },
+                        paragraph: { 
+                            spacing: { after: 200 }, // ✅ CORRECTION: Espacement réduit
+                            alignment: window.docx.AlignmentType.CENTER 
+                        },
                     },
                     {
                         id: 'Heading2',
@@ -1060,7 +1103,18 @@ async exportGenreWordReport() {
                         next: 'Normal',
                         quickFormat: true,
                         run: { size: 20, bold: true, color: colors.SECONDARY.map(c => c.toString(16).padStart(2, '0')).join('') },
-                        paragraph: { spacing: { before: 240, after: 120 } },
+                        paragraph: { 
+                            spacing: { before: 150, after: 100 }, // ✅ CORRECTION: Espacement réduit
+                            alignment: window.docx.AlignmentType.LEFT 
+                        },
+                    },
+                    {
+                        id: 'Normal',
+                        name: 'Normal',
+                        run: { size: 22 }, // Taille normale
+                        paragraph: { 
+                            spacing: { after: 100 } // ✅ CORRECTION: Espacement réduit
+                        },
                     },
                 ],
             },
@@ -1082,7 +1136,7 @@ async exportGenreWordReport() {
     } catch (err) {
         console.error('❌ Erreur export Word:', err);
         
-        // Fallback vers HTML avec graphiques
+        // Fallback vers HTML
         console.log('Fallback vers export HTML...');
         try {
             const htmlContent = await this.generateHTMLReportWithCharts();
@@ -1120,7 +1174,7 @@ async captureChartsForWord() {
             try {
                 await new Promise(resolve => setTimeout(resolve, 500));
                 
-                const scale = 2;
+                const scale = 2.5; // ✅ CORRECTION: Meilleure qualité
                 const tempCanvas = document.createElement('canvas');
                 tempCanvas.width = canvas.width * scale;
                 tempCanvas.height = canvas.height * scale;
@@ -1135,7 +1189,7 @@ async captureChartsForWord() {
                 tempContext.imageSmoothingQuality = 'high';
                 tempContext.drawImage(canvas, 0, 0);
 
-                const chartImg = tempCanvas.toDataURL('image/png', 0.9);
+                const chartImg = tempCanvas.toDataURL('image/png', 0.95); // ✅ CORRECTION: Meilleure qualité
                 
                 if (chartImg && chartImg.length > 100 && !chartImg.includes('data:,')) {
                     chartImages.push({
@@ -1165,31 +1219,52 @@ async captureChartsForWord() {
  */
 async createWordSectionsWithCharts(cleanedReportData, formatNumber, chartImages, colors) {
     const children = [
-        // Page de couverture
+        // Page de couverture - centrée
         new window.docx.Paragraph({
-            alignment: window.docx.AlignmentType.CENTER,
-            children: [new window.docx.TextRun({ text: 'RAPPORT GENRE', bold: true, size: 32, color: colors.PRIMARY.map(c => c.toString(16).padStart(2, '0')).join('') })],
+            style: 'Heading1',
+            children: [new window.docx.TextRun({ text: 'RAPPORT GENRE', bold: true, size: 32 })],
         }),
         new window.docx.Paragraph({
             alignment: window.docx.AlignmentType.CENTER,
-            children: [new window.docx.TextRun({ text: 'PROCASEF Boundou', size: 24, color: colors.SECONDARY.map(c => c.toString(16).padStart(2, '0')).join('') })],
+            spacing: { after: 100 },
+            children: [new window.docx.TextRun({ text: 'PROCASEF Boundou', size: 24 })],
         }),
         new window.docx.Paragraph({
             alignment: window.docx.AlignmentType.CENTER,
-            children: [new window.docx.TextRun({ text: `Généré le ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`, size: 16, italics: true })],
+            spacing: { after: 200 },
+            children: [new window.docx.TextRun({ 
+                text: `Généré le ${new Date().toLocaleDateString('fr-FR', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                })}`, 
+                size: 16, 
+                italics: true 
+            })],
         }),
         new window.docx.Paragraph({ children: [new window.docx.PageBreak()] }),
         
         // Synthèse exécutive
-        new window.docx.Paragraph({ style: 'Heading1', children: [new window.docx.TextRun({ text: '📊 SYNTHÈSE EXÉCUTIVE' })] }),
+        new window.docx.Paragraph({ 
+            style: 'Heading1', 
+            children: [new window.docx.TextRun({ text: '📊 SYNTHÈSE EXÉCUTIVE' })] 
+        }),
         ...this.createWordStatsTable(cleanedReportData, formatNumber),
         
-        // Analyse automatique
-        new window.docx.Paragraph({ style: 'Heading2', children: [new window.docx.TextRun({ text: '🔍 ANALYSE AUTOMATIQUE' })] }),
-        new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: this.generateWordAnalysis(cleanedReportData) })] }),
+        // Analyse automatique - espacement réduit
+        new window.docx.Paragraph({ 
+            style: 'Heading2', 
+            spacing: { before: 100, after: 50 },
+            children: [new window.docx.TextRun({ text: '🔍 ANALYSE AUTOMATIQUE' })] 
+        }),
+        new window.docx.Paragraph({ 
+            spacing: { after: 150 },
+            children: [new window.docx.TextRun({ text: this.generateWordAnalysis(cleanedReportData) })] 
+        }),
     ];
 
-    // Ajouter chaque graphique avec son analyse
+    // Ajouter chaque graphique avec espacement optimisé
     for (const chartImage of chartImages) {
         // Nouvelle page pour chaque graphique
         children.push(new window.docx.Paragraph({ children: [new window.docx.PageBreak()] }));
@@ -1202,12 +1277,13 @@ async createWordSectionsWithCharts(cleanedReportData, formatNumber, chartImages,
             })
         );
 
-        // Ajouter l'image si elle existe
+        // ✅ CORRECTION: Image centrée avec taille fixe
         if (chartImage.imageBuffer) {
             try {
                 children.push(
                     new window.docx.Paragraph({
                         alignment: window.docx.AlignmentType.CENTER,
+                        spacing: { before: 100, after: 100 },
                         children: [
                             new window.docx.ImageRun({
                                 data: chartImage.imageBuffer,
@@ -1224,7 +1300,12 @@ async createWordSectionsWithCharts(cleanedReportData, formatNumber, chartImages,
                 children.push(
                     new window.docx.Paragraph({
                         alignment: window.docx.AlignmentType.CENTER,
-                        children: [new window.docx.TextRun({ text: `Figure: ${chartImage.title}`, italics: true, size: 18 })],
+                        spacing: { after: 150 },
+                        children: [new window.docx.TextRun({ 
+                            text: `Figure: ${chartImage.title}`, 
+                            italics: true, 
+                            size: 18 
+                        })],
                     })
                 );
             } catch (imageError) {
@@ -1241,21 +1322,23 @@ async createWordSectionsWithCharts(cleanedReportData, formatNumber, chartImages,
             }
         }
 
-        // Tableau de données pour cette section
+        // ✅ CORRECTION: Tableau centré
         const tableData = this.getEnhancedTableDataForChart(chartImage.section, cleanedReportData, formatNumber);
         if (tableData.length > 1) {
             children.push(this.createWordTableFromData(tableData));
         }
 
-        // Analyse de la section
+        // Analyse de la section - espacement réduit
         children.push(
             new window.docx.Paragraph({ 
-                style: 'Heading2', 
+                style: 'Heading2',
+                spacing: { before: 100, after: 50 },
                 children: [new window.docx.TextRun({ text: '💡 Analyse' })] 
             })
         );
         children.push(
             new window.docx.Paragraph({ 
+                spacing: { after: 150 },
                 children: [new window.docx.TextRun({ 
                     text: this.generateSectionAnalysis(chartImage.section, cleanedReportData) 
                 })] 
@@ -1265,7 +1348,10 @@ async createWordSectionsWithCharts(cleanedReportData, formatNumber, chartImages,
 
     // Page de recommandations
     children.push(new window.docx.Paragraph({ children: [new window.docx.PageBreak()] }));
-    children.push(new window.docx.Paragraph({ style: 'Heading1', children: [new window.docx.TextRun({ text: '🎯 RECOMMANDATIONS STRATÉGIQUES' })] }));
+    children.push(new window.docx.Paragraph({ 
+        style: 'Heading1', 
+        children: [new window.docx.TextRun({ text: '🎯 RECOMMANDATIONS STRATÉGIQUES' })] 
+    }));
     children.push(...this.createWordRecommendations(cleanedReportData));
 
     return [{ properties: {}, children }];
@@ -1280,13 +1366,22 @@ createWordTableFromData(tableData) {
     const [headers, ...rows] = tableData;
     
     return new window.docx.Table({
+        alignment: window.docx.AlignmentType.CENTER, // ✅ CORRECTION: Centrage du tableau
+        width: {
+            size: 100,
+            type: window.docx.WidthType.PERCENTAGE,
+        },
         rows: [
             new window.docx.TableRow({
                 children: headers.map(header => 
                     new window.docx.TableCell({ 
                         children: [new window.docx.Paragraph({ 
-                            children: [new window.docx.TextRun({ text: header, bold: true })] 
-                        })] 
+                            alignment: window.docx.AlignmentType.CENTER, // ✅ CORRECTION: Centrage du contenu
+                            children: [new window.docx.TextRun({ text: header, bold: true, size: 20 })] 
+                        })],
+                        shading: {
+                            fill: "E8F4FD", // Fond bleu clair pour les en-têtes
+                        },
                     })
                 ),
             }),
@@ -1295,13 +1390,20 @@ createWordTableFromData(tableData) {
                     children: row.map(cell => 
                         new window.docx.TableCell({ 
                             children: [new window.docx.Paragraph({ 
-                                children: [new window.docx.TextRun({ text: String(cell) })] 
+                                alignment: window.docx.AlignmentType.CENTER, // ✅ CORRECTION: Centrage du contenu
+                                children: [new window.docx.TextRun({ text: String(cell), size: 18 })] 
                             })] 
                         })
                     ),
                 })
             ),
         ],
+        margins: {
+            top: 50,
+            bottom: 50,
+            left: 50,
+            right: 50,
+        },
     });
 }
 
@@ -1316,19 +1418,28 @@ async generateHTMLReportWithCharts() {
     const total = hommes + femmes;
     const femmesPourcentage = ((femmes / total) * 100).toFixed(1);
 
+    // Formatage amélioré pour HTML
+    const formatNumber = (value) => {
+        if (value == null || value === '') return '0';
+        let cleanValue = String(value).replace(/[^\d.,\s-]/g, '').replace(/\s+/g, '').trim();
+        const numValue = parseFloat(cleanValue.replace(',', '.'));
+        if (isNaN(numValue)) return String(value).replace(/[^\w\s-]/g, '');
+        return numValue.toLocaleString('fr-FR').replace(/\s/g, ' ');
+    };
+
     // Capture des graphiques
     const chartImages = await this.captureChartsForWord();
     
     let chartImagesHTML = '';
     chartImages.forEach(chart => {
-        const tableData = this.getEnhancedTableDataForChart(chart.section, reportData, (v) => v?.toLocaleString?.('fr-FR') || v);
+        const tableData = this.getEnhancedTableDataForChart(chart.section, reportData, formatNumber);
         const tableHTML = this.generateHTMLTable(tableData);
         
         chartImagesHTML += `
             <div class="section">
                 <h2 class="section-title">${chart.title}</h2>
                 <div class="chart-container">
-                    <img src="${chart.image}" alt="${chart.title}" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; margin: 20px 0;">
+                    <img src="${chart.image}" alt="${chart.title}" class="chart-image">
                 </div>
                 ${tableHTML}
                 <div class="analysis-box">
@@ -1347,44 +1458,61 @@ async generateHTMLReportWithCharts() {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Rapport Genre PROCASEF</title>
         <style>
-            body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
-            .header { text-align: center; margin-bottom: 40px; }
-            .title { color: #2980b9; font-size: 28px; font-weight: bold; }
-            .subtitle { color: #34495e; font-size: 20px; margin: 10px 0; }
-            .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 30px 0; }
-            .stat-card { background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #2980b9; }
-            .stat-value { font-size: 24px; font-weight: bold; color: #2c3e50; }
-            .stat-label { color: #7f8c8d; font-size: 14px; }
-            .section { margin: 40px 0; page-break-inside: avoid; }
-            .section-title { color: #2980b9; font-size: 18px; font-weight: bold; margin-bottom: 15px; }
-            .chart-container { text-align: center; margin: 20px 0; }
-            .analysis-box { background: #f0f8ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2980b9; }
-            .alert { background: #fef9e7; border: 1px solid #f39c12; padding: 15px; border-radius: 5px; margin: 20px 0; }
-            .recommendations { background: #eaf4fd; padding: 20px; border-radius: 8px; }
-            .footer { text-align: center; margin-top: 50px; color: #7f8c8d; font-size: 12px; }
-            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background-color: #f2f2f2; font-weight: bold; }
-            tr:nth-child(even) { background-color: #f9f9f9; }
-            @media print { .section { page-break-inside: avoid; } }
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 40px; line-height: 1.6; color: #2c3e50; }
+            .header { text-align: center; margin-bottom: 40px; padding: 30px; background: linear-gradient(135deg, #2980b9, #3498db); color: white; border-radius: 10px; }
+            .title { font-size: 32px; font-weight: bold; margin-bottom: 10px; }
+            .subtitle { font-size: 24px; margin: 10px 0; opacity: 0.9; }
+            .date { font-size: 16px; opacity: 0.8; }
+            .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 30px 0; }
+            .stat-card { background: #f8f9fa; padding: 25px; border-radius: 10px; border-left: 5px solid #2980b9; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; }
+            .stat-value { font-size: 28px; font-weight: bold; color: #2c3e50; margin-bottom: 5px; }
+            .stat-label { color: #7f8c8d; font-size: 16px; }
+            .section { margin: 50px 0; page-break-inside: avoid; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 15px rgba(0,0,0,0.1); }
+            .section-title { color: #2980b9; font-size: 24px; font-weight: bold; margin-bottom: 20px; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+            .chart-container { text-align: center; margin: 30px 0; padding: 20px; background: #f8f9fa; border-radius: 10px; }
+            .chart-image { max-width: 100%; height: auto; border: 2px solid #bdc3c7; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+            .analysis-box { background: linear-gradient(135deg, #f0f8ff, #e3f2fd); padding: 25px; border-radius: 10px; margin: 25px 0; border-left: 5px solid #2980b9; }
+            .analysis-box h3 { color: #2980b9; margin-top: 0; font-size: 18px; }
+            .alert { background: linear-gradient(135deg, #fef9e7, #fff3b0); border: 2px solid #f39c12; padding: 20px; border-radius: 10px; margin: 25px 0; }
+            .recommendations { background: linear-gradient(135deg, #eaf4fd, #d6eaff); padding: 30px; border-radius: 10px; margin: 30px 0; }
+            .recommendations h2 { color: #2980b9; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+            .rec-item { margin: 20px 0; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid #27ae60; }
+            .rec-title { font-weight: bold; color: #27ae60; font-size: 18px; margin-bottom: 10px; }
+            .footer { text-align: center; margin-top: 60px; padding: 25px; background: #34495e; color: white; border-radius: 10px; }
+            table { width: 100%; border-collapse: collapse; margin: 25px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
+            th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+            th { background: linear-gradient(135deg, #2980b9, #3498db); color: white; font-weight: bold; font-size: 16px; }
+            td { font-size: 14px; }
+            tr:nth-child(even) { background-color: #f8f9fa; }
+            tr:hover { background-color: #e3f2fd; }
+            @media print { 
+                .section { page-break-inside: avoid; } 
+                body { margin: 20px; }
+                .chart-image { max-width: 90%; }
+            }
         </style>
     </head>
     <body>
         <div class="header">
             <h1 class="title">RAPPORT GENRE</h1>
             <h2 class="subtitle">PROCASEF Boundou</h2>
-            <p>Généré le ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+            <p class="date">Généré le ${new Date().toLocaleDateString('fr-FR', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            })}</p>
         </div>
 
         <div class="section">
             <h2 class="section-title">📊 SYNTHÈSE EXÉCUTIVE</h2>
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-value">${total.toLocaleString('fr-FR')}</div>
+                    <div class="stat-value">${formatNumber(total)}</div>
                     <div class="stat-label">Total Bénéficiaires</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${femmes.toLocaleString('fr-FR')}</div>
+                    <div class="stat-value">${formatNumber(femmes)}</div>
                     <div class="stat-label">Femmes</div>
                 </div>
                 <div class="stat-card">
@@ -1402,16 +1530,19 @@ async generateHTMLReportWithCharts() {
         </div>
 
         <div class="section recommendations">
-            <h2 class="section-title">🎯 RECOMMANDATIONS</h2>
+            <h2 class="section-title">🎯 RECOMMANDATIONS STRATÉGIQUES</h2>
             ${this.generateStrategicRecommendations(reportData).map((rec, i) => 
-                `<h3>${i + 1}. ${rec.title}</h3><p>${rec.description}</p>`
+                `<div class="rec-item">
+                    <div class="rec-title">${i + 1}. ${rec.title}</div>
+                    <p>${rec.description}</p>
+                </div>`
             ).join('')}
         </div>
 
         <div class="footer">
-            <p>PROCASEF Dashboard - Rapport Genre Automatisé</p>
+            <p><strong>PROCASEF Dashboard - Rapport Genre Automatisé</strong></p>
             <p>Contact: procasef@example.com | www.procasef.com</p>
-            <p>Rapport généré avec graphiques intégrés</p>
+            <p>Rapport généré avec graphiques intégrés - ${new Date().toLocaleString('fr-FR')}</p>
         </div>
     </body>
     </html>`;
@@ -1611,38 +1742,118 @@ createWordStatsTable(reportData, formatNumber) {
 
     return [
         new window.docx.Table({
+            alignment: window.docx.AlignmentType.CENTER,
+            width: {
+                size: 80,
+                type: window.docx.WidthType.PERCENTAGE,
+            },
             rows: [
                 new window.docx.TableRow({
                     children: [
-                        new window.docx.TableCell({ children: [new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: 'Indicateur', bold: true })] })] }),
-                        new window.docx.TableCell({ children: [new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: 'Valeur', bold: true })] })] }),
-                        new window.docx.TableCell({ children: [new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: 'Pourcentage', bold: true })] })] }),
+                        new window.docx.TableCell({ 
+                            children: [new window.docx.Paragraph({ 
+                                alignment: window.docx.AlignmentType.CENTER,
+                                children: [new window.docx.TextRun({ text: 'Indicateur', bold: true, size: 22 })] 
+                            })],
+                            shading: { fill: "2980B9" },
+                        }),
+                        new window.docx.TableCell({ 
+                            children: [new window.docx.Paragraph({ 
+                                alignment: window.docx.AlignmentType.CENTER,
+                                children: [new window.docx.TextRun({ text: 'Valeur', bold: true, size: 22, color: "FFFFFF" })] 
+                            })],
+                            shading: { fill: "2980B9" },
+                        }),
+                        new window.docx.TableCell({ 
+                            children: [new window.docx.Paragraph({ 
+                                alignment: window.docx.AlignmentType.CENTER,
+                                children: [new window.docx.TextRun({ text: 'Pourcentage', bold: true, size: 22, color: "FFFFFF" })] 
+                            })],
+                            shading: { fill: "2980B9" },
+                        }),
                     ],
                 }),
                 new window.docx.TableRow({
                     children: [
-                        new window.docx.TableCell({ children: [new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: 'Hommes' })] })] }),
-                        new window.docx.TableCell({ children: [new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: formatNumber(hommes) })] })] }),
-                        new window.docx.TableCell({ children: [new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: `${(100 - parseFloat(femmesPourcentage)).toFixed(1)}%` })] })] }),
+                        new window.docx.TableCell({ 
+                            children: [new window.docx.Paragraph({ 
+                                alignment: window.docx.AlignmentType.CENTER,
+                                children: [new window.docx.TextRun({ text: 'Hommes', size: 20 })] 
+                            })] 
+                        }),
+                        new window.docx.TableCell({ 
+                            children: [new window.docx.Paragraph({ 
+                                alignment: window.docx.AlignmentType.CENTER,
+                                children: [new window.docx.TextRun({ text: formatNumber(hommes), size: 20 })] 
+                            })] 
+                        }),
+                        new window.docx.TableCell({ 
+                            children: [new window.docx.Paragraph({ 
+                                alignment: window.docx.AlignmentType.CENTER,
+                                children: [new window.docx.TextRun({ text: `${(100 - parseFloat(femmesPourcentage)).toFixed(1)}%`, size: 20 })] 
+                            })] 
+                        }),
                     ],
                 }),
                 new window.docx.TableRow({
                     children: [
-                        new window.docx.TableCell({ children: [new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: 'Femmes' })] })] }),
-                        new window.docx.TableCell({ children: [new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: formatNumber(femmes) })] })] }),
-                        new window.docx.TableCell({ children: [new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: `${femmesPourcentage}%` })] })] }),
+                        new window.docx.TableCell({ 
+                            children: [new window.docx.Paragraph({ 
+                                alignment: window.docx.AlignmentType.CENTER,
+                                children: [new window.docx.TextRun({ text: 'Femmes', size: 20 })] 
+                            })] 
+                        }),
+                        new window.docx.TableCell({ 
+                            children: [new window.docx.Paragraph({ 
+                                alignment: window.docx.AlignmentType.CENTER,
+                                children: [new window.docx.TextRun({ text: formatNumber(femmes), size: 20 })] 
+                            })] 
+                        }),
+                        new window.docx.TableCell({ 
+                            children: [new window.docx.Paragraph({ 
+                                alignment: window.docx.AlignmentType.CENTER,
+                                children: [new window.docx.TextRun({ text: `${femmesPourcentage}%`, size: 20 })] 
+                            })] 
+                        }),
                     ],
                 }),
                 new window.docx.TableRow({
                     children: [
-                        new window.docx.TableCell({ children: [new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: 'Total', bold: true })] })] }),
-                        new window.docx.TableCell({ children: [new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: formatNumber(total), bold: true })] })] }),
-                        new window.docx.TableCell({ children: [new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: '100%', bold: true })] })] }),
+                        new window.docx.TableCell({ 
+                            children: [new window.docx.Paragraph({ 
+                                alignment: window.docx.AlignmentType.CENTER,
+                                children: [new window.docx.TextRun({ text: 'Total', bold: true, size: 20 })] 
+                            })],
+                            shading: { fill: "ECF0F1" },
+                        }),
+                        new window.docx.TableCell({ 
+                            children: [new window.docx.Paragraph({ 
+                                alignment: window.docx.AlignmentType.CENTER,
+                                children: [new window.docx.TextRun({ text: formatNumber(total), bold: true, size: 20 })] 
+                            })],
+                            shading: { fill: "ECF0F1" },
+                        }),
+                        new window.docx.TableCell({ 
+                            children: [new window.docx.Paragraph({ 
+                                alignment: window.docx.AlignmentType.CENTER,
+                                children: [new window.docx.TextRun({ text: '100%', bold: true, size: 20 })] 
+                            })],
+                            shading: { fill: "ECF0F1" },
+                        }),
                     ],
                 }),
             ],
+            margins: {
+                top: 100,
+                bottom: 100,
+                left: 100,
+                right: 100,
+            },
         }),
-        new window.docx.Paragraph({ text: '' }),
+        new window.docx.Paragraph({ 
+            spacing: { after: 200 },
+            text: '' 
+        }),
     ];
 }
 
@@ -1656,10 +1867,13 @@ createWordRecommendations(reportData) {
     return recommendations.flatMap((rec, index) => [
         new window.docx.Paragraph({
             style: 'Heading2',
+            spacing: { before: 150, after: 50 },
             children: [new window.docx.TextRun({ text: `${index + 1}. ${rec.title}` })],
         }),
-        new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: rec.description })] }),
-        new window.docx.Paragraph({ text: '' }),
+        new window.docx.Paragraph({ 
+            spacing: { after: 150 },
+            children: [new window.docx.TextRun({ text: rec.description, size: 20 })] 
+        }),
     ]);
 }
 
@@ -1890,10 +2104,9 @@ getEnhancedTableDataForChart(section, reportData, formatNumber) {
             let table = [['Source', 'Bénéficiaires', 'Pourcentage']];
             sourceData.forEach(item => {
                 table.push([
-                    item.source || item.communesenegal || item.commune || 'N/A',
+                    (item.source || item.communesenegal || item.commune || 'N/A').replace(/[^\w\s-]/g, ''),
                     formatNumber(item.total || item.nombre || 0),
                     `${(item.femme_pourcentage || item.pourcentage || 0).toFixed(1)}%`
-                    // ✅ Supprimé: emoji
                 ]);
             });
             return table;
@@ -1907,10 +2120,10 @@ getEnhancedTableDataForChart(section, reportData, formatNumber) {
             let table = [['Commune', 'Total', '% Femmes', 'Statut']];
             communeData.forEach(item => {
                 const pourcentage = item.femme_pourcentage || 0;
-                const statut = pourcentage >= 30 ? '🟢 Bon' : 
-                              pourcentage >= 20 ? '🟡 Moyen' : '🔴 Faible';
+                const statut = pourcentage >= 30 ? 'Bon' : 
+                              pourcentage >= 20 ? 'Moyen' : 'Faible';
                 table.push([
-                    item.communesenegal || item.commune || 'N/A',
+                    (item.communesenegal || item.commune || 'N/A').replace(/[^\w\s-]/g, ''),
                     formatNumber(item.total || 0),
                     `${pourcentage.toFixed(1)}%`,
                     statut
@@ -1927,7 +2140,7 @@ getEnhancedTableDataForChart(section, reportData, formatNumber) {
             let table = [['Période', 'Hommes', 'Femmes', '% Femmes']];
             temporalData.forEach(item => {
                 table.push([
-                    item.periode || 'N/A',
+                    (item.periode || 'N/A').replace(/[^\w\s-]/g, ''),
                     formatNumber(item.homme || 0),
                     formatNumber(item.femme || 0),
                     `${(item.femme_pourcentage || 0).toFixed(1)}%`
@@ -1944,7 +2157,7 @@ getEnhancedTableDataForChart(section, reportData, formatNumber) {
             let table = [['Région', 'Population', '% Femmes']];
             regionData.forEach(item => {
                 table.push([
-                    item.region || item.nom || 'N/A',
+                    (item.region || item.nom || 'N/A').replace(/[^\w\s-]/g, ''),
                     formatNumber(item.total || 0),
                     `${(item.femme_pourcentage || 0).toFixed(1)}%`
                 ]);
