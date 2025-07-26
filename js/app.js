@@ -921,6 +921,255 @@ ${chartImages.map(c => `  ✓ ${c.title}`).join('\n')}
 }
 
 /**
+ * Version améliorée de la fonction exportGenreReport avec :
+ * - Graphiques plus grands et mieux proportionnés
+ * - Correction des nombres (suppression des "/")
+ * - Design moderne et attrayant
+ * - Analyse dynamique et recommandations
+ */
+async exportGenreReport() {
+    try {
+        await this.ensureGenreDataLoaded();
+
+        // Charger rapport_complet.json si pas déjà fait
+        if (!this.data.rapportComplet || Object.keys(this.data.rapportComplet).length === 0) {
+            await this.loadDataSafely('data/rapport_complet.json', 'rapportComplet');
+        }
+
+        const reportData = this.data.rapportComplet || {};
+        console.log('Données du rapport:', reportData);
+
+        // IDs des graphiques de la section rapport
+        const chartConfigs = [
+            { id: 'rapportSourceChart', title: 'Détail par Source', section: 'Détail par Source' },
+            { id: 'rapportCommuneMixedChart', title: 'Analyse par Commune', section: 'Analyse par Commune' },
+            { id: 'rapportTemporalChart', title: 'Évolution Temporelle', section: 'Analyse Temporelle' },
+            { id: 'rapportRegionPolarChart', title: 'Répartition par Région', section: 'Tamba-Kédougou' }
+        ];
+
+        // Capture des graphiques avec haute résolution et taille optimisée
+        const chartImages = [];
+        for (const config of chartConfigs) {
+            const canvas = document.getElementById(config.id);
+            
+            if (canvas && canvas.tagName === 'CANVAS') {
+                // Attendre que le graphique soit complètement rendu
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                // Créer un canvas temporaire avec meilleure résolution
+                const originalWidth = canvas.width;
+                const originalHeight = canvas.height;
+                
+                // Créer un canvas haute résolution
+                const tempCanvas = document.createElement('canvas');
+                const scale = 3; // Facteur d'échelle pour la qualité
+                tempCanvas.width = originalWidth * scale;
+                tempCanvas.height = originalHeight * scale;
+                
+                const tempContext = tempCanvas.getContext('2d');
+                tempContext.scale(scale, scale);
+                tempContext.imageSmoothingEnabled = true;
+                tempContext.imageSmoothingQuality = 'high';
+                tempContext.drawImage(canvas, 0, 0);
+                
+                const chartImg = tempCanvas.toDataURL('image/png', 1.0);
+                
+                if (chartImg && chartImg.length > 100 && !chartImg.includes('data:,')) {
+                    chartImages.push({
+                        image: chartImg,
+                        title: config.title,
+                        section: config.section,
+                        originalWidth: originalWidth,
+                        originalHeight: originalHeight
+                    });
+                    console.log(`✅ Graphique capturé: ${config.id}`);
+                } else {
+                    console.warn(`⚠️ Échec capture: ${config.id}`);
+                }
+            } else {
+                console.warn(`⚠️ Canvas non trouvé: ${config.id}`);
+            }
+        }
+
+        console.log(`📊 ${chartImages.length} graphiques capturés sur ${chartConfigs.length}`);
+
+        // Génération PDF avec design moderne
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ 
+            orientation: 'portrait', 
+            unit: 'pt', 
+            format: 'a4' 
+        });
+
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 30;
+        const contentWidth = pageWidth - (2 * margin);
+
+        // Fonction utilitaire pour corriger les nombres
+        const formatNumber = (value) => {
+            if (value === null || value === undefined) return '0';
+            
+            if (typeof value === 'string') {
+                // Nettoyer les chaînes avec des / et espaces
+                return value
+                    .replace(/\s*\/\s*/g, ' ') // Remplacer / par espace
+                    .replace(/\s+/g, ' ')      // Normaliser les espaces multiples
+                    .trim();
+            }
+            
+            if (typeof value === 'number') {
+                return value.toLocaleString('fr-FR');
+            }
+            
+            return String(value).replace(/\s*\/\s*/g, ' ').replace(/\s+/g, ' ').trim();
+        };
+
+        // Fonction pour nettoyer récursivement toutes les valeurs d'un objet
+        const cleanDataObject = (obj) => {
+            if (Array.isArray(obj)) {
+                return obj.map(item => cleanDataObject(item));
+            }
+            
+            if (obj && typeof obj === 'object') {
+                const cleaned = {};
+                for (const [key, value] of Object.entries(obj)) {
+                    if (typeof value === 'string' && value.includes('/')) {
+                        cleaned[key] = formatNumber(value);
+                    } else if (typeof value === 'object') {
+                        cleaned[key] = cleanDataObject(value);
+                    } else {
+                        cleaned[key] = value;
+                    }
+                }
+                return cleaned;
+            }
+            
+            return obj;
+        };
+
+        // Nettoyer toutes les données du rapport
+        const cleanedReportData = cleanDataObject(reportData);
+
+        // Page de couverture moderne
+        this.createCoverPage(doc, pageWidth, pageHeight, margin);
+
+        // Page de synthèse avec analyse
+        doc.addPage();
+        let currentY = this.createSynthesisPage(doc, cleanedReportData, pageWidth, pageHeight, margin, formatNumber);
+
+        // Ajout des graphiques avec analyse
+        for (let index = 0; index < chartImages.length; index++) {
+            const chartData = chartImages[index];
+            
+            // Nouvelle page pour chaque graphique
+            doc.addPage();
+            currentY = 50;
+
+            // Titre de section avec style moderne
+            doc.setFillColor(30, 58, 138);
+            doc.rect(margin, currentY - 10, contentWidth, 35, 'F');
+            
+            doc.setFontSize(16);
+            doc.setTextColor(255, 255, 255);
+            doc.text(chartData.title, margin + 15, currentY + 15);
+            currentY += 50;
+
+            // Graphique plus grand (80% de la largeur de page)
+            const maxGraphWidth = contentWidth * 0.85;
+            const maxGraphHeight = 280; // Augmenté
+            
+            let graphWidth = Math.min(maxGraphWidth, chartData.originalWidth * 0.8);
+            let graphHeight = (graphWidth / chartData.originalWidth) * chartData.originalHeight;
+            
+            if (graphHeight > maxGraphHeight) {
+                graphHeight = maxGraphHeight;
+                graphWidth = (graphHeight / chartData.originalHeight) * chartData.originalWidth;
+            }
+
+            const graphX = (pageWidth - graphWidth) / 2;
+
+            // Ajout d'un cadre subtil autour du graphique
+            doc.setDrawColor(200, 200, 200);
+            doc.setLineWidth(1);
+            doc.rect(graphX - 5, currentY - 5, graphWidth + 10, graphHeight + 10);
+
+            // Ajouter le graphique centré et plus grand
+            doc.addImage(chartData.image, 'PNG', graphX, currentY, graphWidth, graphHeight);
+            currentY += graphHeight + 25;
+
+            // Tableau de données avec style amélioré
+            let tableData = this.getEnhancedTableDataForChart(chartData.section, cleanedReportData, formatNumber);
+            
+            if (tableData.length > 1) {
+                doc.autoTable({
+                    head: [tableData[0]],
+                    body: tableData.slice(1),
+                    startY: currentY,
+                    margin: { left: margin, right: margin },
+                    headStyles: { 
+                        fillColor: [212, 165, 116],
+                        textColor: [255, 255, 255],
+                        fontSize: 12,
+                        halign: 'center',
+                        fontStyle: 'bold'
+                    },
+                    styles: { 
+                        fontSize: 10,
+                        cellPadding: 8,
+                        lineColor: [220, 220, 220],
+                        lineWidth: 0.5,
+                        overflow: 'linebreak'
+                    },
+                    alternateRowStyles: { 
+                        fillColor: [248, 250, 252] 
+                    },
+                    columnStyles: {
+                        1: { halign: 'right' },
+                        2: { halign: 'center' }
+                    }
+                });
+                currentY = doc.lastAutoTable.finalY + 30;
+            }
+
+            // Ajouter l'analyse et recommandations pour cette section
+            this.addSectionAnalysis(doc, chartData.section, cleanedReportData, currentY, margin, contentWidth, formatNumber);
+        }
+
+        // Page de recommandations générales
+        doc.addPage();
+        this.createRecommendationsPage(doc, cleanedReportData, pageWidth, pageHeight, margin, formatNumber);
+
+        // Pied de page moderne pour toutes les pages
+        this.addAdvancedFooters(doc, pageWidth, pageHeight, margin);
+
+        // Sauvegarder le PDF
+        const fileName = `Rapport_Genre_PROCASEF_${new Date().toISOString().slice(0, 10)}.pdf`;
+        doc.save(fileName);
+
+        // Message de succès amélioré
+        const successMsg = `🎉 Rapport genre généré avec succès !
+        
+📈 Fonctionnalités incluses :
+• ${chartImages.length} graphiques haute résolution
+• Analyse dynamique des données
+• Recommandations personnalisées
+• Design moderne et professionnel
+
+📊 Graphiques inclus :
+${chartImages.map(c => `  ✓ ${c.title}`).join('\n')}
+
+💾 Fichier sauvegardé : ${fileName}`;
+        
+        alert(successMsg);
+
+    } catch (err) {
+        console.error('❌ Erreur export genre :', err);
+        this.showError('Échec de la génération du rapport genre. Vérifiez la console pour plus de détails.');
+    }
+}
+
+/**
  * Version améliorée pour l'export Word avec données nettoyées
  */
 async exportGenreWordReport() {
@@ -1221,6 +1470,9 @@ createSynthesisPage(doc, reportData, pageWidth, pageHeight, margin, formatNumber
     const analysisLines = doc.splitTextToSize(analysis, pageWidth - 2 * margin);
     doc.text(analysisLines, margin, currentY);
     currentY += analysisLines.length * 15 + 20;
+
+    return currentY;
+}
 
 /**
  * Crée les statistiques globales pour Word
