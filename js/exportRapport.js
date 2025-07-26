@@ -903,7 +903,7 @@ function getEnhancedTableDataForChart(section, reportData, formatNumber) {
       doc.setFontSize(FONT_SIZES.SMALL);
       doc.setTextColor(...COLORS.NEUTRAL);
       doc.text('PROCASEF Dashboard - Rapport Genre Automatisé', margin, pageHeight - 25);
-      const dateText = `Généré le ${new Date().toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}` );
+      const dateText = `Généré le ${new Date().toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`;
       const dateWidth = doc.getTextWidth(dateText);
       doc.text(dateText, (pageWidth - dateWidth) / 2, pageHeight - 25);
       const pageText = `${i}/${totalPages}`;
