@@ -626,15 +626,22 @@
     </main>
   </div>
 
-<!-- JavaScript Libraries - Fixed Loading Order -->
+ <!-- JavaScript Libraries - Fixed Loading Order -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     
-    <!-- jsPDF and related libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <!-- jsPDF and related libraries - Try multiple CDN sources -->
+    <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script>
+        // Fallback loading for jsPDF
+        if (typeof window.jsPDF === 'undefined') {
+            console.log('First jsPDF source failed, trying backup...');
+            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>');
+        }
+    </script>
+    <script src="https://unpkg.com/jspdf-autotable@3.6.0/dist/jspdf.plugin.autotable.min.js"></script>
     
     <!-- Other libraries -->
     <script src="https://unpkg.com/docx@9.0.0/build/index.min.js"></script>
@@ -643,15 +650,20 @@
     <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
 
     <script>
-        // Wait for all scripts to load
-        window.addEventListener('load', function() {
+        // Wait for all scripts to load with timeout
+        setTimeout(() => {
             const statusDiv = document.getElementById('status');
+            
+            // More comprehensive jsPDF checking
+            const jsPDFAvailable = typeof window.jsPDF !== 'undefined' || 
+                                 typeof jsPDF !== 'undefined' || 
+                                 typeof window.jspdf !== 'undefined';
             
             // Check library availability
             const libraries = {
                 'Leaflet': typeof L !== 'undefined',
                 'Chart.js': typeof Chart !== 'undefined',
-                'jsPDF': typeof window.jsPDF !== 'undefined',
+                'jsPDF': jsPDFAvailable,
                 'Papa Parse': typeof Papa !== 'undefined',
                 'Bootstrap': typeof bootstrap !== 'undefined'
             };
@@ -663,15 +675,33 @@
                 const color = loaded ? 'text-success' : 'text-danger';
                 statusHTML += `<li class="${color}">${status} ${name}: ${loaded ? 'Loaded' : 'Not Found'}</li>`;
             }
+            
+            // Debug info for jsPDF
+            statusHTML += '</ul><h4>jsPDF Debug Info:</h4><ul>';
+            statusHTML += `<li>window.jsPDF: ${typeof window.jsPDF}</li>`;
+            statusHTML += `<li>jsPDF: ${typeof jsPDF}</li>`;
+            statusHTML += `<li>window.jspdf: ${typeof window.jspdf}</li>`;
+            statusHTML += `<li>Global jsPDF keys: ${Object.keys(window).filter(key => key.toLowerCase().includes('jspdf')).join(', ') || 'None found'}</li>`;
             statusHTML += '</ul>';
+            
             statusDiv.innerHTML = statusHTML;
 
-            // Test PDF generation
+            // Test PDF generation with multiple approaches
             document.getElementById('testBtn').addEventListener('click', function() {
+                let jsPDFConstructor = null;
+                
+                // Try different ways to access jsPDF
                 if (typeof window.jsPDF !== 'undefined') {
+                    jsPDFConstructor = window.jsPDF.jsPDF || window.jsPDF;
+                } else if (typeof jsPDF !== 'undefined') {
+                    jsPDFConstructor = jsPDF;
+                } else if (typeof window.jspdf !== 'undefined') {
+                    jsPDFConstructor = window.jspdf;
+                }
+                
+                if (jsPDFConstructor) {
                     try {
-                        const { jsPDF } = window.jsPDF;
-                        const doc = new jsPDF();
+                        const doc = new jsPDFConstructor();
                         doc.text('Hello World!', 10, 10);
                         doc.save('test.pdf');
                         alert('PDF generated successfully!');
@@ -680,18 +710,29 @@
                         console.error('PDF Error:', error);
                     }
                 } else {
-                    alert('jsPDF is not available');
+                    alert('jsPDF is not available through any method');
                 }
             });
-        });
+        }, 1000); // Wait 1 second for all scripts to load
 
-        // Additional debugging
-        console.log('🔍 Library availability check:');
+        // Additional debugging with more detailed checks
+        console.log('🔍 Detailed library availability check:');
         console.log('Chart:', typeof Chart);
-        console.log('jsPDF:', typeof window.jsPDF);
+        console.log('window.jsPDF:', typeof window.jsPDF);
+        console.log('jsPDF:', typeof jsPDF);
+        console.log('window.jspdf:', typeof window.jspdf);
         console.log('Papa:', typeof Papa);
         console.log('L (Leaflet):', typeof L);
         console.log('docx:', typeof docx);
+        console.log('All window properties containing "pdf":', Object.keys(window).filter(key => key.toLowerCase().includes('pdf')));
+        
+        // Check if scripts loaded successfully
+        const scripts = document.querySelectorAll('script[src*="jspdf"]');
+        console.log('jsPDF script tags found:', scripts.length);
+        scripts.forEach((script, index) => {
+            console.log(`Script ${index + 1}:`, script.src);
+            console.log(`Script ${index + 1} loaded:`, !script.onerror);
+        });
     </script>
 
   <!-- ========== SCRIPTS DE L’APPLICATION ================================== -->
