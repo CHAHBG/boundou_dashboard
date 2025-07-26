@@ -673,10 +673,11 @@ class ProcasefDashboard {
 
     // =================== AJOUT #2 – EXPORT GENRE REPORT ===================
 /**
- * Version corrigée de la fonction exportGenreReport avec :
- * - Graphiques à la bonne échelle et centrés
- * - Tableaux correctement formatés avec les vraies données
- * - Meilleure mise en page PDF
+ * Version améliorée de la fonction exportGenreReport avec :
+ * - Graphiques plus grands et mieux proportionnés
+ * - Correction des nombres (suppression des "/")
+ * - Design moderne et attrayant
+ * - Analyse dynamique et recommandations
  */
 async exportGenreReport() {
     try {
@@ -698,7 +699,7 @@ async exportGenreReport() {
             { id: 'rapportRegionPolarChart', title: 'Répartition par Région', section: 'Tamba-Kédougou' }
         ];
 
-        // Capture des graphiques avec haute résolution et taille correcte
+        // Capture des graphiques avec haute résolution et taille optimisée
         const chartImages = [];
         for (const config of chartConfigs) {
             const canvas = document.getElementById(config.id);
@@ -707,18 +708,20 @@ async exportGenreReport() {
                 // Attendre que le graphique soit complètement rendu
                 await new Promise(resolve => setTimeout(resolve, 800));
                 
-                // Créer un canvas temporaire avec la résolution d'origine
+                // Créer un canvas temporaire avec meilleure résolution
                 const originalWidth = canvas.width;
                 const originalHeight = canvas.height;
                 
-                // Créer un canvas haute résolution mais garder les proportions
+                // Créer un canvas haute résolution
                 const tempCanvas = document.createElement('canvas');
-                const scale = 2; // Facteur d'échelle pour la qualité
+                const scale = 3; // Facteur d'échelle pour la qualité
                 tempCanvas.width = originalWidth * scale;
                 tempCanvas.height = originalHeight * scale;
                 
                 const tempContext = tempCanvas.getContext('2d');
                 tempContext.scale(scale, scale);
+                tempContext.imageSmoothingEnabled = true;
+                tempContext.imageSmoothingQuality = 'high';
                 tempContext.drawImage(canvas, 0, 0);
                 
                 const chartImg = tempCanvas.toDataURL('image/png', 1.0);
@@ -742,7 +745,7 @@ async exportGenreReport() {
 
         console.log(`📊 ${chartImages.length} graphiques capturés sur ${chartConfigs.length}`);
 
-        // Génération PDF améliorée
+        // Génération PDF avec design moderne
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ 
             orientation: 'portrait', 
@@ -752,90 +755,46 @@ async exportGenreReport() {
 
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();
-        const margin = 40;
+        const margin = 30;
         const contentWidth = pageWidth - (2 * margin);
 
-        // En-tête du document
-        doc.setFontSize(20);
-        doc.setTextColor(30, 58, 138);
-        const title = 'Rapport Genre – PROCASEF Boundou';
-        const titleWidth = doc.getTextWidth(title);
-        doc.text(title, (pageWidth - titleWidth) / 2, 50);
-        
-        doc.setFontSize(12);
-        doc.setTextColor(0, 0, 0);
-        const dateText = `Généré le : ${new Date().toLocaleString('fr-FR')}`;
-        const dateWidth = doc.getTextWidth(dateText);
-        doc.text(dateText, (pageWidth - dateWidth) / 2, 70);
-
-        let currentY = 100;
-
-        // Tableau des statistiques globales
-        const globalStats = reportData['Synthèse Globale'] || [];
-        
-        // Valeurs par défaut si les données ne sont pas disponibles
-        const hommes = globalStats.find(item => item.indicateur === 'Hommes')?.valeur || 43576;
-        const femmes = globalStats.find(item => item.indicateur === 'Femmes')?.valeur || 9332;
-        const total = globalStats.find(item => item.indicateur === 'Total Personnes')?.valeur || (hommes + femmes);
-        const hommesPercentage = globalStats.find(item => item.indicateur === 'Pourcentage Hommes')?.valeur || ((hommes / total) * 100).toFixed(1) + ' %';
-        const femmesPercentage = globalStats.find(item => item.indicateur === 'Pourcentage Femmes')?.valeur || ((femmes / total) * 100).toFixed(1) + ' %';
-
-        doc.autoTable({
-            head: [['Indicateur', 'Valeur', 'Pourcentage']],
-            body: [
-                ['Hommes', hommes.toLocaleString('fr-FR'), hommesPercentage],
-                ['Femmes', femmes.toLocaleString('fr-FR'), femmesPercentage],
-                ['Total', total.toLocaleString('fr-FR'), '100 %']
-            ],
-            startY: currentY,
-            margin: { left: margin, right: margin },
-            headStyles: { 
-                fillColor: [212, 165, 116], 
-                textColor: [255, 255, 255], 
-                fontSize: 12,
-                halign: 'center'
-            },
-            styles: { 
-                fontSize: 11, 
-                cellPadding: 8, 
-                lineColor: [200, 200, 200], 
-                lineWidth: 0.5,
-                halign: 'center'
-            },
-            alternateRowStyles: { fillColor: [249, 250, 251] },
-            tableWidth: 'auto',
-            columnStyles: {
-                0: { halign: 'left' },
-                1: { halign: 'right' },
-                2: { halign: 'center' }
+        // Fonction utilitaire pour corriger les nombres
+        const formatNumber = (value) => {
+            if (typeof value === 'string') {
+                return value.replace(/\//g, ',').replace(/\s+/g, ' ').trim();
             }
-        });
+            return value?.toLocaleString('fr-FR') || '0';
+        };
 
-        currentY = doc.lastAutoTable.finalY + 30;
+        // Page de couverture moderne
+        this.createCoverPage(doc, pageWidth, pageHeight, margin);
 
-        // Ajouter les graphiques avec les vrais tableaux de données
+        // Page de synthèse avec analyse
+        doc.addPage();
+        let currentY = this.createSynthesisPage(doc, reportData, pageWidth, pageHeight, margin, formatNumber);
+
+        // Ajout des graphiques avec analyse
         for (let index = 0; index < chartImages.length; index++) {
             const chartData = chartImages[index];
             
-            // Vérifier si on a besoin d'une nouvelle page
-            if (currentY > pageHeight - 250) {
-                doc.addPage();
-                currentY = 50;
-            }
+            // Nouvelle page pour chaque graphique
+            doc.addPage();
+            currentY = 50;
 
-            // Titre du graphique centré
-            doc.setFontSize(14);
-            doc.setTextColor(30, 58, 138);
-            const chartTitleWidth = doc.getTextWidth(chartData.title);
-            doc.text(chartData.title, (pageWidth - chartTitleWidth) / 2, currentY);
-            currentY += 25;
-
-            // Calcul des dimensions du graphique pour le centrer
-            const maxGraphWidth = contentWidth * 0.8; // 80% de la largeur disponible
-            const maxGraphHeight = 200;
+            // Titre de section avec style moderne
+            doc.setFillColor(30, 58, 138);
+            doc.rect(margin, currentY - 10, contentWidth, 35, 'F');
             
-            // Calculer les dimensions en gardant les proportions
-            let graphWidth = Math.min(maxGraphWidth, chartData.originalWidth * 0.6);
+            doc.setFontSize(16);
+            doc.setTextColor(255, 255, 255);
+            doc.text(chartData.title, margin + 15, currentY + 15);
+            currentY += 50;
+
+            // Graphique plus grand (80% de la largeur de page)
+            const maxGraphWidth = contentWidth * 0.85;
+            const maxGraphHeight = 280; // Augmenté
+            
+            let graphWidth = Math.min(maxGraphWidth, chartData.originalWidth * 0.8);
             let graphHeight = (graphWidth / chartData.originalWidth) * chartData.originalHeight;
             
             if (graphHeight > maxGraphHeight) {
@@ -845,69 +804,77 @@ async exportGenreReport() {
 
             const graphX = (pageWidth - graphWidth) / 2;
 
-            // Ajouter le graphique centré
-            doc.addImage(chartData.image, 'PNG', graphX, currentY, graphWidth, graphHeight);
-            currentY += graphHeight + 20;
+            // Ajout d'un cadre subtil autour du graphique
+            doc.setDrawColor(200, 200, 200);
+            doc.setLineWidth(1);
+            doc.rect(graphX - 5, currentY - 5, graphWidth + 10, graphHeight + 10);
 
-            // Ajouter le tableau de données correspondant
-            let tableData = this.getTableDataForChart(chartData.section, reportData);
+            // Ajouter le graphique centré et plus grand
+            doc.addImage(chartData.image, 'PNG', graphX, currentY, graphWidth, graphHeight);
+            currentY += graphHeight + 25;
+
+            // Tableau de données avec style amélioré
+            let tableData = this.getEnhancedTableDataForChart(chartData.section, reportData, formatNumber);
             
-            if (tableData.length > 1) { // Au moins un header + une ligne de données
+            if (tableData.length > 1) {
                 doc.autoTable({
-                    head: [tableData[0]], // Première ligne comme header
-                    body: tableData.slice(1), // Reste comme body
+                    head: [tableData[0]],
+                    body: tableData.slice(1),
                     startY: currentY,
                     margin: { left: margin, right: margin },
                     headStyles: { 
-                        fillColor: [212, 165, 116], 
-                        textColor: [255, 255, 255], 
-                        fontSize: 10,
-                        halign: 'center'
+                        fillColor: [212, 165, 116],
+                        textColor: [255, 255, 255],
+                        fontSize: 12,
+                        halign: 'center',
+                        fontStyle: 'bold'
                     },
                     styles: { 
-                        fontSize: 9, 
-                        cellPadding: 6, 
-                        lineColor: [200, 200, 200], 
-                        lineWidth: 0.5 
+                        fontSize: 10,
+                        cellPadding: 8,
+                        lineColor: [220, 220, 220],
+                        lineWidth: 0.5,
+                        overflow: 'linebreak'
                     },
-                    alternateRowStyles: { fillColor: [249, 250, 251] },
+                    alternateRowStyles: { 
+                        fillColor: [248, 250, 252] 
+                    },
                     columnStyles: {
                         1: { halign: 'right' },
                         2: { halign: 'center' }
                     }
                 });
                 currentY = doc.lastAutoTable.finalY + 30;
-            } else {
-                currentY += 20;
             }
+
+            // Ajouter l'analyse et recommandations pour cette section
+            this.addSectionAnalysis(doc, chartData.section, reportData, currentY, margin, contentWidth, formatNumber);
         }
 
-        // Pied de page
-        const totalPages = doc.internal.getNumberOfPages();
-        for (let i = 1; i <= totalPages; i++) {
-            doc.setPage(i);
-            doc.setFontSize(10);
-            doc.setTextColor(128, 128, 128);
-            const footerText = 'Rapport généré par l\'application PROCASEF Dashboard';
-            const footerWidth = doc.getTextWidth(footerText);
-            doc.text(footerText, (pageWidth - footerWidth) / 2, pageHeight - 20);
-            
-            // Numéro de page
-            const pageText = `Page ${i} sur ${totalPages}`;
-            const pageTextWidth = doc.getTextWidth(pageText);
-            doc.text(pageText, pageWidth - margin - pageTextWidth, pageHeight - 20);
-        }
+        // Page de recommandations générales
+        doc.addPage();
+        this.createRecommendationsPage(doc, reportData, pageWidth, pageHeight, margin, formatNumber);
+
+        // Pied de page moderne pour toutes les pages
+        this.addAdvancedFooters(doc, pageWidth, pageHeight, margin);
 
         // Sauvegarder le PDF
-        doc.save('Rapport_Genre_PROCASEF.pdf');
+        const fileName = `Rapport_Genre_PROCASEF_${new Date().toISOString().slice(0, 10)}.pdf`;
+        doc.save(fileName);
 
-        // Message de succès
-        const successMsg = `✅ Rapport genre exporté avec succès !
-📊 ${chartImages.length} graphiques inclus
-📄 Format : PDF de ${totalPages} page(s)
+        // Message de succès amélioré
+        const successMsg = `🎉 Rapport genre généré avec succès !
+        
+📈 Fonctionnalités incluses :
+• ${chartImages.length} graphiques haute résolution
+• Analyse dynamique des données
+• Recommandations personnalisées
+• Design moderne et professionnel
 
-Graphiques inclus :
-${chartImages.map(c => `• ${c.title}`).join('\n')}`;
+📊 Graphiques inclus :
+${chartImages.map(c => `  ✓ ${c.title}`).join('\n')}
+
+💾 Fichier sauvegardé : ${fileName}`;
         
         alert(successMsg);
 
@@ -918,68 +885,415 @@ ${chartImages.map(c => `• ${c.title}`).join('\n')}`;
 }
 
 /**
- * Génère les données de tableau pour chaque section
+ * Crée une page de couverture moderne
  */
-getTableDataForChart(section, reportData) {
+createCoverPage(doc, pageWidth, pageHeight, margin) {
+    // Gradient de fond (simulé avec des rectangles)
+    const gradientSteps = 50;
+    for (let i = 0; i < gradientSteps; i++) {
+        const alpha = i / gradientSteps;
+        const blue = Math.round(30 + (200 - 30) * alpha);
+        doc.setFillColor(blue, blue + 20, 138 + alpha * 100);
+        doc.rect(0, i * (pageHeight / gradientSteps), pageWidth, pageHeight / gradientSteps, 'F');
+    }
+
+    // Titre principal
+    doc.setFontSize(28);
+    doc.setTextColor(255, 255, 255);
+    const mainTitle = 'RAPPORT GENRE';
+    const mainTitleWidth = doc.getTextWidth(mainTitle);
+    doc.text(mainTitle, (pageWidth - mainTitleWidth) / 2, 200);
+
+    // Sous-titre
+    doc.setFontSize(20);
+    const subTitle = 'PROCASEF Boundou';
+    const subTitleWidth = doc.getTextWidth(subTitle);
+    doc.text(subTitle, (pageWidth - subTitleWidth) / 2, 240);
+
+    // Date et informations
+    doc.setFontSize(14);
+    const dateText = `Généré le ${new Date().toLocaleDateString('fr-FR', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    })}`;
+    const dateWidth = doc.getTextWidth(dateText);
+    doc.text(dateText, (pageWidth - dateWidth) / 2, 400);
+
+    // Version et footer
+    doc.setFontSize(12);
+    doc.setTextColor(220, 220, 220);
+    const versionText = 'Version 2.0 - Analyse Avancée';
+    const versionWidth = doc.getTextWidth(versionText);
+    doc.text(versionText, (pageWidth - versionWidth) / 2, pageHeight - 60);
+}
+
+/**
+ * Crée la page de synthèse avec KPIs
+ */
+createSynthesisPage(doc, reportData, pageWidth, pageHeight, margin, formatNumber) {
+    let currentY = 50;
+
+    // Titre de section
+    doc.setFillColor(212, 165, 116);
+    doc.rect(margin, currentY - 10, pageWidth - 2 * margin, 35, 'F');
+    doc.setFontSize(18);
+    doc.setTextColor(255, 255, 255);
+    doc.text('📊 SYNTHÈSE EXÉCUTIVE', margin + 15, currentY + 15);
+    currentY += 60;
+
+    // Statistiques globales avec design KPI
+    const globalStats = reportData['Synthèse Globale'] || [];
+    const hommes = globalStats.find(item => item.indicateur === 'Hommes')?.valeur || 43576;
+    const femmes = globalStats.find(item => item.indicateur === 'Femmes')?.valeur || 9332;
+    const total = hommes + femmes;
+    const femmesPourcentage = ((femmes / total) * 100).toFixed(1);
+
+    // KPI Cards
+    this.createKPICard(doc, margin, currentY, 'TOTAL BÉNÉFICIAIRES', formatNumber(total), '#1e40af');
+    this.createKPICard(doc, margin + 180, currentY, 'FEMMES', formatNumber(femmes), '#dc2626');
+    this.createKPICard(doc, margin + 360, currentY, '% FEMMES', femmesPourcentage + '%', '#059669');
+    
+    currentY += 100;
+
+    // Analyse automatique des données
+    doc.setFontSize(14);
+    doc.setTextColor(30, 58, 138);
+    doc.text('🔍 ANALYSE AUTOMATIQUE', margin, currentY);
+    currentY += 25;
+
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    
+    // Analyse du ratio genre
+    let analysis = this.generateGenderAnalysis(hommes, femmes, femmesPourcentage);
+    const analysisLines = doc.splitTextToSize(analysis, pageWidth - 2 * margin);
+    doc.text(analysisLines, margin, currentY);
+    currentY += analysisLines.length * 15 + 20;
+
+    return currentY;
+}
+
+/**
+ * Crée une carte KPI moderne
+ */
+createKPICard(doc, x, y, title, value, color) {
+    // Fond de la carte
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(x, y, 160, 80, 5, 5, 'F');
+    
+    // Bordure colorée
+    doc.setDrawColor(color);
+    doc.setLineWidth(3);
+    doc.line(x, y, x + 160, y);
+    
+    // Titre
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(title, x + 10, y + 20);
+    
+    // Valeur
+    doc.setFontSize(20);
+    doc.setTextColor(0, 0, 0);
+    doc.text(value, x + 10, y + 50);
+}
+
+/**
+ * Génère une analyse automatique du ratio genre
+ */
+generateGenderAnalysis(hommes, femmes, femmesPourcentage) {
+    let analysis = "";
+    
+    if (femmesPourcentage < 20) {
+        analysis = `⚠️ ALERTE : La représentation féminine est critiquement faible (${femmesPourcentage}%). `;
+        analysis += "Cette situation indique une inégalité genre majeure nécessitant des actions correctives urgentes.";
+    } else if (femmesPourcentage < 30) {
+        analysis = `📉 La représentation féminine (${femmesPourcentage}%) reste en dessous des standards internationaux. `;
+        analysis += "Des efforts supplémentaires sont nécessaires pour atteindre un équilibre genre acceptable.";
+    } else if (femmesPourcentage < 40) {
+        analysis = `📈 La participation féminine (${femmesPourcentage}%) montre des progrès encourageants. `;
+        analysis += "Continuez les efforts pour atteindre la parité recommandée de 40-60%.";
+    } else if (femmesPourcentage <= 60) {
+        analysis = `✅ Excellent ! La représentation féminine (${femmesPourcentage}%) respecte les standards de parité genre. `;
+        analysis += "Maintenez ces bonnes pratiques.";
+    } else {
+        analysis = `📊 La représentation féminine (${femmesPourcentage}%) est élevée. `;
+        analysis += "Assurez-vous que cette situation reflète un choix équitable et non une discrimination inverse.";
+    }
+
+    return analysis;
+}
+
+/**
+ * Ajoute une analyse spécifique à chaque section
+ */
+addSectionAnalysis(doc, section, reportData, startY, margin, contentWidth, formatNumber) {
+    doc.setFillColor(245, 245, 245);
+    doc.rect(margin, startY, contentWidth, 2, 'F');
+    
+    doc.setFontSize(12);
+    doc.setTextColor(30, 58, 138);
+    doc.text('💡 ANALYSE & INSIGHTS', margin, startY + 25);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    
+    let analysis = this.generateSectionAnalysis(section, reportData);
+    const analysisLines = doc.splitTextToSize(analysis, contentWidth - 20);
+    doc.text(analysisLines, margin + 10, startY + 45);
+}
+
+/**
+ * Génère une analyse spécifique par section
+ */
+generateSectionAnalysis(section, reportData) {
     switch (section) {
         case 'Détail par Source':
             const sourceData = reportData['Détail par Source'] || [];
-            if (sourceData.length === 0) return [['Indicateur', 'Valeur', 'Pourcentage'], ['Aucune donnée', '0', '0 %']];
+            if (sourceData.length > 0) {
+                const individuels = sourceData.find(s => s.source === 'Individuel');
+                const collectifs = sourceData.find(s => s.source === 'Collectif');
+                
+                if (individuels && collectifs) {
+                    const indivFemmes = individuels.femmes_1 || 0;
+                    const collFemmes = collectifs.femmes_1 || 0;
+                    
+                    if (indivFemmes > collFemmes) {
+                        return `Les projets individuels montrent une meilleure participation féminine (${indivFemmes}%) comparés aux projets collectifs (${collFemmes}%). Recommandation : Promouvoir davantage les approches individuelles pour améliorer l'inclusion des femmes.`;
+                    } else {
+                        return `Les projets collectifs favorisent mieux la participation féminine (${collFemmes}%) que les projets individuels (${indivFemmes}%). Recommandation : Renforcer les initiatives collectives tout en améliorant l'accès individuel pour les femmes.`;
+                    }
+                }
+            }
+            return "Analyse des sources de financement pour identifier les mécanismes les plus inclusifs.";
+
+        case 'Analyse par Commune':
+            const communeData = reportData['Analyse par Commune'] || [];
+            if (communeData.length > 0) {
+                const sorted = communeData.sort((a, b) => (b.femme_pourcentage || 0) - (a.femme_pourcentage || 0));
+                const meilleure = sorted[0];
+                const moins_bonne = sorted[sorted.length - 1];
+                
+                return `La commune de ${meilleure.communesenegal || meilleure.commune} présente la meilleure inclusion féminine (${(meilleure.femme_pourcentage || 0).toFixed(1)}%), tandis que ${moins_bonne.communesenegal || moins_bonne.commune} montre des résultats plus faibles (${(moins_bonne.femme_pourcentage || 0).toFixed(1)}%). Recommandation : Étudier les bonnes pratiques de ${meilleure.communesenegal || meilleure.commune} pour les répliquer ailleurs.`;
+            }
+            return "Analyse comparative des performances genre entre les différentes communes du projet.";
+
+        case 'Analyse Temporelle':
+            const temporalData = reportData['Analyse Temporelle'] || [];
+            if (temporalData.length >= 2) {
+                const recent = temporalData[temporalData.length - 1];
+                const precedent = temporalData[temporalData.length - 2];
+                
+                const evolution = (recent.femme_pourcentage || 0) - (precedent.femme_pourcentage || 0);
+                
+                if (evolution > 0) {
+                    return `Tendance positive : La participation féminine s'améliore (+${evolution.toFixed(1)}% entre ${precedent.periode} et ${recent.periode}). Continuez les efforts actuels pour maintenir cette progression.`;
+                } else if (evolution < 0) {
+                    return `Tendance préoccupante : La participation féminine diminue (${evolution.toFixed(1)}% entre ${precedent.periode} et ${recent.periode}). Des actions correctives urgentes sont nécessaires.`;
+                } else {
+                    return `Stabilité observée dans la participation féminine entre ${precedent.periode} et ${recent.periode}. Explorez de nouvelles stratégies pour stimuler l'inclusion.`;
+                }
+            }
+            return "Suivi de l'évolution temporelle de la participation genre dans le projet.";
+
+        case 'Tamba-Kédougou':
+            const regionData = reportData['Tamba-Kédougou'] || [];
+            if (regionData.length >= 2) {
+                const sorted = regionData.sort((a, b) => (b.femme_pourcentage || 0) - (a.femme_pourcentage || 0));
+                const meilleure = sorted[0];
+                const autre = sorted[1];
+                
+                return `La région de ${meilleure.region || meilleure.nom} surperforme avec ${(meilleure.femme_pourcentage || 0).toFixed(1)}% de participation féminine, comparée à ${autre.region || autre.nom} (${(autre.femme_pourcentage || 0).toFixed(1)}%). Recommandation : Analyser les facteurs de succès régionaux pour optimiser les interventions.`;
+            }
+            return "Comparaison des performances genre entre les régions du projet PROCASEF.";
+
+        default:
+            return "Analyse des données pour identifier les opportunités d'amélioration de l'inclusion genre.";
+    }
+}
+
+/**
+ * Crée la page de recommandations
+ */
+createRecommendationsPage(doc, reportData, pageWidth, pageHeight, margin, formatNumber) {
+    let currentY = 50;
+
+    // Titre
+    doc.setFillColor(30, 58, 138);
+    doc.rect(margin, currentY - 10, pageWidth - 2 * margin, 35, 'F');
+    doc.setFontSize(18);
+    doc.setTextColor(255, 255, 255);
+    doc.text('🎯 RECOMMANDATIONS STRATÉGIQUES', margin + 15, currentY + 15);
+    currentY += 60;
+
+    const recommendations = this.generateStrategicRecommendations(reportData);
+    
+    recommendations.forEach((rec, index) => {
+        // Vérifier si on a besoin d'une nouvelle page
+        if (currentY > pageHeight - 150) {
+            doc.addPage();
+            currentY = 50;
+        }
+
+        // Numéro et titre
+        doc.setFillColor(212, 165, 116);
+        doc.circle(margin + 10, currentY + 5, 8, 'F');
+        doc.setFontSize(12);
+        doc.setTextColor(255, 255, 255);
+        doc.text((index + 1).toString(), margin + 7, currentY + 8);
+
+        doc.setFontSize(12);
+        doc.setTextColor(30, 58, 138);
+        doc.text(rec.title, margin + 30, currentY + 8);
+        currentY += 20;
+
+        // Description
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        const descLines = doc.splitTextToSize(rec.description, pageWidth - 2 * margin - 40);
+        doc.text(descLines, margin + 30, currentY);
+        currentY += descLines.length * 12 + 20;
+    });
+}
+
+/**
+ * Génère des recommandations stratégiques basées sur les données
+ */
+generateStrategicRecommendations(reportData) {
+    const recommendations = [];
+    
+    // Analyse globale
+    const globalStats = reportData['Synthèse Globale'] || [];
+    const femmes = globalStats.find(item => item.indicateur === 'Femmes')?.valeur || 9332;
+    const total = globalStats.find(item => item.indicateur === 'Total Personnes')?.valeur || 52908;
+    const femmesPourcentage = ((femmes / total) * 100);
+
+    if (femmesPourcentage < 25) {
+        recommendations.push({
+            title: "URGENCE : Renforcement massif de l'inclusion féminine",
+            description: "Mettre en place un programme d'action positive avec quotas temporaires de 30% minimum pour les femmes. Créer des mécanismes de financement dédiés aux femmes et renforcer la sensibilisation communautaire."
+        });
+    }
+
+    // Recommandations par source
+    const sourceData = reportData['Détail par Source'] || [];
+    if (sourceData.length > 0) {
+        recommendations.push({
+            title: "Optimisation des mécanismes de financement",
+            description: "Développer des produits financiers adaptés aux besoins spécifiques des femmes (microcrédit, tontines améliorées, épargne progressive). Former les agents de terrain sur l'approche genre."
+        });
+    }
+
+    // Recommandations temporelles
+    const temporalData = reportData['Analyse Temporelle'] || [];
+    if (temporalData.length >= 2) {
+        recommendations.push({
+            title: "Suivi et monitoring renforcé",
+            description: "Installer un système de suivi mensuel des indicateurs genre avec alertes automatiques. Organiser des revues trimestrielles avec les parties prenantes pour ajuster les stratégies."
+        });
+    }
+
+    // Recommandations communales
+    recommendations.push({
+        title: "Approche différenciée par commune",
+        description: "Adapter les stratégies d'intervention selon les spécificités culturelles et économiques de chaque commune. Identifier et former des ambassadrices genre dans chaque localité."
+    });
+
+    recommendations.push({
+        title: "Renforcement des capacités institutionnelles",
+        description: "Former tous les acteurs du projet sur l'approche genre. Intégrer systématiquement l'analyse genre dans tous les processus de décision et développer des partenariats avec les organisations de femmes."
+    });
+
+    return recommendations;
+}
+
+/**
+ * Améliore les données de tableau avec formatage
+ */
+getEnhancedTableDataForChart(section, reportData, formatNumber) {
+    switch (section) {
+        case 'Détail par Source':
+            const sourceData = reportData['Détail par Source'] || [];
+            if (sourceData.length === 0) return [['Source/Genre', 'Nombre', 'Pourcentage'], ['Aucune donnée', '0', '0%']];
             
-            let sourceTable = [['Source/Genre', 'Nombre', 'Pourcentage']];
+            let sourceTable = [['Source/Genre', 'Bénéficiaires', 'Pourcentage']];
             sourceData.forEach(item => {
                 sourceTable.push([
                     `${item.source} - Hommes`,
-                    item.hommes?.toLocaleString('fr-FR') || '0',
-                    `${item.hommes_1 || 0} %`
+                    formatNumber(item.hommes),
+                    `${(item.hommes_1 || 0).toFixed(1)}%`
                 ]);
                 sourceTable.push([
                     `${item.source} - Femmes`,
-                    item.femmes?.toLocaleString('fr-FR') || '0',
-                    `${item.femmes_1 || 0} %`
+                    formatNumber(item.femmes),
+                    `${(item.femmes_1 || 0).toFixed(1)}%`
                 ]);
             });
             return sourceTable;
 
         case 'Analyse par Commune':
             const communeData = reportData['Analyse par Commune'] || [];
-            if (communeData.length === 0) return [['Commune', 'Total', 'Pourcentage Femmes'], ['Aucune donnée', '0', '0 %']];
+            if (communeData.length === 0) return [['Commune', 'Population', '% Femmes'], ['Aucune donnée', '0', '0%']];
             
-            let communeTable = [['Commune', 'Population Totale', '% Femmes']];
-            communeData.slice(0, 10).forEach(item => {
+            let communeTable = [['Commune', 'Population Totale', '% Femmes', 'Rang Genre']];
+            const sortedCommunes = communeData
+                .sort((a, b) => (b.femme_pourcentage || 0) - (a.femme_pourcentage || 0))
+                .slice(0, 10);
+                
+            sortedCommunes.forEach((item, index) => {
+                const emoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}°`;
                 communeTable.push([
                     item.communesenegal || item.commune || 'N/A',
-                    item.total?.toLocaleString('fr-FR') || '0',
-                    `${item.femme_pourcentage?.toFixed(1) || 0} %`
+                    formatNumber(item.total),
+                    `${(item.femme_pourcentage || 0).toFixed(1)}%`,
+                    emoji
                 ]);
             });
             return communeTable;
 
         case 'Analyse Temporelle':
             const temporalData = reportData['Analyse Temporelle'] || [];
-            if (temporalData.length === 0) return [['Période', 'Total', 'Répartition'], ['Aucune donnée', '0', '0 %']];
+            if (temporalData.length === 0) return [['Période', 'Hommes', 'Femmes', 'Évolution'], ['Aucune donnée', '0', '0', '-']];
             
-            let temporalTable = [['Période', 'Hommes', 'Femmes', '% Femmes']];
-            temporalData.forEach(item => {
+            let temporalTable = [['Période', 'Hommes', 'Femmes', '% Femmes', 'Tendance']];
+            temporalData.forEach((item, index) => {
+                let tendance = '-';
+                if (index > 0) {
+                    const prev = temporalData[index - 1].femme_pourcentage || 0;
+                    const curr = item.femme_pourcentage || 0;
+                    tendance = curr > prev ? '📈 +' + (curr - prev).toFixed(1) : 
+                              curr < prev ? '📉 ' + (curr - prev).toFixed(1) : '➡️ =';
+                }
+                
                 temporalTable.push([
                     item.periode || 'N/A',
-                    item.homme?.toLocaleString('fr-FR') || '0',
-                    item.femme?.toLocaleString('fr-FR') || '0',
-                    `${item.femme_pourcentage?.toFixed(1) || 0} %`
+                    formatNumber(item.homme),
+                    formatNumber(item.femme),
+                    `${(item.femme_pourcentage || 0).toFixed(1)}%`,
+                    tendance
                 ]);
             });
             return temporalTable;
 
         case 'Tamba-Kédougou':
             const regionData = reportData['Tamba-Kédougou'] || [];
-            if (regionData.length === 0) return [['Région', 'Total', 'Pourcentage Femmes'], ['Aucune donnée', '0', '0 %']];
+            if (regionData.length === 0) return [['Région', 'Population', '% Femmes'], ['Aucune donnée', '0', '0%']];
             
-            let regionTable = [['Région', 'Population Totale', '% Femmes']];
+            let regionTable = [['Région', 'Population Totale', '% Femmes', 'Évaluation']];
             regionData.forEach(item => {
+                const pourcentage = item.femme_pourcentage || 0;
+                let evaluation = '';
+                if (pourcentage >= 40) evaluation = '🟢 Excellent';
+                else if (pourcentage >= 25) evaluation = '🟡 Moyen';
+                else if (pourcentage >= 15) evaluation = '🟠 Faible';
+                else evaluation = '🔴 Critique';
+                
                 regionTable.push([
                     item.region || item.nom || 'N/A',
-                    item.total?.toLocaleString('fr-FR') || '0',
-                    `${item.femme_pourcentage?.toFixed(1) || 0} %`
+                    formatNumber(item.total),
+                    `${pourcentage.toFixed(1)}%`,
+                    evaluation
                 ]);
             });
             return regionTable;
@@ -987,6 +1301,204 @@ getTableDataForChart(section, reportData) {
         default:
             return [['Indicateur', 'Valeur'], ['Aucune donnée disponible', '-']];
     }
+}
+
+/**
+ * Ajoute des pieds de page modernes avec navigation
+ */
+addAdvancedFooters(doc, pageWidth, pageHeight, margin) {
+    const totalPages = doc.internal.getNumberOfPages();
+    
+    for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        
+        // Ligne de séparation
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.5);
+        doc.line(margin, pageHeight - 40, pageWidth - margin, pageHeight - 40);
+        
+        // Informations du pied de page
+        doc.setFontSize(9);
+        doc.setTextColor(100, 100, 100);
+        
+        // Nom de l'application (gauche)
+        doc.text('PROCASEF Dashboard - Rapport Genre Automatisé', margin, pageHeight - 25);
+        
+        // Date de génération (centre)
+        const dateText = `Généré le ${new Date().toLocaleString('fr-FR', {
+            day: '2-digit',
+            month: '2-digit', 
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        })}`;
+        const dateWidth = doc.getTextWidth(dateText);
+        doc.text(dateText, (pageWidth - dateWidth) / 2, pageHeight - 25);
+        
+        // Numéro de page (droite)
+        const pageText = `${i}/${totalPages}`;
+        const pageTextWidth = doc.getTextWidth(pageText);
+        doc.text(pageText, pageWidth - margin - pageTextWidth, pageHeight - 25);
+        
+        // URL ou contact (très petit en bas)
+        doc.setFontSize(7);
+        const contactText = 'Contact: procasef@example.com | www.procasef-dashboard.sn';
+        const contactWidth = doc.getTextWidth(contactText);
+        doc.text(contactText, (pageWidth - contactWidth) / 2, pageHeight - 10);
+    }
+}
+
+/**
+ * Fonction utilitaire pour créer des graphiques en camembert pour les KPIs
+ */
+createPieChartKPI(doc, x, y, size, percentage, color, label) {
+    const centerX = x + size / 2;
+    const centerY = y + size / 2;
+    const radius = size / 3;
+    
+    // Cercle de fond
+    doc.setFillColor(240, 240, 240);
+    doc.circle(centerX, centerY, radius, 'F');
+    
+    // Arc pour le pourcentage
+    if (percentage > 0) {
+        doc.setFillColor(color);
+        const angle = (percentage / 100) * 360;
+        // Note: jsPDF ne supporte pas nativement les arcs, mais on peut simuler avec des lignes
+        doc.circle(centerX, centerY, radius * (percentage / 100), 'F');
+    }
+    
+    // Texte du pourcentage
+    doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0);
+    const percentText = percentage.toFixed(1) + '%';
+    const textWidth = doc.getTextWidth(percentText);
+    doc.text(percentText, centerX - textWidth / 2, centerY + 3);
+    
+    // Label
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    const labelWidth = doc.getTextWidth(label);
+    doc.text(label, centerX - labelWidth / 2, y + size + 10);
+}
+
+/**
+ * Ajoute des statistiques de performance du rapport
+ */
+addPerformanceStats(doc, reportData, y, margin, contentWidth) {
+    doc.setFillColor(248, 250, 252);
+    doc.rect(margin, y, contentWidth, 60, 'F');
+    
+    doc.setFontSize(12);
+    doc.setTextColor(30, 58, 138);
+    doc.text('📈 INDICATEURS DE PERFORMANCE', margin + 10, y + 20);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    
+    // Calculer quelques métriques intéressantes
+    const globalStats = reportData['Synthèse Globale'] || [];
+    const total = globalStats.find(item => item.indicateur === 'Total Personnes')?.valeur || 0;
+    const femmes = globalStats.find(item => item.indicateur === 'Femmes')?.valeur || 0;
+    
+    const metrics = [
+        `Taux d'inclusion féminine: ${((femmes / total) * 100).toFixed(1)}%`,
+        `Objectif ODD 5 (50%): ${((femmes / total) * 100) >= 50 ? '✅ Atteint' : '❌ Non atteint'}`,
+        `Écart à la parité: ${Math.abs(50 - ((femmes / total) * 100)).toFixed(1)} points`,
+        `Niveau de priorité: ${((femmes / total) * 100) < 20 ? '🔴 Urgence' : ((femmes / total) * 100) < 30 ? '🟡 Attention' : '🟢 Satisfaisant'}`
+    ];
+    
+    metrics.forEach((metric, index) => {
+        doc.text(metric, margin + 20 + (index % 2) * 250, y + 35 + Math.floor(index / 2) * 15);
+    });
+    
+    return y + 80;
+}
+
+/**
+ * Génère des alertes basées sur les seuils critiques
+ */
+generateAlerts(reportData) {
+    const alerts = [];
+    const globalStats = reportData['Synthèse Globale'] || [];
+    const femmes = globalStats.find(item => item.indicateur === 'Femmes')?.valeur || 0;
+    const total = globalStats.find(item => item.indicateur === 'Total Personnes')?.valeur || 1;
+    const femmesPourcentage = (femmes / total) * 100;
+    
+    // Alertes critiques
+    if (femmesPourcentage < 15) {
+        alerts.push({
+            level: 'CRITIQUE',
+            icon: '🚨',
+            message: 'Représentation féminine extrêmement faible - Action immédiate requise',
+            color: [220, 38, 38]
+        });
+    } else if (femmesPourcentage < 25) {
+        alerts.push({
+            level: 'ATTENTION',
+            icon: '⚠️',
+            message: 'Représentation féminine insuffisante - Renforcement nécessaire',
+            color: [245, 158, 11]
+        });
+    }
+    
+    // Vérifier les tendances temporelles
+    const temporalData = reportData['Analyse Temporelle'] || [];
+    if (temporalData.length >= 2) {
+        const dernier = temporalData[temporalData.length - 1];
+        const precedent = temporalData[temporalData.length - 2];
+        
+        if ((dernier.femme_pourcentage || 0) < (precedent.femme_pourcentage || 0)) {
+            alerts.push({
+                level: 'TENDANCE',
+                icon: '📉',
+                message: 'Régression de la participation féminine détectée',
+                color: [239, 68, 68]
+            });
+        }
+    }
+    
+    return alerts;
+}
+
+/**
+ * Ajoute une section d'alertes au rapport
+ */
+addAlertsSection(doc, reportData, startY, margin, contentWidth) {
+    const alerts = this.generateAlerts(reportData);
+    
+    if (alerts.length === 0) {
+        // Pas d'alertes = message positif
+        doc.setFillColor(220, 252, 231);
+        doc.rect(margin, startY, contentWidth, 40, 'F');
+        
+        doc.setFontSize(12);
+        doc.setTextColor(22, 163, 74);
+        doc.text('✅ AUCUNE ALERTE CRITIQUE DÉTECTÉE', margin + 15, startY + 25);
+        
+        return startY + 50;
+    }
+    
+    let currentY = startY;
+    
+    alerts.forEach(alert => {
+        // Boîte d'alerte colorée
+        doc.setFillColor(alert.color[0], alert.color[1], alert.color[2], 0.1);
+        doc.rect(margin, currentY, contentWidth, 35, 'F');
+        
+        // Bordure gauche colorée
+        doc.setFillColor(alert.color[0], alert.color[1], alert.color[2]);
+        doc.rect(margin, currentY, 4, 35, 'F');
+        
+        // Texte de l'alerte
+        doc.setFontSize(11);
+        doc.setTextColor(alert.color[0], alert.color[1], alert.color[2]);
+        doc.text(`${alert.icon} ${alert.level}: ${alert.message}`, margin + 15, currentY + 22);
+        
+        currentY += 45;
+    });
+    
+    return currentY;
 }
 
     /** Charge à la volée les datasets genre si non déjà présents */
