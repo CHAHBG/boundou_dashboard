@@ -672,197 +672,320 @@ class ProcasefDashboard {
     }
 
     // =================== AJOUT #2 – EXPORT GENRE REPORT ===================
-    /**
-     * Exporte un rapport complet « Genre » en PDF et Word (.docx)
-     * – Statistiques globales
-     * – Graphe donut Hommes/Femmes
-     * – Explications textuelles
-     */
 /**
- * Exporte un rapport complet « Genre » en PDF et Word (.docx)
- * – Statistiques globales
- * – Tous les graphiques genre (global, trimestre, commune)
- * – Explications textuelles
+ * Version corrigée de la fonction exportGenreReport avec :
+ * - Graphiques à la bonne échelle et centrés
+ * - Tableaux correctement formatés avec les vraies données
+ * - Meilleure mise en page PDF
  */
 async exportGenreReport() {
     try {
         await this.ensureGenreDataLoaded();
 
-        // Load rapport_complet.json (assuming it's available in this.data)
-        const reportData = this.data.rapport_complet || {};
-        console.log('Report Data:', reportData); // Debug: Check if data is loaded
+        // Charger rapport_complet.json si pas déjà fait
+        if (!this.data.rapportComplet || Object.keys(this.data.rapportComplet).length === 0) {
+            await this.loadDataSafely('data/rapport_complet.json', 'rapportComplet');
+        }
 
-        // Use only the "rapport" section charts
-        const chartIds = [
-            'rapportSourceChart',
-            'rapportCommuneMixedChart',
-            'rapportTemporalChart',
-            'rapportRegionPolarChart'
+        const reportData = this.data.rapportComplet || {};
+        console.log('Données du rapport:', reportData);
+
+        // IDs des graphiques de la section rapport
+        const chartConfigs = [
+            { id: 'rapportSourceChart', title: 'Détail par Source', section: 'Détail par Source' },
+            { id: 'rapportCommuneMixedChart', title: 'Analyse par Commune', section: 'Analyse par Commune' },
+            { id: 'rapportTemporalChart', title: 'Évolution Temporelle', section: 'Analyse Temporelle' },
+            { id: 'rapportRegionPolarChart', title: 'Répartition par Région', section: 'Tamba-Kédougou' }
         ];
 
-        const chartTitles = [
-            'Détail par Source',
-            'Analyse Mixte Communes',
-            'Évolution Temporelle',
-            'Répartition Polaire par Région'
-        ];
-
+        // Capture des graphiques avec haute résolution et taille correcte
         const chartImages = [];
-        for (let i = 0; i < chartIds.length; i++) {
-            const chartId = chartIds[i];
-            const canvas = document.getElementById(chartId);
-
+        for (const config of chartConfigs) {
+            const canvas = document.getElementById(config.id);
+            
             if (canvas && canvas.tagName === 'CANVAS') {
-                await new Promise(resolve => setTimeout(resolve, 700)); // Wait for rendering
-                // Increase canvas resolution for HD quality
+                // Attendre que le graphique soit complètement rendu
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                // Créer un canvas temporaire avec la résolution d'origine
+                const originalWidth = canvas.width;
+                const originalHeight = canvas.height;
+                
+                // Créer un canvas haute résolution mais garder les proportions
                 const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = canvas.width * 3; // Triple width
-                tempCanvas.height = canvas.height * 3; // Triple height
+                const scale = 2; // Facteur d'échelle pour la qualité
+                tempCanvas.width = originalWidth * scale;
+                tempCanvas.height = originalHeight * scale;
+                
                 const tempContext = tempCanvas.getContext('2d');
-                tempContext.scale(3, 3); // Scale the drawing context
-                tempContext.drawImage(canvas, 0, 0); // Draw the original canvas at higher resolution
+                tempContext.scale(scale, scale);
+                tempContext.drawImage(canvas, 0, 0);
+                
                 const chartImg = tempCanvas.toDataURL('image/png', 1.0);
+                
                 if (chartImg && chartImg.length > 100 && !chartImg.includes('data:,')) {
                     chartImages.push({
                         image: chartImg,
-                        title: chartTitles[i],
-                        section: 'Rapport'
+                        title: config.title,
+                        section: config.section,
+                        originalWidth: originalWidth,
+                        originalHeight: originalHeight
                     });
-                    console.log(`✅ Graphique capturé: ${chartId} with HD resolution`);
+                    console.log(`✅ Graphique capturé: ${config.id}`);
                 } else {
-                    console.warn(`⚠️ Échec capture graphique: ${chartId} - Image vide ou invalide`);
+                    console.warn(`⚠️ Échec capture: ${config.id}`);
                 }
             } else {
-                console.warn(`⚠️ Canvas non trouvé: ${chartId}`);
+                console.warn(`⚠️ Canvas non trouvé: ${config.id}`);
             }
         }
 
-        console.log(`📊 ${chartImages.length} graphiques capturés sur ${chartIds.length}`);
+        console.log(`📊 ${chartImages.length} graphiques capturés sur ${chartConfigs.length}`);
 
-        // Génération PDF with improved quality and smaller graphs
+        // Génération PDF améliorée
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+        const doc = new jsPDF({ 
+            orientation: 'portrait', 
+            unit: 'pt', 
+            format: 'a4' 
+        });
 
-        // En-tête
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 40;
+        const contentWidth = pageWidth - (2 * margin);
+
+        // En-tête du document
         doc.setFontSize(20);
         doc.setTextColor(30, 58, 138);
-        doc.text('Rapport Genre – PROCASEF Boundou', 40, 50);
+        const title = 'Rapport Genre – PROCASEF Boundou';
+        const titleWidth = doc.getTextWidth(title);
+        doc.text(title, (pageWidth - titleWidth) / 2, 50);
+        
         doc.setFontSize(12);
         doc.setTextColor(0, 0, 0);
-        doc.text(`Généré le : ${new Date().toLocaleString('fr-FR')}`, 40, 70);
+        const dateText = `Généré le : ${new Date().toLocaleString('fr-FR')}`;
+        const dateWidth = doc.getTextWidth(dateText);
+        doc.text(dateText, (pageWidth - dateWidth) / 2, 70);
 
         let currentY = 100;
 
-        // Tableau des statistiques globales from Synthèse Globale
+        // Tableau des statistiques globales
         const globalStats = reportData['Synthèse Globale'] || [];
+        
+        // Valeurs par défaut si les données ne sont pas disponibles
         const hommes = globalStats.find(item => item.indicateur === 'Hommes')?.valeur || 43576;
         const femmes = globalStats.find(item => item.indicateur === 'Femmes')?.valeur || 9332;
-        const total = globalStats.find(item => item.indicateur === 'Total Personnes')?.valeur || 52908;
+        const total = globalStats.find(item => item.indicateur === 'Total Personnes')?.valeur || (hommes + femmes);
+        const hommesPercentage = globalStats.find(item => item.indicateur === 'Pourcentage Hommes')?.valeur || ((hommes / total) * 100).toFixed(1) + ' %';
+        const femmesPercentage = globalStats.find(item => item.indicateur === 'Pourcentage Femmes')?.valeur || ((femmes / total) * 100).toFixed(1) + ' %';
+
         doc.autoTable({
             head: [['Indicateur', 'Valeur', 'Pourcentage']],
             body: [
-                ['Hommes', hommes.toLocaleString().replace(/\//g, ' '), globalStats.find(item => item.indicateur === 'Pourcentage Hommes')?.valeur || '82.4 %'],
-                ['Femmes', femmes.toLocaleString().replace(/\//g, ' '), globalStats.find(item => item.indicateur === 'Pourcentage Femmes')?.valeur || '17.6 %'],
-                ['Total', total.toLocaleString().replace(/\//g, ' '), '100 %']
+                ['Hommes', hommes.toLocaleString('fr-FR'), hommesPercentage],
+                ['Femmes', femmes.toLocaleString('fr-FR'), femmesPercentage],
+                ['Total', total.toLocaleString('fr-FR'), '100 %']
             ],
             startY: currentY,
-            headStyles: { fillColor: [212, 165, 116], textColor: [255, 255, 255], fontSize: 12 },
-            styles: { fontSize: 11, cellPadding: 8, lineColor: [200, 200, 200], lineWidth: 0.5 },
-            alternateRowStyles: { fillColor: [249, 250, 251] }
+            margin: { left: margin, right: margin },
+            headStyles: { 
+                fillColor: [212, 165, 116], 
+                textColor: [255, 255, 255], 
+                fontSize: 12,
+                halign: 'center'
+            },
+            styles: { 
+                fontSize: 11, 
+                cellPadding: 8, 
+                lineColor: [200, 200, 200], 
+                lineWidth: 0.5,
+                halign: 'center'
+            },
+            alternateRowStyles: { fillColor: [249, 250, 251] },
+            tableWidth: 'auto',
+            columnStyles: {
+                0: { halign: 'left' },
+                1: { halign: 'right' },
+                2: { halign: 'center' }
+            }
         });
-        console.log(`Global stats table added at Y: ${currentY}`);
 
         currentY = doc.lastAutoTable.finalY + 30;
 
-        // Ajouter les graphiques au PDF with smaller size and actual data tables
-        chartImages.forEach((chartData, index) => {
-            if (currentY > 600) {
+        // Ajouter les graphiques avec les vrais tableaux de données
+        for (let index = 0; index < chartImages.length; index++) {
+            const chartData = chartImages[index];
+            
+            // Vérifier si on a besoin d'une nouvelle page
+            if (currentY > pageHeight - 250) {
                 doc.addPage();
                 currentY = 50;
-                console.log(`New page added for ${chartData.title}`);
             }
 
-            // Titre du graphique
-            doc.setFontSize(13);
+            // Titre du graphique centré
+            doc.setFontSize(14);
             doc.setTextColor(30, 58, 138);
-            doc.text(chartData.title, 40, currentY);
-            currentY += 20;
-            console.log(`${chartData.title} title added at Y: ${currentY}`);
+            const chartTitleWidth = doc.getTextWidth(chartData.title);
+            doc.text(chartData.title, (pageWidth - chartTitleWidth) / 2, currentY);
+            currentY += 25;
 
-            // Smaller graph size
-            const imgWidth = 400;
-            const imgHeight = 180;
-            doc.addImage(chartData.image, 'PNG', 40, currentY, imgWidth, imgHeight);
-            currentY += imgHeight + 20;
-            console.log(`${chartData.title} image added at Y: ${currentY}`);
-
-            // Add table with actual data from rapport_complet.json
-            let tableData = [['Indicateur', 'Valeur', 'Pourcentage']];
-            if (chartData.title === 'Détail par Source') {
-                const sourceData = reportData['Détail par Source'] || [];
-                console.log('Source Data:', sourceData); // Debug: Check source data
-                if (sourceData.length > 0) {
-                    sourceData.forEach(item => {
-                        tableData.push([item.source + ' - Hommes', item.hommes.toLocaleString().replace(/\//g, ' '), item.hommes_1 + ' %']);
-                        tableData.push([item.source + ' - Femmes', item.femmes.toLocaleString().replace(/\//g, ' '), item.femmes_1 + ' %']);
-                    });
-                } else {
-                    tableData.push(['No Data', '0', '0 %']); // Placeholder if no data
-                }
-            } else if (chartData.title === 'Analyse Mixte Communes') {
-                const communeData = reportData['Analyse par Commune'] || [];
-                console.log('Commune Data:', communeData); // Debug: Check commune data
-                if (communeData.length > 0) {
-                    communeData.forEach(item => {
-                        tableData.push([item.communesenegal, item.total.toLocaleString().replace(/\//g, ' '), item.femme_pourcentage.toFixed(1) + ' %']);
-                    });
-                } else {
-                    tableData.push(['No Data', '0', '0 %']); // Placeholder if no data
-                }
-            } else if (chartData.title === 'Évolution Temporelle') {
-                const temporalData = reportData['Analyse Temporelle'] || [];
-                console.log('Temporal Data:', temporalData); // Debug: Check temporal data
-                if (temporalData.length > 0) {
-                    temporalData.forEach(item => {
-                        tableData.push([item.periode + ' - Hommes', item.homme.toLocaleString().replace(/\//g, ' '), item.homme_pourcentage.toFixed(1) + ' %']);
-                        tableData.push([item.periode + ' - Femmes', item.femme.toLocaleString().replace(/\//g, ' '), item.femme_pourcentage.toFixed(1) + ' %']);
-                    });
-                } else {
-                    tableData.push(['No Data', '0', '0 %']); // Placeholder if no data
-                }
-            } else if (chartData.title === 'Répartition Polaire par Région') {
-                const polarData = reportData['Tamba-Kédougou'] || [];
-                console.log('Polar Data:', polarData); // Debug: Check polar data
-                if (polarData.length > 0) {
-                    polarData.forEach(item => {
-                        tableData.push([item.region, item.total.toLocaleString().replace(/\//g, ' '), item.femme_pourcentage.toFixed(1) + ' %']);
-                    });
-                } else {
-                    tableData.push(['No Data', '0', '0 %']); // Placeholder if no data
-                }
+            // Calcul des dimensions du graphique pour le centrer
+            const maxGraphWidth = contentWidth * 0.8; // 80% de la largeur disponible
+            const maxGraphHeight = 200;
+            
+            // Calculer les dimensions en gardant les proportions
+            let graphWidth = Math.min(maxGraphWidth, chartData.originalWidth * 0.6);
+            let graphHeight = (graphWidth / chartData.originalWidth) * chartData.originalHeight;
+            
+            if (graphHeight > maxGraphHeight) {
+                graphHeight = maxGraphHeight;
+                graphWidth = (graphHeight / chartData.originalHeight) * chartData.originalWidth;
             }
 
-            doc.autoTable({
-                body: tableData,
-                startY: currentY,
-                headStyles: { fillColor: [212, 165, 116], textColor: [255, 255, 255], fontSize: 10 },
-                styles: { fontSize: 9, cellPadding: 6, lineColor: [200, 200, 200], lineWidth: 0.5 },
-                alternateRowStyles: { fillColor: [249, 250, 251] }
-            });
-            currentY = doc.lastAutoTable.finalY + 20;
-            console.log(`${chartData.title} table added at Y: ${currentY} with ${tableData.length - 1} rows`);
-        });
+            const graphX = (pageWidth - graphWidth) / 2;
+
+            // Ajouter le graphique centré
+            doc.addImage(chartData.image, 'PNG', graphX, currentY, graphWidth, graphHeight);
+            currentY += graphHeight + 20;
+
+            // Ajouter le tableau de données correspondant
+            let tableData = this.getTableDataForChart(chartData.section, reportData);
+            
+            if (tableData.length > 1) { // Au moins un header + une ligne de données
+                doc.autoTable({
+                    head: [tableData[0]], // Première ligne comme header
+                    body: tableData.slice(1), // Reste comme body
+                    startY: currentY,
+                    margin: { left: margin, right: margin },
+                    headStyles: { 
+                        fillColor: [212, 165, 116], 
+                        textColor: [255, 255, 255], 
+                        fontSize: 10,
+                        halign: 'center'
+                    },
+                    styles: { 
+                        fontSize: 9, 
+                        cellPadding: 6, 
+                        lineColor: [200, 200, 200], 
+                        lineWidth: 0.5 
+                    },
+                    alternateRowStyles: { fillColor: [249, 250, 251] },
+                    columnStyles: {
+                        1: { halign: 'right' },
+                        2: { halign: 'center' }
+                    }
+                });
+                currentY = doc.lastAutoTable.finalY + 30;
+            } else {
+                currentY += 20;
+            }
+        }
+
+        // Pied de page
+        const totalPages = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+            doc.setPage(i);
+            doc.setFontSize(10);
+            doc.setTextColor(128, 128, 128);
+            const footerText = 'Rapport généré par l\'application PROCASEF Dashboard';
+            const footerWidth = doc.getTextWidth(footerText);
+            doc.text(footerText, (pageWidth - footerWidth) / 2, pageHeight - 20);
+            
+            // Numéro de page
+            const pageText = `Page ${i} sur ${totalPages}`;
+            const pageTextWidth = doc.getTextWidth(pageText);
+            doc.text(pageText, pageWidth - margin - pageTextWidth, pageHeight - 20);
+        }
 
         // Sauvegarder le PDF
         doc.save('Rapport_Genre_PROCASEF.pdf');
 
-        // Success message
-        const successMsg = `✅ Rapport genre exporté avec succès !\n📊 ${chartImages.length} graphiques inclus\n📄 Format : PDF\n\nGraphiques inclus :\n${chartImages.map(c => `• ${c.title}`).join('\n')}`;
+        // Message de succès
+        const successMsg = `✅ Rapport genre exporté avec succès !
+📊 ${chartImages.length} graphiques inclus
+📄 Format : PDF de ${totalPages} page(s)
+
+Graphiques inclus :
+${chartImages.map(c => `• ${c.title}`).join('\n')}`;
+        
         alert(successMsg);
 
     } catch (err) {
         console.error('❌ Erreur export genre :', err);
         this.showError('Échec de la génération du rapport genre. Vérifiez la console pour plus de détails.');
+    }
+}
+
+/**
+ * Génère les données de tableau pour chaque section
+ */
+getTableDataForChart(section, reportData) {
+    switch (section) {
+        case 'Détail par Source':
+            const sourceData = reportData['Détail par Source'] || [];
+            if (sourceData.length === 0) return [['Indicateur', 'Valeur', 'Pourcentage'], ['Aucune donnée', '0', '0 %']];
+            
+            let sourceTable = [['Source/Genre', 'Nombre', 'Pourcentage']];
+            sourceData.forEach(item => {
+                sourceTable.push([
+                    `${item.source} - Hommes`,
+                    item.hommes?.toLocaleString('fr-FR') || '0',
+                    `${item.hommes_1 || 0} %`
+                ]);
+                sourceTable.push([
+                    `${item.source} - Femmes`,
+                    item.femmes?.toLocaleString('fr-FR') || '0',
+                    `${item.femmes_1 || 0} %`
+                ]);
+            });
+            return sourceTable;
+
+        case 'Analyse par Commune':
+            const communeData = reportData['Analyse par Commune'] || [];
+            if (communeData.length === 0) return [['Commune', 'Total', 'Pourcentage Femmes'], ['Aucune donnée', '0', '0 %']];
+            
+            let communeTable = [['Commune', 'Population Totale', '% Femmes']];
+            communeData.slice(0, 10).forEach(item => {
+                communeTable.push([
+                    item.communesenegal || item.commune || 'N/A',
+                    item.total?.toLocaleString('fr-FR') || '0',
+                    `${item.femme_pourcentage?.toFixed(1) || 0} %`
+                ]);
+            });
+            return communeTable;
+
+        case 'Analyse Temporelle':
+            const temporalData = reportData['Analyse Temporelle'] || [];
+            if (temporalData.length === 0) return [['Période', 'Total', 'Répartition'], ['Aucune donnée', '0', '0 %']];
+            
+            let temporalTable = [['Période', 'Hommes', 'Femmes', '% Femmes']];
+            temporalData.forEach(item => {
+                temporalTable.push([
+                    item.periode || 'N/A',
+                    item.homme?.toLocaleString('fr-FR') || '0',
+                    item.femme?.toLocaleString('fr-FR') || '0',
+                    `${item.femme_pourcentage?.toFixed(1) || 0} %`
+                ]);
+            });
+            return temporalTable;
+
+        case 'Tamba-Kédougou':
+            const regionData = reportData['Tamba-Kédougou'] || [];
+            if (regionData.length === 0) return [['Région', 'Total', 'Pourcentage Femmes'], ['Aucune donnée', '0', '0 %']];
+            
+            let regionTable = [['Région', 'Population Totale', '% Femmes']];
+            regionData.forEach(item => {
+                regionTable.push([
+                    item.region || item.nom || 'N/A',
+                    item.total?.toLocaleString('fr-FR') || '0',
+                    `${item.femme_pourcentage?.toFixed(1) || 0} %`
+                ]);
+            });
+            return regionTable;
+
+        default:
+            return [['Indicateur', 'Valeur'], ['Aucune donnée disponible', '-']];
     }
 }
 
