@@ -702,24 +702,26 @@ class ProcasefDashboard {
  */
 async exportBothReports() {
   try {
-    console.log('Starting dual export (PDF and Word)...');
+        console.log('Starting dual export (PDF and Word)...');
 
-    console.log('Exporting PDF...');
-    await this.exportGenreReport();
-    console.log('PDF export completed.');
+        console.log('Exporting PDF...');
+        await this.exportGenreReport();
+        console.log('PDF export completed.');
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
-    console.log('Exporting Word...');
-    await this.exportGenreWordReport();
-    console.log('Word export completed.');
+        console.log('Exporting Word...');
+        await this.exportGenreWordReport();
+        console.log('Word export completed.');
 
-    alert('✅ Les rapports PDF et Word ont été générés avec succès !');
-  } catch (err) {
-    console.error('Error during dual export:', err);
-    alert(`❌ Erreur lors de l'exportation : ${err.message}\nVérifiez la console pour plus de détails.`);
-    throw err;
-  }
+        alert('✅ Les rapports PDF et Word ont été générés avec succès !');
+    } catch (err) {
+        console.error('Error during dual export:', err);
+        
+        // ✅ CORRECTION: Gestion sécurisée de l'erreur
+        const errorMessage = err.message || String(err);
+        alert(`❌ Erreur lors de l'exportation : ${errorMessage}\nVérifiez la console pour plus de détails.`);
+    }
 }
 
 async exportGenreReport() {
@@ -933,14 +935,22 @@ async exportGenreReport() {
     } catch (err) {
         console.error('❌ Erreur export PDF:', err);
         let errorMsg = 'Échec de la génération du rapport PDF.\n\n';
-        if (err.message.includes('jsPDF')) {
+        
+        // ✅ CORRECTION: Vérification sécurisée des erreurs
+        const errorMessage = err.message || String(err);
+        
+        if (errorMessage.includes('jsPDF')) {
             errorMsg += '❌ Bibliothèque jsPDF non trouvée.\nAssurez-vous que jsPDF est chargé.';
-        } else if (err.includes('Canvas')) {
+        } else if (errorMessage.includes('Canvas')) {
             errorMsg += '❌ Impossible de capturer les graphiques.\nVérifiez que les graphiques sont affichés.';
+        } else if (errorMessage.includes('autoTable')) {
+            errorMsg += '❌ Extension autoTable manquante.\nVérifiez que jsPDF-autoTable est chargé.';
         } else {
-            errorMsg += `Erreur: ${err.message}\nVérifiez la console pour plus de détails.`;
+            errorMsg += `Erreur: ${errorMessage}\nVérifiez la console pour plus de détails.`;
         }
+        
         alert(errorMsg);
+        throw err; // ✅ Re-lancer l'erreur pour exportBothReports
     }
 }
 
@@ -1875,70 +1885,73 @@ getEnhancedTableDataForChart(section, reportData, formatNumber) {
         case 'Détail par Source': {
             const sourceData = reportData['Détail par Source'] || [];
             if (!sourceData.length) {
-                return [['Source/Genre', 'Nombre', 'Pourcentage'], ['Aucune donnée', '0', '0%']];
+                return [['Source', 'Bénéficiaires', 'Pourcentage'], ['Aucune donnée', '0', '0%']];
             }
-            let table = [['Source/Genre', 'Bénéficiaires', 'Pourcentage']];
+            let table = [['Source', 'Bénéficiaires', 'Pourcentage']];
             sourceData.forEach(item => {
                 table.push([
-                    item.communesenegal || item.commune || 'N/A',
-                    formatNumber(item.total),
-                    `${(item.femme_pourcentage || 0).toFixed(1)}%`,
-                    emoji
+                    item.source || item.communesenegal || item.commune || 'N/A',
+                    formatNumber(item.total || item.nombre || 0),
+                    `${(item.femme_pourcentage || item.pourcentage || 0).toFixed(1)}%`
+                    // ✅ Supprimé: emoji
                 ]);
             });
             return table;
         }
+        
+        case 'Analyse par Commune': {
+            const communeData = reportData['Analyse par Commune'] || [];
+            if (!communeData.length) {
+                return [['Commune', 'Total', '% Femmes', 'Statut'], ['Aucune donnée', '0', '0%', '-']];
+            }
+            let table = [['Commune', 'Total', '% Femmes', 'Statut']];
+            communeData.forEach(item => {
+                const pourcentage = item.femme_pourcentage || 0;
+                const statut = pourcentage >= 30 ? '🟢 Bon' : 
+                              pourcentage >= 20 ? '🟡 Moyen' : '🔴 Faible';
+                table.push([
+                    item.communesenegal || item.commune || 'N/A',
+                    formatNumber(item.total || 0),
+                    `${pourcentage.toFixed(1)}%`,
+                    statut
+                ]);
+            });
+            return table;
+        }
+        
         case 'Analyse Temporelle': {
             const temporalData = reportData['Analyse Temporelle'] || [];
             if (!temporalData.length) {
-                return [['Période', 'Hommes', 'Femmes', 'Évolution'], ['Aucune donnée', '0', '0', '-']];
+                return [['Période', 'Hommes', 'Femmes', '% Femmes'], ['Aucune donnée', '0', '0', '0%']];
             }
-            let table = [['Période', 'Hommes', 'Femmes', '% Femmes', 'Tendance']];
-            temporalData.forEach((item, index) => {
-                let tendance = '-';
-                if (index > 0) {
-                    const prev = temporalData[index - 1].femme_pourcentage || 0;
-                    const curr = item.femme_pourcentage || 0;
-                    tendance = curr > prev
-                        ? `📈 +${(curr - prev).toFixed(1)}`
-                        : curr < prev
-                        ? `📉 ${(curr - prev).toFixed(1)}`
-                        : '➡️ =';
-                }
+            let table = [['Période', 'Hommes', 'Femmes', '% Femmes']];
+            temporalData.forEach(item => {
                 table.push([
                     item.periode || 'N/A',
-                    formatNumber(item.homme),
-                    formatNumber(item.femme),
-                    `${(item.femme_pourcentage || 0).toFixed(1)}%`,
-                    tendance
+                    formatNumber(item.homme || 0),
+                    formatNumber(item.femme || 0),
+                    `${(item.femme_pourcentage || 0).toFixed(1)}%`
                 ]);
             });
             return table;
         }
+        
         case 'Tamba-Kédougou': {
             const regionData = reportData['Tamba-Kédougou'] || [];
             if (!regionData.length) {
                 return [['Région', 'Population', '% Femmes'], ['Aucune donnée', '0', '0%']];
             }
-            let table = [['Région', 'Population Totale', '% Femmes', 'Évaluation']];
+            let table = [['Région', 'Population', '% Femmes']];
             regionData.forEach(item => {
-                const pourcentage = item.femme_pourcentage || 0;
-                const evaluation = pourcentage >= 40
-                    ? '🟢 Excellent'
-                    : pourcentage >= 25
-                    ? '🟡 Moyen'
-                    : pourcentage >= 15
-                    ? '🟠 Faible'
-                    : '🔴 Critique';
                 table.push([
                     item.region || item.nom || 'N/A',
-                    formatNumber(item.total),
-                    `${pourcentage.toFixed(1)}%`,
-                    evaluation
+                    formatNumber(item.total || 0),
+                    `${(item.femme_pourcentage || 0).toFixed(1)}%`
                 ]);
             });
             return table;
         }
+        
         default: {
             return [['Indicateur', 'Valeur'], ['Aucune donnée disponible', '-']];
         }
