@@ -1541,7 +1541,7 @@ async generateHTMLReportWithCharts() {
 
         <div class="footer">
             <p><strong>PROCASEF Dashboard - Rapport Genre Automatisé</strong></p>
-            <p>Contact: cheikhabgn@gmail.com | www.procasef.com</p>
+            <p>Contact: cheikhabgn@gmail.com | BetPlusAudetAG | www.procasef.com</p>
             <p>Rapport généré avec graphiques intégrés - ${new Date().toLocaleString('fr-FR')}</p>
         </div>
     </body>
@@ -2211,7 +2211,7 @@ addAdvancedFooters(doc, pageWidth, pageHeight, margin) {
         
         // Contact au centre en bas
         doc.setFontSize((this.FONT_SIZES?.SMALL || 8) - 1);
-        const contactText = 'Contact: cheikhabgn@gmail.com | www.procasef.com';
+        const contactText = 'Contact: cheikhabgn@gmail.com | BetPlusAudetAG | www.procasef.com';
         const contactWidth = doc.getTextWidth(contactText);
         doc.text(contactText, (pageWidth - contactWidth) / 2, pageHeight - 10);
     }
