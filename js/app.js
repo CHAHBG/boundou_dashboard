@@ -3502,7 +3502,7 @@ generateAlerts(reportData) {
                         ${item.delib_pct}%
                     </span>
                 </td>
-                <td class="text-end">${item.superficie.toFixed(2)} ha</td>
+                <td class="text-end">${item.superficie.toFixed(2)} m²</td>
             `;
             tbody.appendChild(row);
         });
