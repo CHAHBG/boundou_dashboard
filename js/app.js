@@ -97,13 +97,16 @@ class ProcasefDashboard {
     }
 
     toggleSidebar() {
-        const sidebar = document.querySelector('.sidebar');
-        const mainContent = document.querySelector('.main-content');
-        if (sidebar && mainContent) {
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('expanded');
+            console.log('Toggling sidebar...'); // Debug log
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+            if (sidebar && mainContent) {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+            } else {
+                console.error('Sidebar or main-content element not found');
+            }
         }
-    }
 
     updateElement(elementId, value) {
         const element = document.getElementById(elementId);
@@ -232,77 +235,76 @@ class ProcasefDashboard {
     }
 
     setupEventListeners() {
-        console.log('Configuration des event listeners...');
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', async (e) => {
-                e.preventDefault();
-                const section = item.getAttribute('data-section');
-                if (section) {
-                    await this.navigateToSection(section);
-                }
-            });
-        });
-
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        if (sidebarToggle) {
-            sidebarToggle.addEventListener('click', () => this.toggleSidebar());
-        }
-
-        this.setupFontSizeControls();
-
-        ['communeFilter', 'nicadFilter', 'deliberationFilter', 'postCommuneFilter', 'postGeomFilter'].forEach(filterId => {
-            const filter = document.getElementById(filterId);
-            if (filter) {
-                filter.addEventListener('change', () => this.applyFilters());
-            }
-        });
-
-        ['topoCommuneFilter', 'topoTopographeFilter'].forEach(filterId => {
-            const filter = document.getElementById(filterId);
-            if (filter) {
-                filter.addEventListener('change', () => this.applyTopoFilters());
-            }
-        });
-
-        ['topoDateDebut', 'topoDateFin'].forEach(filterId => {
-            const filter = document.getElementById(filterId);
-            if (filter) {
-                filter.addEventListener('change', () => {
-                    if (this.validateDateRange()) {
-                        this.applyTopoFilters();
+            console.log('Configuration des event listeners...');
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const section = item.getAttribute('data-section');
+                    if (section) {
+                        await this.navigateToSection(section);
                     }
                 });
-            }
-        });
-
-        const clearDateBtn = document.getElementById('clearDateRange');
-        if (clearDateBtn) {
-            clearDateBtn.addEventListener('click', () => this.clearDateRange());
-        }
-
-        const exportParcellesBtn = document.getElementById('exportParcellesBtn');
-        const exportPostBtn = document.getElementById('exportPostBtn');
-        const exportTopoBtn = document.getElementById('exportTopoBtn');
-
-        if (exportParcellesBtn) {
-            exportParcellesBtn.addEventListener('click', () => this.exportParcellesData());
-        }
-        if (exportPostBtn) {
-            exportPostBtn.addEventListener('click', () => this.exportPostData());
-        }
-        if (exportTopoBtn) {
-            exportTopoBtn.addEventListener('click', () => this.exportTopoData());
-        }
-
-    // =================== MODIFIED EVENT LISTENER ===================
-        // Updated to call exportBothReports for both PDF and Word
-        const exportGenreBtn = document.getElementById('exportGenreBtn');
-        if (exportGenreBtn) {
-            exportGenreBtn.addEventListener('click', () => this.exportBothReports());
-        }
+            });
     
-        window.addEventListener('resize', () => this.handleResize());
-}
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', () => this.toggleSidebar());
+            }
+    
+            this.setupFontSizeControls();
+    
+            ['communeFilter', 'nicadFilter', 'deliberationFilter', 'postCommuneFilter', 'postGeomFilter'].forEach(filterId => {
+                const filter = document.getElementById(filterId);
+                if (filter) {
+                    filter.addEventListener('change', () => this.applyFilters());
+                }
+            });
+    
+            ['topoCommuneFilter', 'topoTopographeFilter'].forEach(filterId => {
+                const filter = document.getElementById(filterId);
+                if (filter) {
+                    filter.addEventListener('change', () => this.applyTopoFilters());
+                }
+            });
+    
+            ['topoDateDebut', 'topoDateFin'].forEach(filterId => {
+                const filter = document.getElementById(filterId);
+                if (filter) {
+                    filter.addEventListener('change', () => {
+                        if (this.validateDateRange()) {
+                            this.applyTopoFilters();
+                        }
+                    });
+                }
+            });
+    
+            const clearDateBtn = document.getElementById('clearDateRange');
+            if (clearDateBtn) {
+                clearDateBtn.addEventListener('click', () => this.clearDateRange());
+            }
+    
+            const exportParcellesBtn = document.getElementById('exportParcellesBtn');
+            const exportPostBtn = document.getElementById('exportPostBtn');
+            const exportTopoBtn = document.getElementById('exportTopoBtn');
+    
+            if (exportParcellesBtn) {
+                exportParcellesBtn.addEventListener('click', () => this.exportParcellesData());
+            }
+            if (exportPostBtn) {
+                exportPostBtn.addEventListener('click', () => this.exportPostData());
+            }
+            if (exportTopoBtn) {
+                exportTopoBtn.addEventListener('click', () => this.exportTopoData());
+            }
+    
+            const exportGenreBtn = document.getElementById('exportGenreBtn');
+            if (exportGenreBtn) {
+                exportGenreBtn.addEventListener('click', () => this.exportBothReports());
+            }
+    
+            window.addEventListener('resize', () => this.handleResize());
+        }
+
     setupFontSizeControls() {
         try {
             const saved = localStorage.getItem('procasef-font-size');
@@ -3865,52 +3867,44 @@ generateAlerts(reportData) {
 
 // Initialisation de l'application
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('DOM loaded, initializing PROCASEF application...');
-  
-  // Vérification des dépendances critiques
-  const dependencies = {
-    jsPDF: typeof window.jspdf !== 'undefined' && typeof window.jspdf.jsPDF === 'function',
-    docx: typeof window.docx !== 'undefined' || typeof docx !== 'undefined',
-    Chart: typeof Chart !== 'undefined'
-  };
-  
-  console.log('Dependencies check:', dependencies);
-  
-  // Au lieu d'arrêter complètement, on initialise l'app et on gère les erreurs par fonctionnalité
-  let hasWarnings = false;
-  
-  if (!dependencies.jsPDF) {
-    console.warn('jsPDF is not loaded. PDF export will be disabled.');
-    hasWarnings = true;
-  }
-  
-  if (!dependencies.docx) {
-    console.warn('docx is not loaded. Word export will be disabled.');
-    hasWarnings = true;
-  }
-  
-  if (!dependencies.Chart) {
-    console.warn('Chart.js is not loaded. Charts will be disabled.');
-    hasWarnings = true;
-  }
-  
-  // Afficher un avertissement si certaines fonctionnalités seront limitées
-  if (hasWarnings) {
-    console.warn('Some features will be limited due to missing dependencies.');
-    // Optionnel : afficher une notification discrète à l'utilisateur
-    showDependencyWarning();
-  }
-  
-  // Initialiser l'application même si certaines dépendances manquent
-  try {
-    const dashboard = new ProcasefDashboard();
-    console.log('PROCASEF Dashboard initialized successfully');
-    
-    // Stocker l'instance globalement pour le debugging
-    window.procasefDashboard = dashboard;
-    
-  } catch (error) {
-    console.error('Failed to initialize PROCASEF Dashboard:', error);
-    showInitializationError(error);
-  }
+    console.log('DOM loaded, initializing PROCASEF application...');
+
+    const dependencies = {
+        jsPDF: typeof window.jspdf !== 'undefined' && typeof window.jspdf.jsPDF === 'function',
+        docx: typeof window.docx !== 'undefined' || typeof docx !== 'undefined',
+        Chart: typeof Chart !== 'undefined'
+    };
+
+    console.log('Dependencies check:', dependencies);
+
+    let hasWarnings = false;
+
+    if (!dependencies.jsPDF) {
+        console.warn('jsPDF is not loaded. PDF export will be disabled.');
+        hasWarnings = true;
+    }
+
+    if (!dependencies.docx) {
+        console.warn('docx is not loaded. Word export will be disabled.');
+        hasWarnings = true;
+    }
+
+    if (!dependencies.Chart) {
+        console.warn('Chart.js is not loaded. Charts will be disabled.');
+        hasWarnings = true;
+    }
+
+    if (hasWarnings) {
+        console.warn('Some features will be limited due to missing dependencies.');
+        // Optional: Implement showDependencyWarning()
+    }
+
+    try {
+        const dashboard = new ProcasefDashboard();
+        console.log('PROCASEF Dashboard initialized successfully');
+        window.procasefDashboard = dashboard;
+    } catch (error) {
+        console.error('Failed to initialize PROCASEF Dashboard:', error);
+        // Optional: Implement showInitializationError(error)
+    }
 });
