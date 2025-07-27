@@ -405,12 +405,12 @@ class ProcasefDashboard {
         if (targetSection) targetSection.classList.add('active');
 
         const titles = {
-            'accueil': 'Dashboard PROCASEF',
+            'accueil': 'Dashboard PROCASEF Boundou',
             'parcelles': 'Répartition des Parcelles',
             'etat-avancement': 'État d\'Avancement',
             'projections-2025': 'Projections 2025',
             'genre': 'Répartition par Genre',
-            'rapport': 'Rapport Complet',
+            'rapport': 'Répartition du Genre',
             'stats-topo': 'Statistiques Topographiques',
             'post-traitement': 'Post-Traitement'
         };
