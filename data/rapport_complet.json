@@ -189,7 +189,7 @@
   ],
   "Tamba-Kédougou": [
     {
-      "nomregion": "Kédougou",
+      "region": "Kédougou",
       "femme": 17254,
       "homme": 47636,
       "total": 64890,
@@ -197,7 +197,7 @@
       "femme_pourcentage": 26.58961319155494
     },
     {
-      "nomregion": "Tambacounda",
+      "region": "Tambacounda",
       "femme": 5946,
       "homme": 59732,
       "total": 65678,
