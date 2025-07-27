@@ -315,7 +315,7 @@ class MapManager {
                         <strong>📋 Parcelles délibérées:</strong> ${parcellesDeliberees.toLocaleString()}
                     </p>
                     <p style="margin: 5px 0; color: #333;">
-                        <strong>📏 Superficie totale:</strong> ${superficie.toFixed(2)} ha
+                        <strong>📏 Superficie totale:</strong> ${superficie.toFixed(2)} m²
                     </p>
                 </div>
                 
