@@ -1639,7 +1639,7 @@ createSynthesisPage(doc, reportData, pageWidth, pageHeight, margin, formatNumber
     doc.rect(margin, currentY - 10, pageWidth - 2 * margin, 35, 'F');
     doc.setFontSize(this.FONT_SIZES?.TITLE || 16);
     doc.setTextColor(255, 255, 255);
-    doc.text('📊 SYNTHÈSE EXÉCUTIVE', margin + (this.MARGINS?.TEXT || 10), currentY + 15);
+    doc.text(' SYNTHÈSE EXÉCUTIVE', margin + (this.MARGINS?.TEXT || 10), currentY + 15);
     currentY += 60;
 
     // Calcul des statistiques
@@ -1658,7 +1658,7 @@ createSynthesisPage(doc, reportData, pageWidth, pageHeight, margin, formatNumber
     // Analyse automatique
     doc.setFontSize(this.FONT_SIZES?.SUBTITLE || 14);
     doc.setTextColor(...colors.PRIMARY);
-    doc.text('🔍 ANALYSE AUTOMATIQUE', margin, currentY);
+    doc.text(' ANALYSE AUTOMATIQUE', margin, currentY);
     currentY += 25;
 
     doc.setFontSize(this.FONT_SIZES?.BODY || 10);
@@ -1718,13 +1718,13 @@ generateWordAnalysis(reportData) {
     const femmesPourcentage = ((femmes / total) * 100).toFixed(1);
 
     if (femmesPourcentage < 20) {
-        return `⚠️ ALERTE : Représentation féminine critiquement faible (${femmesPourcentage}%).`;
+        return ` ALERTE : Représentation féminine critiquement faible (${femmesPourcentage}%).`;
     } else if (femmesPourcentage < 30) {
-        return `📉 Représentation féminine insuffisante (${femmesPourcentage}%). Efforts supplémentaires nécessaires.`;
+        return ` Représentation féminine insuffisante (${femmesPourcentage}%). Efforts supplémentaires nécessaires.`;
     } else if (femmesPourcentage < 40) {
-        return `📈 Progrès encourageants (${femmesPourcentage}%). Continuez vers la parité 40-60%.`;
+        return ` Progrès encourageants (${femmesPourcentage}%). Continuez vers la parité 40-60%.`;
     }
-    return `✅ Excellent : Représentation féminine (${femmesPourcentage}%) conforme aux standards de parité.`;
+    return ` Excellent : Représentation féminine (${femmesPourcentage}%) conforme aux standards de parité.`;
 }
 
 /**
@@ -1916,7 +1916,7 @@ addSectionAnalysis(doc, section, reportData, startY, margin, contentWidth, forma
     doc.rect(margin, startY, contentWidth, 2, 'F');
     doc.setFontSize(this.FONT_SIZES?.SUBTITLE || 14);
     doc.setTextColor(...colors.PRIMARY);
-    doc.text('💡 ANALYSE & INSIGHTS', margin, startY + 25);
+    doc.text(' ANALYSE & INSIGHTS', margin, startY + 25);
     doc.setFontSize(this.FONT_SIZES?.BODY || 10);
     doc.setTextColor(0, 0, 0);
     const analysis = this.generateSectionAnalysis(section, reportData);
@@ -2009,7 +2009,7 @@ createRecommendationsPage(doc, reportData, pageWidth, pageHeight, margin, format
     doc.rect(margin, currentY - 10, pageWidth - 2 * margin, 35, 'F');
     doc.setFontSize(this.FONT_SIZES?.TITLE || 16);
     doc.setTextColor(255, 255, 255);
-    doc.text('🎯 RECOMMANDATIONS STRATÉGIQUES', margin + (this.MARGINS?.TEXT || 10), currentY + 15);
+    doc.text(' RECOMMANDATIONS STRATÉGIQUES', margin + (this.MARGINS?.TEXT || 10), currentY + 15);
     currentY += 60;
 
     const recommendations = this.generateStrategicRecommendations(reportData);
