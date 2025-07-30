@@ -3778,61 +3778,62 @@ generateAlerts(reportData) {
         }
     }
 
-    exportTopoData() {
-        const data = this.filteredTopoData || this.data.topoData || [];
-        if (!data.length) {
-            this.showError('Aucune donnée à exporter');
-            return;
-        }
-
-        const formattedData = data.map(t => ({
-            Date: t.date || '-',
-            Topographe: `${t.prenom || ''} ${t.nom || ''}`.trim() || '-',
-            Commune: t.commune || '-',
-            Champs: (t.champs || 0).toLocaleString(),
-            Bâtis: (t.batis || 0).toLocaleString(),
-            Total: (t.totale_parcelles || 0).toLocaleString()
-        }));
-
-        const columns = ['Date', 'Topographe', 'Commune', 'Champs', 'Bâtis', 'Total'];
-        const title = 'Rapport Topographique PROCASEF';
-        const htmlContent = this.generateTableHTML(formattedData, columns, title);
-
-        // Téléchargement HTML
-        const blob = new Blob([htmlContent], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'Rapport_Topographique_PROCASEF.html';
-        a.click();
-        URL.revokeObjectURL(url);
-
-        // Téléchargement PDF
-        try {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.setFontSize(18);
-            doc.text(title, 20, 20);
-            doc.setFontSize(12);
-            doc.text(`Généré le : ${new Date().toLocaleString('fr-FR')}`, 20, 30);
-
-            doc.autoTable({
-                head: [columns],
-                body: formattedData.map(row => columns.map(col => row[col])),
-                startY: 40,
-                theme: 'grid',
-                headStyles: { fillColor: this.colors.primary },
-                styles: { fontSize: 10, cellPadding: 2 },
-                alternateRowStyles: { fillColor: '#f9fafb' }
-            });
-
-            doc.text('Rapport généré par l\'application PROCASEF Dashboard', 20, doc.lastAutoTable.finalY + 10);
-            doc.save('Rapport_Topographique_PROCASEF.pdf');
-        } catch (error) {
-            console.error('Erreur lors de la génération du PDF:', error);
-            this.showError('Erreur lors de la génération du PDF. Le fichier HTML a été téléchargé.');
-        }
+exportTopoData() {
+    const data = this.filteredTopoData || this.data.topoData || [];
+    if (!data.length) {
+        this.showError('Aucune donnée à exporter');
+        return;
     }
+
+    const formattedData = data.map(t => ({
+        Date: t.date || '-',
+        Topographe: `${t.prenom || ''} ${t.nom || ''}`.trim() || '-',
+        Commune: t.commune || '-',
+        Village: t.village || '-',
+        Champs: (t.champs || 0).toLocaleString(),
+        Bâtis: (t.batis || 0).toLocaleString(),
+        Total: (t.totale_parcelles || 0).toLocaleString()
+    }));
+
+    const columns = ['Date', 'Topographe', 'Commune', 'Village', 'Champs', 'Bâtis', 'Total'];
+    const title = 'Rapport Topographique PROCASEF';
+    const htmlContent = this.generateTableHTML(formattedData, columns, title);
+
+    // Téléchargement HTML
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Rapport_Topographique_PROCASEF.html';
+    a.click();
+    URL.revokeObjectURL(url);
+
+    // Téléchargement PDF
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.setFontSize(18);
+        doc.text(title, 20, 20);
+        doc.setFontSize(12);
+        doc.text(`Généré le : ${new Date().toLocaleString('fr-FR')}`, 20, 30);
+
+        doc.autoTable({
+            head: [columns],
+            body: formattedData.map(row => columns.map(col => row[col])),
+            startY: 40,
+            theme: 'grid',
+            headStyles: { fillColor: this.colors.primary },
+            styles: { fontSize: 10, cellPadding: 2 },
+            alternateRowStyles: { fillColor: '#f9fafb' }
+        });
+
+        doc.text('Rapport généré par l\'application PROCASEF Dashboard', 20, doc.lastAutoTable.finalY + 10);
+        doc.save('Rapport_Topographique_PROCASEF.pdf');
+    } catch (error) {
+        console.error('Erreur lors de la génération du PDF:', error);
+        this.showError('Erreur lors de la génération du PDF. Le fichier HTML a été téléchargé.');
+    }
+}
 
     destroyAllCharts() {
         if (window.chartManager) {
