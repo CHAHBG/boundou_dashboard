@@ -1,5 +1,4 @@
-{
-  "Leevee_nettoyee": [
+[
     {
       "date": "2024-08-13T00:00:00",
       "prenom": "Ame",
@@ -24453,80 +24452,5 @@
       "totale_parcelles": 24.0,
       "deroulement_des_operations": null
     }
-  ],
-  "Sheet1": [
-    {
-      "djiby": "Mouhamed  A",
-      "gueye": "SYLLA",
-      "tombronkoto": "Tombronkoto",
-      "bantacocouta": "Mako",
-      "18": 2.0,
-      "18_1": 16
-    },
-    {
-      "djiby": "Yandé",
-      "gueye": "DIOP",
-      "tombronkoto": "Tombronkoto",
-      "bantacocouta": "Darsalam",
-      "18": null,
-      "18_1": 12
-    },
-    {
-      "djiby": "Yakhya",
-      "gueye": "TOURE",
-      "tombronkoto": "Tombronkoto",
-      "bantacocouta": "Bantacocouta",
-      "18": 32.0,
-      "18_1": 32
-    },
-    {
-      "djiby": "Seydina Alioune",
-      "gueye": "SOW",
-      "tombronkoto": "Tombronkoto",
-      "bantacocouta": "Mako",
-      "18": 6.0,
-      "18_1": 22
-    },
-    {
-      "djiby": "Mignane",
-      "gueye": "Gning",
-      "tombronkoto": "Tombronkoto",
-      "bantacocouta": "Tombronkoto",
-      "18": 9.0,
-      "18_1": 30
-    },
-    {
-      "djiby": "Souleymane ",
-      "gueye": "Niang",
-      "tombronkoto": "Tombronkoto",
-      "bantacocouta": "Kabateguinda",
-      "18": null,
-      "18_1": 17
-    },
-    {
-      "djiby": "Cheikh ",
-      "gueye": "Diawara",
-      "tombronkoto": "Tombronkoto",
-      "bantacocouta": "Kabateguinda",
-      "18": null,
-      "18_1": 20
-    },
-    {
-      "djiby": "Gora",
-      "gueye": "Dieng",
-      "tombronkoto": "Tombronkoto",
-      "bantacocouta": "Foukhoto ",
-      "18": 2.0,
-      "18_1": 18
-    },
-    {
-      "djiby": "Serigne saliou",
-      "gueye": "Sow",
-      "tombronkoto": "Tombronkoto",
-      "bantacocouta": "Bognomba",
-      "18": 7.0,
-      "18_1": 30
-    }
   ]
 
-}
