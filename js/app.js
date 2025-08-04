@@ -166,11 +166,14 @@ class ProcasefDashboard {
 
     async loadDataSafely(path, key) {
         try {
-            this.data[key] = await this.dataLoader.loadData(path);
-            console.log(`✅ ${key} chargé avec succès:`, this.data[key]?.length || 'N/A', 'éléments');
+            const data = await this.dataLoader.loadData(path);
+            // Ensure data is an array
+            this.data[key] = Array.isArray(data) ? data : [];
+            console.log(`✅ ${key} chargé avec succès:`, this.data[key].length, 'éléments');
         } catch (error) {
             console.error(`❌ Échec chargement ${key}:`, error);
             this.data[key] = [];
+            this.showError(`Erreur lors du chargement des données ${key}`);
         }
     }
 
@@ -682,11 +685,16 @@ class ProcasefDashboard {
 
     renderStatsTopo() {
         console.log('Rendu de la section Stats Topo');
-        this.applyTopoFilters();
-        this.updateTopoKPIs();
-        this.createTopoCharts();
-        this.renderTopoTable();
-        this.renderTopoTimeline();
+        try {
+            this.applyTopoFilters();
+            this.updateTopoKPIs();
+            this.createTopoCharts();
+            this.renderTopoTable();
+            this.renderTopoTimeline();
+        } catch (error) {
+            console.error('Erreur dans renderStatsTopo:', error);
+            this.showError('Erreur lors du rendu des statistiques topographiques');
+        }
     }
 
     renderPostTraitement() {
@@ -2528,17 +2536,21 @@ generateAlerts(reportData) {
     }
 
     applyTopoFilters() {
+        console.log('Applying topo filters...');
+        console.log('Initial topoData:', this.data.topoData);
+        
+        let filtered = Array.isArray(this.data.topoData) ? this.data.topoData : [];
+        console.log('After array check, filtered:', filtered);
+    
         const communeFilter = document.getElementById('topoCommuneFilter')?.value;
         const topoFilter = document.getElementById('topoTopographeFilter')?.value;
         const dateDebut = document.getElementById('topoDateDebut')?.value;
         const dateFin = document.getElementById('topoDateFin')?.value;
-
-        let filtered = this.data.topoData || [];
-
+    
         if (communeFilter) {
-            filtered = filtered.filter(t => (t.commune || '').trim() === communeFilter);
+            filtered = filtered.filter(t => t.commune === communeFilter);
         }
-
+    
         if (topoFilter) {
             filtered = filtered.filter(t => {
                 const prenom = (t.prenom || '').trim();
@@ -2547,7 +2559,7 @@ generateAlerts(reportData) {
                 return fullName === topoFilter;
             });
         }
-
+    
         if (dateDebut || dateFin) {
             filtered = filtered.filter(t => {
                 const itemDate = t.date;
@@ -2562,9 +2574,11 @@ generateAlerts(reportData) {
                 return isInRange;
             });
         }
-
-        this.filteredTopoData = filtered;
-
+    
+        // Ensure filtered is always an array
+        this.filteredTopoData = Array.isArray(filtered) ? filtered : [];
+        console.log('Final filteredTopoData:', this.filteredTopoData, 'Length:', this.filteredTopoData.length);
+    
         if (this.currentSection === 'stats-topo') {
             this.updateTopoKPIs();
             this.renderTopoTable();
@@ -2582,18 +2596,21 @@ generateAlerts(reportData) {
     }
 
     updateTopoKPIs() {
-        const d = this.filteredTopoData || [];
+        console.log('Updating topo KPIs...');
+        const d = Array.isArray(this.filteredTopoData) ? this.filteredTopoData : [];
+        console.log('filteredTopoData in updateTopoKPIs:', d, 'Length:', d.length);
+    
         const totalChamps = d.reduce((s, x) => s + (x.champs || 0), 0);
         const totalBatis = d.reduce((s, x) => s + (x.batis || 0), 0);
         const total = d.reduce((s, x) => s + (x.totale_parcelles || 0), 0);
         const dates = [...new Set(d.map(x => x.date).filter(Boolean))];
         const avg = dates.length ? Math.round(total / dates.length) : 0;
-
+    
         this.updateKPI('totalChampsKPI', totalChamps);
         this.updateKPI('totalBatisKPI', totalBatis);
         this.updateKPI('totalTopoParcellesKPI', total);
         this.updateKPI('avgParJourKPI', avg);
-
+    
         const dateDebut = document.getElementById('topoDateDebut')?.value;
         const dateFin = document.getElementById('topoDateFin')?.value;
         let periode = '';
@@ -2606,12 +2623,12 @@ generateAlerts(reportData) {
         } else {
             periode = 'Toute la période';
         }
-
+    
         const sectionHeader = document.querySelector('#stats-topo-section .section-description');
         if (sectionHeader) {
             sectionHeader.textContent = `Analyse détaillée des levés topographiques - ${periode}`;
         }
-
+    
         const counts = {};
         d.forEach(x => {
             const prenom = (x.prenom || '').trim();
@@ -2621,7 +2638,7 @@ generateAlerts(reportData) {
                 counts[name] = (counts[name] || 0) + (x.totale_parcelles || 0);
             }
         });
-
+    
         const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
         this.updateKPI('topTopoKPI', top ? `${top[0]} (${top[1]})` : '-');
         this.updateKPI('activeTopoKPI', Object.keys(counts).length);
