@@ -19,13 +19,13 @@
   },
   {
     "mois": "Juillet 2025",
-    "inventaires_mensuels_realises": 8290.0,
+    "inventaires_mensuels_realises": 11023.0,
     "objectif_inventaires_mensuels": 8000,
     "objectif_inventaires_total": 42421
   },
   {
     "mois": "Aout 2025",
-    "inventaires_mensuels_realises": null,
+    "inventaires_mensuels_realises": 86.0,
     "objectif_inventaires_mensuels": 8000,
     "objectif_inventaires_total": 50421
   },
@@ -54,3 +54,4 @@
     "objectif_inventaires_total": 82421
   }
 ]
+
