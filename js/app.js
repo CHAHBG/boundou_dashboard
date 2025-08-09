@@ -180,12 +180,22 @@ async init() {
     async loadDataSafely(path, key) {
         try {
             const data = await this.dataLoader.loadData(path);
-            // Ensure data is an array
-            this.data[key] = Array.isArray(data) ? data : [];
-            console.log(`✅ ${key} chargé avec succès:`, this.data[key].length, 'éléments');
+            // Special handling for rapport_complet which is an object, not an array
+            if (key === 'rapportComplet') {
+                this.data[key] = data || {};
+                console.log(`✅ ${key} chargé avec succès:`, Object.keys(this.data[key]).length, 'sections');
+            } else {
+                // Ensure data is an array for other datasets
+                this.data[key] = Array.isArray(data) ? data : [];
+                console.log(`✅ ${key} chargé avec succès:`, this.data[key].length, 'éléments');
+            }
         } catch (error) {
             console.error(`❌ Échec chargement ${key}:`, error);
-            this.data[key] = [];
+            if (key === 'rapportComplet') {
+                this.data[key] = {};
+            } else {
+                this.data[key] = [];
+            }
             this.showError(`Erreur lors du chargement des données ${key}`);
         }
     }
