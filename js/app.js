@@ -557,7 +557,7 @@ class ProcasefDashboard {
     renderRapport() {
         console.log('Rendu de la section Rapport');
         const data = this.data.rapportComplet || {};
-        console.log(data);
+        console.log('Rapport data:', data); // Debug log
         const wrap = document.getElementById("rapportKpiGrid");
         if (wrap) {
             wrap.innerHTML = "";
@@ -575,7 +575,6 @@ class ProcasefDashboard {
                 wrap.appendChild(card);
             });
         }
-
         this.renderRapportCharts(data);
     }
 
