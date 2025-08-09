@@ -5,6 +5,8 @@ class DataLoader {
         this.loadingPromises = new Map();
         this.retryAttempts = 3;
         this.retryDelay = 1000;
+        // Reference to the external data object (assumed to be set by the app)
+        this.data = typeof window !== 'undefined' && window.app ? window.app.data : {};
     }
 
     async loadData(url) {
@@ -23,7 +25,13 @@ class DataLoader {
         console.log(`Fetching data from: ${url}`);
         const loadPromise = this.fetchWithRetry(url)
             .then(data => {
+                // Store the raw data in cache
                 this.cache.set(url, data);
+                // Assign to this.data if the url matches rapport_complet.json
+                if (url.includes('rapport_complet.json')) {
+                    this.data.rapportComplet = data; // Direct assignment to app's data
+                    console.log(`Assigned rapportComplet to app.data: ${Object.keys(data).length} sections`);
+                }
                 this.loadingPromises.delete(url);
                 return data;
             })
@@ -61,39 +69,39 @@ class DataLoader {
         }
     }
 
-     getFallbackData(url) {
-    console.log(`Generating fallback data for: ${url}`);
+    getFallbackData(url) {
+        console.log(`Generating fallback data for: ${url}`);
 
-    if (url.includes('parcelles.json')) {
-      return this.generateParcelleFallbackData();
-    } else if (url.includes('Projections_2025.json')) {
-      return this.generateProjectionsFallbackData();
-    } else if (url.includes('Genre_par_Commune.json')) {
-      return this.generateGenreCommuneFallbackData();
-    } else if (url.includes('Genre_par_trimestre.json')) {
-      return this.generateGenreTrimestreFallbackData();
-    } else if (url.includes('Repartition_genre.json')) {
-      return this.generateRepartitionGenreFallbackData();
-    } else if (url.includes('rapport_complet.json')) {
-      return this.generateRapportCompletFallbackData();
-    } else if (url.includes('Etat_des_operations_Boundou_Mai_2025.json') ||
-               url.includes('Etat-des-operations-Boundou-Mai-2025.json')) {
-      return this.generateEtatOperationsFallbackData();
-    } else if (url.includes('Parcelles_terrain_periode.json')) {
-      return this.generateParcellesTerrainFallbackData();
-    } else if (url.includes('Parcelles_post_traites_par_geom.json')) {
-      return this.generateParcellesPostTraitesFallbackData();
-    } else if (url.includes('Urm_Terrain_comparaison.json')) {
-      return this.generateUrmTerrainFallbackData();
-    } else if (url.includes('Levee_par_commune_Terrain_URM.json')) {
-      return this.generateLeveeCommuneFallbackData();
-    } else if (url.includes('Rapports_Topo_nettoyee.json')) {
-      return this.generateTopoFallbackData();
+        if (url.includes('parcelles.json')) {
+            return this.generateParcelleFallbackData();
+        } else if (url.includes('Projections_2025.json')) {
+            return this.generateProjectionsFallbackData();
+        } else if (url.includes('Genre_par_Commune.json')) {
+            return this.generateGenreCommuneFallbackData();
+        } else if (url.includes('Genre_par_trimestre.json')) {
+            return this.generateGenreTrimestreFallbackData();
+        } else if (url.includes('Repartition_genre.json')) {
+            return this.generateRepartitionGenreFallbackData();
+        } else if (url.includes('rapport_complet.json')) {
+            return this.generateRapportCompletFallbackData();
+        } else if (url.includes('Etat_des_operations_Boundou_Mai_2025.json') ||
+                   url.includes('Etat-des-operations-Boundou-Mai-2025.json')) {
+            return this.generateEtatOperationsFallbackData();
+        } else if (url.includes('Parcelles_terrain_periode.json')) {
+            return this.generateParcellesTerrainFallbackData();
+        } else if (url.includes('Parcelles_post_traites_par_geom.json')) {
+            return this.generateParcellesPostTraitesFallbackData();
+        } else if (url.includes('Urm_Terrain_comparaison.json')) {
+            return this.generateUrmTerrainFallbackData();
+        } else if (url.includes('Levee_par_commune_Terrain_URM.json')) {
+            return this.generateLeveeCommuneFallbackData();
+        } else if (url.includes('Rapports_Topo_nettoyee.json')) {
+            return this.generateTopoFallbackData();
+        }
+
+        /* Default fallback */
+        return {};
     }
-
-    /* valeur par défaut */
-    return [];
-  }
 
     generateParcelleFallbackData() {
         const communes = [
@@ -385,7 +393,7 @@ class DataLoader {
             'data/parcelles.json',
             'data/Repartition_genre.json',
             'data/Projections_2025.json',
-            'data/rapport_complet.json'  // Ajout du rapport complet
+            'data/rapport_complet.json'  // Ensure rapport_complet is preloaded
         ];
 
         const loadPromises = essentialFiles.map(file => this.loadData(file));
@@ -397,6 +405,7 @@ class DataLoader {
             console.warn('Some essential data failed to preload:', error);
         }
     }
+
     // Chargement des données topographiques
     async loadTopoData() {
         console.log('Chargement des données topographiques...');
@@ -411,85 +420,85 @@ class DataLoader {
     }
 
     // Génération de données de fallback pour les stats topo
-generateTopoFallbackData() {
-    console.log('Génération de données de fallback pour Stats Topo');
-    
-    const communes = ['NDOGA BABACAR', 'BANDAFASSI', 'DIMBOLI', 'MISSIRAH', 'NETTEBOULOU'];
-    const villages = ['Medina coly', 'Sare souna', 'Soutouba peulh', 'Village Nord', 'Village Sud'];
-    const prenoms = ['Ame', 'Saliou', 'Arona', 'Fatou', 'Moussa', 'Aissatou', 'Ibrahima', 'Mariama'];
-    const noms = ['FAYE', 'NDIAYE', 'FALL', 'DIOP', 'SARR', 'BA', 'SECK', 'GUEYE'];
-    const operations = [
-        'Levés topographiques terminés',
-        'Enquêtes socio-foncières en cours',
-        'Affichage public réalisé',
-        'Difficultés terrain',
-        null
-    ];
+    generateTopoFallbackData() {
+        console.log('Génération de données de fallback pour Stats Topo');
+        
+        const communes = ['NDOGA BABACAR', 'BANDAFASSI', 'DIMBOLI', 'MISSIRAH', 'NETTEBOULOU'];
+        const villages = ['Medina coly', 'Sare souna', 'Soutouba peulh', 'Village Nord', 'Village Sud'];
+        const prenoms = ['Ame', 'Saliou', 'Arona', 'Fatou', 'Moussa', 'Aissatou', 'Ibrahima', 'Mariama'];
+        const noms = ['FAYE', 'NDIAYE', 'FALL', 'DIOP', 'SARR', 'BA', 'SECK', 'GUEYE'];
+        const operations = [
+            'Levés topographiques terminés',
+            'Enquêtes socio-foncières en cours',
+            'Affichage public réalisé',
+            'Difficultés terrain',
+            null
+        ];
 
-    const fallbackData = [];
-    
-    // Générer des données sur 6 mois
-    for (let month = 0; month < 6; month++) {
-        for (let day = 1; day <= 28; day += Math.floor(Math.random() * 3) + 1) {
-            const date = new Date(2024, 7 + month, day); // À partir d'août 2024
-            
-            // Générer plusieurs entrées par jour
-            const entriesPerDay = Math.floor(Math.random() * 5) + 1;
-            
-            for (let entry = 0; entry < entriesPerDay; entry++) {
-                const champsValue = Math.random() > 0.5 ? Math.floor(Math.random() * 30) : null;
-                const batisValue = Math.random() > 0.3 ? Math.floor(Math.random() * 20) : null;
-                const totalParcelles = (champsValue || 0) + (batisValue || 0);
+        const fallbackData = [];
+        
+        // Générer des données sur 6 mois
+        for (let month = 0; month < 6; month++) {
+            for (let day = 1; day <= 28; day += Math.floor(Math.random() * 3) + 1) {
+                const date = new Date(2024, 7 + month, day); // À partir d'août 2024
                 
-                if (totalParcelles > 0) {
-                    fallbackData.push({
-                        date: date.toISOString().split('T')[0],
-                        prenom: prenoms[Math.floor(Math.random() * prenoms.length)],
-                        nom: noms[Math.floor(Math.random() * noms.length)],
-                        commune: communes[Math.floor(Math.random() * communes.length)],
-                        village: villages[Math.floor(Math.random() * villages.length)],
-                        champs: champsValue,
-                        batis: batisValue,
-                        totale_parcelles: totalParcelles,
-                        deroulement_des_operations: operations[Math.floor(Math.random() * operations.length)]
-                    });
+                // Générer plusieurs entrées par jour
+                const entriesPerDay = Math.floor(Math.random() * 5) + 1;
+                
+                for (let entry = 0; entry < entriesPerDay; entry++) {
+                    const champsValue = Math.random() > 0.5 ? Math.floor(Math.random() * 30) : null;
+                    const batisValue = Math.random() > 0.3 ? Math.floor(Math.random() * 20) : null;
+                    const totalParcelles = (champsValue || 0) + (batisValue || 0);
+                    
+                    if (totalParcelles > 0) {
+                        fallbackData.push({
+                            date: date.toISOString().split('T')[0],
+                            prenom: prenoms[Math.floor(Math.random() * prenoms.length)],
+                            nom: noms[Math.floor(Math.random() * noms.length)],
+                            commune: communes[Math.floor(Math.random() * communes.length)],
+                            village: villages[Math.floor(Math.random() * villages.length)],
+                            champs: champsValue,
+                            batis: batisValue,
+                            totale_parcelles: totalParcelles,
+                            deroulement_des_operations: operations[Math.floor(Math.random() * operations.length)]
+                        });
+                    }
                 }
             }
         }
+        
+        console.log(`Généré ${fallbackData.length} enregistrements de fallback pour Stats Topo`);
+        return fallbackData;
     }
-    
-    console.log(`Généré ${fallbackData.length} enregistrements de fallback pour Stats Topo`);
-    return fallbackData;
-}
 
-// Méthode pour obtenir les données topo filtrées
-getTopoFiltered(filters) {
-    const data = this.cache.get('data/Rapports_Topo_nettoyee.json') || [];
-    
-    return data.filter(item => {
-        // Filtre par date
-        if (filters.dateFrom && item.date && item.date < filters.dateFrom) return false;
-        if (filters.dateTo && item.date && item.date > filters.dateTo) return false;
+    // Méthode pour obtenir les données topo filtrées
+    getTopoFiltered(filters) {
+        const data = this.cache.get('data/Rapports_Topo_nettoyee.json') || [];
         
-        // Filtre par commune
-        if (filters.commune && item.commune !== filters.commune) return false;
-        
-        // Filtre par topographe
-        const topographeName = `${item.prenom || ''} ${item.nom || ''}`.trim();
-        if (filters.topographe && topographeName !== filters.topographe) return false;
-        
-        // Filtre par village
-        if (filters.village && item.village !== filters.village) return false;
-        
-        // Filtre par type
-        if (filters.type) {
-            if (filters.type === 'champs' && (!item.champs || item.champs === 0)) return false;
-            if (filters.type === 'batis' && (!item.batis || item.batis === 0)) return false;
-        }
-        
-        return true;
-    });
-}
+        return data.filter(item => {
+            // Filtre par date
+            if (filters.dateFrom && item.date && item.date < filters.dateFrom) return false;
+            if (filters.dateTo && item.date && item.date > filters.dateTo) return false;
+            
+            // Filtre par commune
+            if (filters.commune && item.commune !== filters.commune) return false;
+            
+            // Filtre par topographe
+            const topographeName = `${item.prenom || ''} ${item.nom || ''}`.trim();
+            if (filters.topographe && topographeName !== filters.topographe) return false;
+            
+            // Filtre par village
+            if (filters.village && item.village !== filters.village) return false;
+            
+            // Filtre par type
+            if (filters.type) {
+                if (filters.type === 'champs' && (!item.champs || item.champs === 0)) return false;
+                if (filters.type === 'batis' && (!item.batis || item.batis === 0)) return false;
+            }
+            
+            return true;
+        });
+    }
 }
 
 // Export for use in other modules
