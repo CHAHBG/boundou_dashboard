@@ -579,15 +579,18 @@ class ProcasefDashboard {
         this.renderRapportCharts(data);
     }
 
-    renderRapportCharts(data) {
+        renderRapportCharts(data) {
         if (!window.chartManager) {
             console.error('ChartManager non disponible');
             return;
         }
     
+        console.log('Data received in renderRapportCharts:', data); // Debug log
+    
         try {
-            // Graphique sources
+            // Graphique sources (Stacked Bar)
             const src = data["Détail par Source"] || [];
+            console.log('Détail par Source data:', src); // Debug log
             if (src.length > 0) {
                 window.chartManager.createStackedBar("rapportSourceChart", {
                     labels: src.map(s => s.source || 'Source inconnue'),
@@ -604,24 +607,33 @@ class ProcasefDashboard {
                         }
                     ]
                 });
+            } else {
+                console.warn('No data for Détail par Source');
             }
     
             // Mixed Top 10 Communes
             const communesData = (data["Analyse par Commune"] || [])
                 .sort((a, b) => (b.total || 0) - (a.total || 0))
                 .slice(0, 10);
+            console.log('Analyse par Commune data:', communesData); // Debug log
             if (communesData.length > 0) {
                 window.chartManager.createMixedChart("rapportCommuneMixedChart", communesData);
+            } else {
+                console.warn('No data for Analyse par Commune');
             }
     
             // Évolution temporelle
             const temporal = data["Analyse Temporelle"] || [];
+            console.log('Analyse Temporelle data:', temporal); // Debug log
             if (temporal.length > 0) {
                 window.chartManager.createTemporalChart("rapportTemporalChart", temporal);
+            } else {
+                console.warn('No data for Analyse Temporelle');
             }
     
             // Graphique polaire par région
             const regions = (data["Tamba-Kédougou"] || []).filter(r => r.nomregion);
+            console.log('Tamba-Kédougou data:', regions); // Debug log
             if (regions.length > 0) {
                 window.chartManager.createPolarChart("rapportRegionPolarChart", {
                     labels: regions.map(r => r.nomregion),
