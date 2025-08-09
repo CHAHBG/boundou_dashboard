@@ -24,7 +24,7 @@
     "etat_d_avancement": "Presque terminé",
     "date_de_prevision_de_completer_les_inven": "2025-04-07 00:00:00",
     "csig": "Ibrahima",
-    "progres_des_etapes": "• Levés topo et enquetes en cours"
+    "progres_des_etapes": "• Levés topo et enquetes en cours\n• Affichage public ( complétés)\n• Réunion du CTASF (complétés)\n• Délibération (pas encore)"
   },
   {
     "region": "Tambacounda",
@@ -48,10 +48,10 @@
     "region": "Tambacounda",
     "commune": "Sinthiou Maleme",
     "date_debut": "lundi 04 Août 2025",
-    "etat_d_avancement": "pas encore débuté",
+    "etat_d_avancement": "En cours ",
     "date_de_prevision_de_completer_les_inven": "2025-04-07 00:00:00",
     "csig": "Bamba",
-    "progres_des_etapes": null
+    "progres_des_etapes": "• Levés topo et enquetes en cours"
   },
   {
     "region": "Tambacounda",
@@ -96,7 +96,7 @@
     "etat_d_avancement": "Terminé",
     "date_de_prevision_de_completer_les_inven": "2025-04-25 00:00:00",
     "csig": "Ibrahima",
-    "progres_des_etapes": "• Levés topo et enquetes complétés\n• Affichage public (complété)\n• Réunion du CTASF (complété)\n• Délibération (pas encore)"
+    "progres_des_etapes": "• Levés topo et enquetes complétés\n• Affichage public (complété)\n• Réunion du CTASF (complété)\n• Délibération (complété)"
   },
   {
     "region": "Kedougou",
@@ -127,12 +127,12 @@
   },
   {
     "region": "Kedougou",
-    "commune": "Dindéfello",
+    "commune": "Dindefello",
     "date_debut": "lundi 19 mai 2025",
     "etat_d_avancement": "Presque terminé",
     "date_de_prevision_de_completer_les_inven": "2025-08-11 00:00:00",
     "csig": "Demba",
-    "progres_des_etapes": "• Levés topo et enquetes (complété)\n• Affichage public (en cours)"
+    "progres_des_etapes": "• Levés topo et enquetes (complété)\n• Affichage public (complété)"
   },
   {
     "region": "Kedougou",
@@ -141,7 +141,7 @@
     "etat_d_avancement":  "En cours ",
     "date_de_prevision_de_completer_les_inven": "2025-09-02 00:00:00",
     "csig": "Ibrahima",
-    "progres_des_etapes": "• Levés topo et enquetes en cours"
+    "progres_des_etapes": "• Levés topo et enquetes (complété)"
   },
   {
     "region": "Kedougou",
@@ -153,3 +153,4 @@
     "progres_des_etapes": "• Levés topo et enquetes complétés\n• Affichage public (complétés)\n• Réunion du CTASF ((complété))-(certaines parcelles pas obtenues les NICAD)\n• Délibération ((complété))"
   }
 ]
+
