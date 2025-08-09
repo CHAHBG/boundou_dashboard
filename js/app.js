@@ -584,7 +584,7 @@ class ProcasefDashboard {
             console.error('ChartManager non disponible');
             return;
         }
-
+    
         try {
             // Graphique sources
             const src = data["Détail par Source"] || [];
@@ -605,7 +605,7 @@ class ProcasefDashboard {
                     ]
                 });
             }
-
+    
             // Mixed Top 10 Communes
             const communesData = (data["Analyse par Commune"] || [])
                 .sort((a, b) => (b.total || 0) - (a.total || 0))
@@ -613,18 +613,18 @@ class ProcasefDashboard {
             if (communesData.length > 0) {
                 window.chartManager.createMixedChart("rapportCommuneMixedChart", communesData);
             }
-
+    
             // Évolution temporelle
             const temporal = data["Analyse Temporelle"] || [];
             if (temporal.length > 0) {
                 window.chartManager.createTemporalChart("rapportTemporalChart", temporal);
             }
-
+    
             // Graphique polaire par région
-            const regions = (data["Tamba-Kédougou"] || []).filter(r => r.nom || r.region);
+            const regions = (data["Tamba-Kédougou"] || []).filter(r => r.nomregion);
             if (regions.length > 0) {
                 window.chartManager.createPolarChart("rapportRegionPolarChart", {
-                    labels: regions.map(r => r.nom || r.region || 'Région inconnue'),
+                    labels: regions.map(r => r.nomregion),
                     datasets: [{
                         data: regions.map(r => r.total || r.valeur || 0),
                         backgroundColor: this.colors.chartColors.map(color => color + '80'),
