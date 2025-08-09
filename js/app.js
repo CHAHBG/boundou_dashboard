@@ -1,70 +1,73 @@
 // PROCASEF Dashboard Application - Version optimisée et corrigée avec export rapport genre
 class ProcasefDashboard {
     constructor() {
-        // Palette de couleurs PROCASEF
-       this.colors = {
-            primary: '#D4A574',
-            secondary: '#1E3A8A',
-            accent: '#B8860B',
-            success: '#10B981',
-            warning: '#F59E0B',
-            error: '#EF4444',
-            info: '#3B82F6',
-            chartColors: ['#D4A574', '#1E3A8A', '#B8860B', '#10B981', '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6', '#EC4899', '#06B6D4']
-        };
-
-        // Constantes globales pour une meilleure maintenabilité
-        this.COLORS = {
-            PRIMARY: [30, 58, 138], // Bleu principal
-            SECONDARY: [212, 165, 116], // Orange doux
-            SUCCESS: [5, 150, 105], // Vert
-            WARNING: [245, 158, 11], // Jaune
-            DANGER: [220, 38, 38], // Rouge
-            NEUTRAL: [100, 100, 100], // Gris
-            BACKGROUND: [248, 250, 252], // Fond clair
-        };
-
-        this.MARGINS = {
-            DEFAULT: 30,
-            TABLE: 20,
-            TEXT: 15,
-        };
-
-        this.FONT_SIZES = {
-            TITLE: 18,
-            SUBTITLE: 14,
-            BODY: 10,
-            SMALL: 8,
-        };
-
-        this.dataLoader = new DataLoader();
-        this.charts = {};
-        this.mapManager = null;
-        this.data = {
-            parcelles: null,
-            projections: null,
-            genreCommune: null,
-            genreTrimestre: null,
-            repartitionGenre: null,
-            etatOperations: null,
-            parcellesTerrain: null,
-            urmTerrain: null,
-            rapportComplet: null,
-            topoData: null
-        };
-
-        this.currentSection = 'accueil';
-        this.fontSize = 14;
-        this.filteredParcelles = null;
-        this.filteredTopoData = [];
-        this.filters = {
-            commune: '',
-            nicad: '',
-            deliberation: ''
-        };
-
-        this.init();
-    }
+            // Palette de couleurs PROCASEF
+            this.colors = {
+                primary: '#D4A574',
+                secondary: '#1E3A8A',
+                accent: '#B8860B',
+                success: '#10B981',
+                warning: '#F59E0B',
+                error: '#EF4444',
+                info: '#3B82F6',
+                chartColors: ['#D4A574', '#1E3A8A', '#B8860B', '#10B981', '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6', '#EC4899', '#06B6D4']
+            };
+    
+            // Constantes globales pour une meilleure maintenabilité
+            this.COLORS = {
+                PRIMARY: [30, 58, 138], // Bleu principal
+                SECONDARY: [212, 165, 116], // Orange doux
+                SUCCESS: [5, 150, 105], // Vert
+                WARNING: [245, 158, 11], // Jaune
+                DANGER: [220, 38, 38], // Rouge
+                NEUTRAL: [100, 100, 100], // Gris
+                BACKGROUND: [248, 250, 252], // Fond clair
+            };
+    
+            this.MARGINS = {
+                DEFAULT: 30,
+                TABLE: 20,
+                TEXT: 15,
+            };
+    
+            this.FONT_SIZES = {
+                TITLE: 18,
+                SUBTITLE: 14,
+                BODY: 10,
+                SMALL: 8,
+            };
+    
+            this.dataLoader = new DataLoader();
+            this.charts = {};
+            this.mapManager = null;
+            this.data = {
+                parcelles: null,
+                projections: null,
+                genreCommune: null,
+                genreTrimestre: null,
+                repartitionGenre: null,
+                etatOperations: null,
+                parcellesTerrain: null,
+                urmTerrain: null,
+                rapportComplet: null,
+                topoData: null
+            };
+    
+            this.currentSection = 'accueil';
+            this.fontSize = 14;
+            this.filteredParcelles = null;
+            this.filteredTopoData = [];
+            this.filters = {
+                commune: '',
+                nicad: '',
+                deliberation: ''
+            };
+    
+            // Make this instance globally accessible
+            window.app = this;
+    
+            this.init();
+        }
 
     showLoading() {
         const loadingEl = document.getElementById('loadingSpinner');
@@ -121,19 +124,29 @@ class ProcasefDashboard {
         return parcelle ? parcelle.region || 'N/A' : 'N/A';
     }
 
-    async init() {
-        this.showLoading();
-        try {
-            this.setupEventListeners();
-            await this.loadInitialData();
-            this.calculateStats();
-            this.renderDashboard();
-        } catch (error) {
-            console.error('Erreur durant l\'init:', error);
-            this.showError('Erreur lors de l\'initialisation de l\'application');
-        }
-        this.hideLoading();
+async init() {
+    this.showLoading();
+    try {
+        // Set global app reference
+        window.app = this;
+
+        // Setup event listeners
+        this.setupEventListeners();
+
+        // Load initial data
+        await this.loadInitialData();
+
+        // Calculate stats (assuming this uses loaded data)
+        this.calculateStats();
+
+        // Render the initial dashboard
+        this.renderDashboard();
+    } catch (error) {
+        console.error('Erreur durant l\'init:', error);
+        this.showError('Erreur lors de l\'initialisation de l\'application');
     }
+    this.hideLoading();
+}
 
     showError(message) {
         const errorEl = document.createElement('div');
@@ -479,11 +492,18 @@ class ProcasefDashboard {
                 'etat-avancement': () => this.renderEtatAvancement(),
                 'projections-2025': () => this.renderProjections(),
                 'genre': () => this.renderGenre(),
-                'rapport': () => this.renderRapport(),
+                'rapport': () => {
+                    if (this.data.rapportComplet) {
+                        this.renderRapport();
+                    } else {
+                        console.warn('Data for rapport section not loaded yet');
+                        this.showError('Données du rapport non disponibles');
+                    }
+                },
                 'stats-topo': () => this.renderStatsTopo(),
                 'post-traitement': () => this.renderPostTraitement()
             };
-
+    
             const renderMethod = renderMethods[sec];
             if (renderMethod) {
                 renderMethod();
@@ -558,6 +578,7 @@ class ProcasefDashboard {
         console.log('Rendu de la section Rapport');
         const data = this.data.rapportComplet || {};
         console.log('Rapport data:', data); // Debug log
+        console.log('Rendering Rapport section with data:', this.data.rapportComplet);
         const wrap = document.getElementById("rapportKpiGrid");
         if (wrap) {
             wrap.innerHTML = "";
