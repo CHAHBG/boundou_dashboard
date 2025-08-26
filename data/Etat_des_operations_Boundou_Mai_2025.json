@@ -137,7 +137,7 @@
   {
     "region": "Kedougou",
     "commune": "Tomboronkoto",
-    "date_debut": null,
+    "date_debut": "2025-08-02 00:00:00",
     "etat_d_avancement":  "En cours ",
     "date_de_prevision_de_completer_les_inven": "2025-09-02 00:00:00",
     "csig": "Ibrahima",
@@ -153,4 +153,5 @@
     "progres_des_etapes": "• Levés topo et enquetes complétés\n• Affichage public (complétés)\n• Réunion du CTASF ((complété))-(certaines parcelles pas obtenues les NICAD)\n• Délibération ((complété))"
   }
 ]
+
 
