@@ -220,6 +220,8 @@ async init() {
             total: this.data.parcelles.length,
             nicad_oui: this.data.parcelles.filter(p => p.nicad === 'Oui').length,
             nicad_non: this.data.parcelles.filter(p => p.nicad === 'Non').length,
+            ctasf_oui: this.data.parcelles.filter(p => p.ctasf === 'Oui').length,
+            ctasf_non: this.data.parcelles.filter(p => p.ctasf === 'Non').length,
             deliberees_oui: this.data.parcelles.filter(p => p.deliberee === 'Oui').length,
             deliberees_non: this.data.parcelles.filter(p => p.deliberee === 'Non').length,
             superficie_totale: this.data.parcelles
@@ -234,12 +236,14 @@ async init() {
                 this.communeStats[commune] = {
                     total: 0,
                     nicad_oui: 0,
+                    ctasf_oui: 0,
                     deliberees_oui: 0,
                     superficie: 0
                 };
             }
             this.communeStats[commune].total++;
             if (parcelle.nicad === 'Oui') this.communeStats[commune].nicad_oui++;
+            if (parcelle.ctasf === 'Oui') this.communeStats[commune].ctasf_oui++;
             if (parcelle.deliberee === 'Oui') this.communeStats[commune].deliberees_oui++;
             if (parcelle.superficie && !isNaN(parseFloat(parcelle.superficie))) {
                 this.communeStats[commune].superficie += parseFloat(parcelle.superficie);
@@ -3009,9 +3013,10 @@ generateAlerts(reportData) {
         const stats = {};
         (this.filteredParcelles || this.data.parcelles || []).forEach(p => {
             const c = p.commune;
-            if (!stats[c]) stats[c] = { total: 0, nicad_oui: 0, deliberees_oui: 0, superficie: 0 };
+            if (!stats[c]) stats[c] = { total: 0, nicad_oui: 0, ctasf_oui: 0, deliberees_oui: 0, superficie: 0 };
             stats[c].total++;
             if (p.nicad === 'Oui') stats[c].nicad_oui++;
+            if (p.ctasf === 'Oui') stats[c].ctasf_oui++;
             if (p.deliberee === 'Oui') stats[c].deliberees_oui++;
             if (p.superficie) stats[c].superficie += parseFloat(p.superficie);
         });
@@ -3020,22 +3025,25 @@ generateAlerts(reportData) {
     }
 
     updateKPIs() {
-        if (!this.stats) return;
+    if (!this.stats) return;
 
-        this.updateElement('totalParcelles', (this.stats.total || 0).toLocaleString());
-        this.updateElement('parcellesNicad', (this.stats.nicad_oui || 0).toLocaleString());
-        this.updateElement('parcellesDeliberees', (this.stats.deliberees_oui || 0).toLocaleString());
-        this.updateElement('superficieTotale', (this.stats.superficie_totale || 0).toLocaleString(undefined, { maximumFractionDigits: 2 }));
+    this.updateElement('totalParcelles', (this.stats.total || 0).toLocaleString());
+    this.updateElement('parcellesNicad', (this.stats.nicad_oui || 0).toLocaleString());
+    this.updateElement('parcellesCtasf', (this.stats.ctasf_oui || 0).toLocaleString());
+    this.updateElement('parcellesDeliberees', (this.stats.deliberees_oui || 0).toLocaleString());
+    this.updateElement('superficieTotale', (this.stats.superficie_totale || 0).toLocaleString(undefined, { maximumFractionDigits: 2 }));
 
-        const nicadPct = this.stats.total > 0 ? ((this.stats.nicad_oui / this.stats.total) * 100).toFixed(1) : 0;
-        const delibPct = this.stats.total > 0 ? ((this.stats.deliberees_oui / this.stats.total) * 100).toFixed(1) : 0;
+    const nicadPct = this.stats.total > 0 ? ((this.stats.nicad_oui / this.stats.total) * 100).toFixed(1) : 0;
+    const ctasfPct = this.stats.total > 0 ? ((this.stats.ctasf_oui / this.stats.total) * 100).toFixed(1) : 0;
+    const delibPct = this.stats.total > 0 ? ((this.stats.deliberees_oui / this.stats.total) * 100).toFixed(1) : 0;
 
-        this.updateElement('percentageNicad', `${nicadPct}% avec NICAD`);
-        this.updateElement('percentageDeliberees', `${delibPct}% délibérées`);
+    this.updateElement('percentageNicad', `${nicadPct}% avec NICAD`);
+    this.updateElement('percentageCtasf', `${ctasfPct}% avec CTASF`);
+    this.updateElement('percentageDeliberees', `${delibPct}% délibérées`);
 
-        const OBJECTIF = 70000;
-        const tauxRealisation = ((this.stats.total / OBJECTIF) * 100).toFixed(1);
-        this.updateElement('tauxRealisation', `${tauxRealisation}%`);
+    const OBJECTIF = 70000;
+    const tauxRealisation = ((this.stats.total / OBJECTIF) * 100).toFixed(1);
+    this.updateElement('tauxRealisation', `${tauxRealisation}%`);
     }
 
     updateProgressBar() {
@@ -3574,9 +3582,10 @@ generateAlerts(reportData) {
         const o = {};
         arr.forEach(p => {
             const c = p.commune;
-            if (!o[c]) o[c] = { total: 0, nicad_oui: 0, deliberees_oui: 0, superficie: 0 };
+            if (!o[c]) o[c] = { total: 0, nicad_oui: 0, ctasf_oui: 0, deliberees_oui: 0, superficie: 0 };
             o[c].total++;
             if (p.nicad === 'Oui') o[c].nicad_oui++;
+            if (p.ctasf === 'Oui') o[c].ctasf_oui++;
             if (p.deliberee === 'Oui') o[c].deliberees_oui++;
             if (p.superficie) o[c].superficie += parseFloat(p.superficie);
         });
@@ -3737,11 +3746,12 @@ generateAlerts(reportData) {
             Commune: p.commune || '-',
             Région: p.region || '-',
             NICAD: p.nicad || '-',
+            CTASF: p.ctasf || '-',
             Délibérée: p.deliberee || '-',
             Superficie: p.superficie ? `${parseFloat(p.superficie).toFixed(2)} ha` : '-'
         }));
 
-        const columns = ['Commune', 'Région', 'NICAD', 'Délibérée', 'Superficie'];
+        const columns = ['Commune', 'Région', 'NICAD', 'CTASF', 'Délibérée', 'Superficie'];
         const title = 'Rapport des Parcelles PROCASEF';
         const htmlContent = this.generateTableHTML(formattedData, columns, title);
 
