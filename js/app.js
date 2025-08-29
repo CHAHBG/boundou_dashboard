@@ -3551,19 +3551,32 @@ generateAlerts(reportData) {
             }))
             .sort((a, b) => b.total - a.total);
 
+        // Calculate total parcels for all communes
+        const totalParcellesGlobal = communeData.reduce((sum, c) => sum + c.total, 0);
         communeData.forEach(item => {
             const row = document.createElement('tr');
             const region = this.getRegionForCommune(item.commune);
+            // Calculate % CTASF
+            const ctasf_pct = item.total > 0 ? ((item.ctasf_oui / item.total) * 100).toFixed(1) : '0.0';
+            // Calculate % du total
+            const pctTotal = totalParcellesGlobal > 0 ? ((item.total / totalParcellesGlobal) * 100).toFixed(1) : '0.0';
             row.innerHTML = `
                 <td>${item.commune}</td>
                 <td>${region}</td>
                 <td class="text-end">${item.total.toLocaleString()}</td>
+                <td class="text-end">${pctTotal}%</td>
                 <td class="text-end">${item.nicad_oui.toLocaleString()}</td>
                 <td class="text-end">${item.ctasf_oui !== undefined ? item.ctasf_oui.toLocaleString() : ''}</td>
                 <td class="text-end">
                     <span class="badge ${parseFloat(item.nicad_pct) >= 60 ? 'bg-success' : 
                                         parseFloat(item.nicad_pct) >= 40 ? 'bg-warning' : 'bg-danger'}">
                         ${item.nicad_pct}%
+                    </span>
+                </td>
+                <td class="text-end">
+                    <span class="badge ${parseFloat(ctasf_pct) >= 60 ? 'bg-success' : 
+                                        parseFloat(ctasf_pct) >= 40 ? 'bg-warning' : 'bg-danger'}">
+                        ${ctasf_pct}%
                     </span>
                 </td>
                 <td class="text-end">${item.deliberees_oui.toLocaleString()}</td>
