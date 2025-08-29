@@ -3559,6 +3559,7 @@ generateAlerts(reportData) {
                 <td>${region}</td>
                 <td class="text-end">${item.total.toLocaleString()}</td>
                 <td class="text-end">${item.nicad_oui.toLocaleString()}</td>
+                <td class="text-end">${item.ctasf_oui !== undefined ? item.ctasf_oui.toLocaleString() : ''}</td>
                 <td class="text-end">
                     <span class="badge ${parseFloat(item.nicad_pct) >= 60 ? 'bg-success' : 
                                         parseFloat(item.nicad_pct) >= 40 ? 'bg-warning' : 'bg-danger'}">
