@@ -269,6 +269,12 @@ class ProcasefDashboard {
         return true;
     }
 
+    initTheme() {
+        // Initialize theme settings
+        // Can be extended later for dark/light theme toggle
+        console.log('Theme initialized');
+    }
+
     setupEventListeners() {
         console.log('Configuration des event listeners...');
         document.querySelectorAll('.nav-item').forEach(item => {
