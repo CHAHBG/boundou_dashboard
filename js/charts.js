@@ -103,12 +103,12 @@ class ChartManager {
     prepareCanvas(canvasId) {
         const canvas = document.getElementById(canvasId);
         if (!canvas) {
-            Logger.error(`❌ Canvas '${canvasId}' not found in DOM`);
+            console.error(`❌ Canvas '${canvasId}' not found in DOM`);
             return null;
         }
 
         if (canvas.tagName.toLowerCase() !== 'canvas') {
-            Logger.error(`❌ Element '${canvasId}' is not a canvas`);
+            console.error(`❌ Element '${canvasId}' is not a canvas`);
             return null;
         }
 
@@ -116,7 +116,7 @@ class ChartManager {
             this.destroyChart(canvasId);
         }
 
-        Logger.log(`✅ Canvas prepared: ${canvasId}`);
+        console.log(`✅ Canvas prepared: ${canvasId}`);
         return canvas;
     }
 
@@ -127,12 +127,12 @@ class ChartManager {
     destroyChart(chartId) {
         if (this.charts[chartId]) {
             try {
-                Logger.log(`🧹 Destroying chart: ${chartId}`);
+                console.log(`🧹 Destroying chart: ${chartId}`);
                 this.charts[chartId].destroy();
                 delete this.charts[chartId];
-                Logger.log(`✅ Chart ${chartId} destroyed successfully`);
+                console.log(`✅ Chart ${chartId} destroyed successfully`);
             } catch (error) {
-                Logger.warn(`⚠️ Error destroying chart ${chartId}:`, error);
+                console.warn(`⚠️ Error destroying chart ${chartId}:`, error);
                 delete this.charts[chartId];
             }
         }
@@ -142,27 +142,27 @@ class ChartManager {
      * Destroys all charts
      */
     destroyAll() {
-        Logger.log('🗑️ Destroying all charts...');
+        console.log('🗑️ Destroying all charts...');
         Object.keys(this.charts).forEach(chartId => this.destroyChart(chartId));
         this.charts = {};
-        Logger.log('✅ All charts destroyed');
+        console.log('✅ All charts destroyed');
     }
 
     /**
      * Resizes all charts (fixes resizeAll warning)
      */
     resizeAll() {
-        Logger.log('📏 Resizing all charts...');
+        console.log('📏 Resizing all charts...');
         Object.values(this.charts).forEach(chart => {
             if (chart && typeof chart.resize === 'function') {
                 try {
                     chart.resize();
                 } catch (error) {
-                    Logger.warn('⚠️ Error resizing chart:', error);
+                    console.warn('⚠️ Error resizing chart:', error);
                 }
             }
         });
-        Logger.log('✅ All charts resized');
+        console.log('✅ All charts resized');
     }
 
     /**
@@ -263,10 +263,10 @@ class ChartManager {
 
         try {
             this.charts[canvasId] = new Chart(ctx, config);
-            Logger.log(`📊 Bar chart ${canvasId} created successfully`);
+            console.log(`📊 Bar chart ${canvasId} created successfully`);
             return this.charts[canvasId];
         } catch (error) {
-            Logger.error(`❌ Error creating bar chart ${canvasId}:`, error);
+            console.error(`❌ Error creating bar chart ${canvasId}:`, error);
             return null;
         }
     }
@@ -334,10 +334,10 @@ class ChartManager {
 
         try {
             this.charts[canvasId] = new Chart(ctx, config);
-            Logger.log(`🍩 Doughnut chart ${canvasId} created successfully`);
+            console.log(`🍩 Doughnut chart ${canvasId} created successfully`);
             return this.charts[canvasId];
         } catch (error) {
-            Logger.error(`❌ Error creating doughnut chart ${canvasId}:`, error);
+            console.error(`❌ Error creating doughnut chart ${canvasId}:`, error);
             return null;
         }
     }
@@ -396,10 +396,10 @@ class ChartManager {
 
         try {
             this.charts[canvasId] = new Chart(ctx, config);
-            Logger.log(`📈 Line chart ${canvasId} created successfully`);
+            console.log(`📈 Line chart ${canvasId} created successfully`);
             return this.charts[canvasId];
         } catch (error) {
-            Logger.error(`❌ Error creating line chart ${canvasId}:`, error);
+            console.error(`❌ Error creating line chart ${canvasId}:`, error);
             return null;
         }
     }
@@ -452,7 +452,7 @@ class ChartManager {
      */
     createPolarChart(canvasId, data, options = {}) {
         if (!data || !data.labels || !data.datasets) {
-            Logger.error(`❌ Invalid data for polar chart ${canvasId}:`, data);
+            console.error(`❌ Invalid data for polar chart ${canvasId}:`, data);
             return null;
         }
 
@@ -503,10 +503,10 @@ class ChartManager {
 
         try {
             this.charts[canvasId] = new Chart(ctx, config);
-            Logger.log(`🌟 Polar chart ${canvasId} created successfully`);
+            console.log(`🌟 Polar chart ${canvasId} created successfully`);
             return this.charts[canvasId];
         } catch (error) {
-            Logger.error(`❌ Error creating polar chart ${canvasId}:`, error);
+            console.error(`❌ Error creating polar chart ${canvasId}:`, error);
             return null;
         }
     }
@@ -520,7 +520,7 @@ class ChartManager {
      */
     createMixedChart(canvasId, communesData, showTop = 8) {
         if (!communesData || !Array.isArray(communesData)) {
-            Logger.error(`❌ Invalid communes data for mixed chart ${canvasId}`);
+            console.error(`❌ Invalid communes data for mixed chart ${canvasId}`);
             return null;
         }
 
@@ -627,10 +627,10 @@ class ChartManager {
 
         try {
             this.charts[canvasId] = new Chart(ctx, config);
-            Logger.log(`📊 Mixed chart ${canvasId} created successfully`);
+            console.log(`📊 Mixed chart ${canvasId} created successfully`);
             return this.charts[canvasId];
         } catch (error) {
-            Logger.error(`❌ Error creating mixed chart ${canvasId}:`, error);
+            console.error(`❌ Error creating mixed chart ${canvasId}:`, error);
             return null;
         }
     }
@@ -643,7 +643,7 @@ class ChartManager {
      */
     createTemporalChart(canvasId, temporalData) {
         if (!temporalData || !Array.isArray(temporalData)) {
-            Logger.error(`❌ Invalid temporal data for chart ${canvasId}`);
+            console.error(`❌ Invalid temporal data for chart ${canvasId}`);
             return null;
         }
 
@@ -685,10 +685,10 @@ class ChartManager {
 
         try {
             this.charts[canvasId] = new Chart(ctx, config);
-            Logger.log(`📈 Temporal chart ${canvasId} created successfully`);
+            console.log(`📈 Temporal chart ${canvasId} created successfully`);
             return this.charts[canvasId];
         } catch (error) {
-            Logger.error(`❌ Error creating temporal chart ${canvasId}:`, error);
+            console.error(`❌ Error creating temporal chart ${canvasId}:`, error);
             return null;
         }
     }
@@ -702,7 +702,7 @@ class ChartManager {
      */
     createEtatCommuneBarChart(canvasId, communes, etats) {
         if (!communes || !etats || !Array.isArray(communes) || !Array.isArray(etats) || communes.length !== etats.length) {
-            Logger.error(`❌ Invalid data for commune bar chart ${canvasId}`);
+            console.error(`❌ Invalid data for commune bar chart ${canvasId}`);
             return null;
         }
 
@@ -769,10 +769,10 @@ class ChartManager {
 
         try {
             this.charts[canvasId] = new Chart(ctx, config);
-            Logger.log(`📊 Commune state bar chart ${canvasId} created successfully`);
+            console.log(`📊 Commune state bar chart ${canvasId} created successfully`);
             return this.charts[canvasId];
         } catch (error) {
-            Logger.error(`❌ Error creating commune state bar chart ${canvasId}:`, error);
+            console.error(`❌ Error creating commune state bar chart ${canvasId}:`, error);
             return null;
         }
     }
@@ -787,7 +787,7 @@ class ChartManager {
      */
     createEtatDonutChart(canvasId, labels, data, options = {}) {
         if (!labels || !data || !Array.isArray(labels) || !Array.isArray(data) || labels.length !== data.length) {
-            Logger.error(`❌ Invalid data for state donut chart ${canvasId}`);
+            console.error(`❌ Invalid data for state donut chart ${canvasId}`);
             return null;
         }
 
@@ -876,10 +876,10 @@ class ChartManager {
 
         try {
             this.charts[canvasId] = new Chart(ctx, config);
-            Logger.log(`🍩 State donut chart ${canvasId} created successfully`);
+            console.log(`🍩 State donut chart ${canvasId} created successfully`);
             return this.charts[canvasId];
         } catch (error) {
-            Logger.error(`❌ Error creating state donut chart ${canvasId}:`, error);
+            console.error(`❌ Error creating state donut chart ${canvasId}:`, error);
             return null;
         }
     }
@@ -892,7 +892,7 @@ class ChartManager {
      */
     createTopoTypeDonutChart(canvasId, stats) {
         if (!stats || (!stats.champs && !stats.batis)) {
-            Logger.warn(`⚠️ No data for topo donut chart ${canvasId}`);
+            console.warn(`⚠️ No data for topo donut chart ${canvasId}`);
             return null;
         }
 
@@ -931,10 +931,10 @@ class ChartManager {
 
         try {
             this.charts[canvasId] = new Chart(ctx, config);
-            Logger.log(`🍩 Topo donut chart ${canvasId} created successfully`);
+            console.log(`🍩 Topo donut chart ${canvasId} created successfully`);
             return this.charts[canvasId];
         } catch (error) {
-            Logger.error(`❌ Error creating topo donut chart ${canvasId}:`, error);
+            console.error(`❌ Error creating topo donut chart ${canvasId}:`, error);
             return null;
         }
     }
@@ -984,7 +984,7 @@ if (window.chartManager) {
 }
 window.chartManager = new ChartManager();
 
-Logger.log('🚀 Optimized ChartManager created and available globally');
+console.log('🚀 Optimized ChartManager created and available globally');
 
 // Automatic resize handling
 let resizeTimeout;

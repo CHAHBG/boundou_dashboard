@@ -104,14 +104,14 @@ class ProcasefDashboard {
     }
 
     toggleSidebar() {
-        Logger.log('Toggling sidebar...'); // Debug log
+        console.log('Toggling sidebar...'); // Debug log
         const sidebar = document.querySelector('.sidebar');
         const mainContent = document.querySelector('.main-content');
         if (sidebar && mainContent) {
             sidebar.classList.toggle('collapsed');
             mainContent.classList.toggle('expanded');
         } else {
-            Logger.error('Sidebar or main-content element not found');
+            console.error('Sidebar or main-content element not found');
         }
     }
 
@@ -147,7 +147,7 @@ class ProcasefDashboard {
             // Render the initial dashboard
             this.renderDashboard();
         } catch (error) {
-            Logger.error('Erreur durant l\'init:', error);
+            console.error('Erreur durant l\'init:', error);
             this.showError('Erreur lors de l\'initialisation de l\'application');
         }
         this.hideLoading();
@@ -173,7 +173,7 @@ class ProcasefDashboard {
     }
 
     async loadInitialData() {
-        Logger.log('Chargement des données initiales...');
+        console.log('Chargement des données initiales...');
         const loadPromises = [
             this.loadDataSafely('data/parcelles.json', 'parcelles'),
             this.loadDataSafely('data/Projections_2025.json', 'projections'),
@@ -188,14 +188,14 @@ class ProcasefDashboard {
             // Special handling for rapport_complet which is an object, not an array
             if (key === 'rapportComplet') {
                 this.data[key] = data || {};
-                Logger.log(`✅ ${key} chargé avec succès:`, Object.keys(this.data[key]).length, 'sections');
+                console.log(`✅ ${key} chargé avec succès:`, Object.keys(this.data[key]).length, 'sections');
             } else {
                 // Ensure data is an array for other datasets
                 this.data[key] = Array.isArray(data) ? data : [];
-                Logger.log(`✅ ${key} chargé avec succès:`, this.data[key].length, 'éléments');
+                console.log(`✅ ${key} chargé avec succès:`, this.data[key].length, 'éléments');
             }
         } catch (error) {
-            Logger.error(`❌ Échec chargement ${key}:`, error);
+            console.error(`❌ Échec chargement ${key}:`, error);
             if (key === 'rapportComplet') {
                 this.data[key] = {};
             } else {
@@ -207,7 +207,7 @@ class ProcasefDashboard {
 
     calculateStats() {
         if (!this.data.parcelles || !Array.isArray(this.data.parcelles)) {
-            Logger.warn('Pas de données parcelles disponibles pour le calcul des stats');
+            console.warn('Pas de données parcelles disponibles pour le calcul des stats');
             this.stats = {
                 total: 0,
                 nicad_oui: 0,
@@ -220,7 +220,7 @@ class ProcasefDashboard {
             return;
         }
 
-        Logger.log('Calcul des statistiques...');
+        console.log('Calcul des statistiques...');
         this.stats = {
             total: this.data.parcelles.length,
             nicad_oui: this.data.parcelles.filter(p => p.nicad === 'Oui').length,
@@ -255,7 +255,7 @@ class ProcasefDashboard {
             }
         });
 
-        Logger.log('Statistiques calculées:', this.stats);
+        console.log('Statistiques calculées:', this.stats);
     }
 
     validateDateRange() {
@@ -270,7 +270,7 @@ class ProcasefDashboard {
     }
 
     setupEventListeners() {
-        Logger.log('Configuration des event listeners...');
+        console.log('Configuration des event listeners...');
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', async (e) => {
                 e.preventDefault();
@@ -347,7 +347,7 @@ class ProcasefDashboard {
                 this.fontSize = parseInt(saved);
             }
         } catch (error) {
-            Logger.log('localStorage non disponible');
+            console.log('localStorage non disponible');
         }
 
         const fontSlider = document.getElementById('fontSizeSlider');
@@ -407,24 +407,24 @@ class ProcasefDashboard {
         try {
             localStorage.setItem('procasef-font-size', this.fontSize.toString());
         } catch (error) {
-            Logger.log('localStorage non disponible');
+            console.log('localStorage non disponible');
         }
     }
 
     async navigateToSection(sectionId) {
         if (this.currentSection === sectionId) {
-            Logger.log(`Déjà sur la section ${sectionId}, ignorer navigation`);
+            console.log(`Déjà sur la section ${sectionId}, ignorer navigation`);
             return;
         }
 
-        Logger.log('Navigation vers la section:', sectionId);
+        console.log('Navigation vers la section:', sectionId);
 
         if (this.mapManager && this.mapManager.map && sectionId !== 'parcelles') {
-            Logger.log('Destruction de la carte avant changement de section');
+            console.log('Destruction de la carte avant changement de section');
             try {
                 this.mapManager.destroyMap();
             } catch (error) {
-                Logger.warn('Erreur lors de la destruction de la carte:', error);
+                console.warn('Erreur lors de la destruction de la carte:', error);
                 this.mapManager.map = null;
                 if (this.mapManager.markers) this.mapManager.markers = [];
                 if (this.mapManager.markerCluster) this.mapManager.markerCluster = null;
@@ -490,7 +490,7 @@ class ProcasefDashboard {
                 this.populateTopoFilters();
             }
         } catch (error) {
-            Logger.error(`Erreur lors du chargement des données pour ${sec}:`, error);
+            console.error(`Erreur lors du chargement des données pour ${sec}:`, error);
             this.showError(`Impossible de charger les données pour ${sec}`);
         } finally {
             this.hideLoading();
@@ -515,7 +515,7 @@ class ProcasefDashboard {
                     if (this.data.rapportComplet) {
                         this.renderRapport();
                     } else {
-                        Logger.warn('Data for rapport section not loaded yet');
+                        console.warn('Data for rapport section not loaded yet');
                         this.showError('Données du rapport non disponibles');
                     }
                 },
@@ -527,18 +527,18 @@ class ProcasefDashboard {
             if (renderMethod) {
                 renderMethod();
             } else {
-                Logger.warn(`Section inconnue: ${sec}`);
+                console.warn(`Section inconnue: ${sec}`);
                 this.renderAccueil();
             }
         } catch (error) {
-            Logger.error(`Erreur lors du rendu de la section ${sec}:`, error);
+            console.error(`Erreur lors du rendu de la section ${sec}:`, error);
             this.showError(`Erreur lors de l'affichage de la section ${sec}`);
             this.renderAccueil();
         }
     }
 
     renderAccueil() {
-        Logger.log('Rendu de la section Accueil');
+        console.log('Rendu de la section Accueil');
         this.updateKPIs();
         this.createTopCommunesChart();
         this.createProjectionsChart();
@@ -546,7 +546,7 @@ class ProcasefDashboard {
     }
 
     renderParcelles() {
-        Logger.log('Rendu de la section Parcelles');
+        console.log('Rendu de la section Parcelles');
         this.populateFilters();
         this.initializeMap();
         this.createRegionChart();
@@ -579,14 +579,14 @@ class ProcasefDashboard {
     }
 
     renderProjections() {
-        Logger.log('Rendu de la section Projections');
+        console.log('Rendu de la section Projections');
         this.updateProjectionsKPIs();
         this.createObjectifsChart();
         this.renderPerformanceList();
     }
 
     renderGenre() {
-        Logger.log('Rendu de la section Genre');
+        console.log('Rendu de la section Genre');
         this.updateGenreKPIs();
         this.createGenreGlobalChart();
         this.createGenreTrimestreChart();
@@ -594,10 +594,10 @@ class ProcasefDashboard {
     }
 
     renderRapport() {
-        Logger.log('Rendu de la section Rapport');
+        console.log('Rendu de la section Rapport');
         const data = this.data.rapportComplet || {};
-        Logger.log('Rapport data:', data); // Debug log
-        Logger.log('Rendering Rapport section with data:', this.data.rapportComplet);
+        console.log('Rapport data:', data); // Debug log
+        console.log('Rendering Rapport section with data:', this.data.rapportComplet);
         const wrap = document.getElementById("rapportKpiGrid");
         if (wrap) {
             wrap.innerHTML = "";
@@ -620,16 +620,16 @@ class ProcasefDashboard {
 
     renderRapportCharts(data) {
         if (!window.chartManager) {
-            Logger.error('ChartManager non disponible');
+            console.error('ChartManager non disponible');
             return;
         }
 
-        Logger.log('Data received in renderRapportCharts:', data); // Debug log
+        console.log('Data received in renderRapportCharts:', data); // Debug log
 
         try {
             // Graphique sources (Stacked Bar)
             const src = data["Détail par Source"] || [];
-            Logger.log('Détail par Source data:', src); // Debug log
+            console.log('Détail par Source data:', src); // Debug log
             if (src.length > 0) {
                 window.chartManager.createStackedBar("rapportSourceChart", {
                     labels: src.map(s => s.source || 'Source inconnue'),
@@ -647,32 +647,32 @@ class ProcasefDashboard {
                     ]
                 });
             } else {
-                Logger.warn('No data for Détail par Source');
+                console.warn('No data for Détail par Source');
             }
 
             // Mixed Top 10 Communes
             const communesData = (data["Analyse par Commune"] || [])
                 .sort((a, b) => (b.total || 0) - (a.total || 0))
                 .slice(0, 10);
-            Logger.log('Analyse par Commune data:', communesData); // Debug log
+            console.log('Analyse par Commune data:', communesData); // Debug log
             if (communesData.length > 0) {
                 window.chartManager.createMixedChart("rapportCommuneMixedChart", communesData);
             } else {
-                Logger.warn('No data for Analyse par Commune');
+                console.warn('No data for Analyse par Commune');
             }
 
             // Évolution temporelle
             const temporal = data["Analyse Temporelle"] || [];
-            Logger.log('Analyse Temporelle data:', temporal); // Debug log
+            console.log('Analyse Temporelle data:', temporal); // Debug log
             if (temporal.length > 0) {
                 window.chartManager.createTemporalChart("rapportTemporalChart", temporal);
             } else {
-                Logger.warn('No data for Analyse Temporelle');
+                console.warn('No data for Analyse Temporelle');
             }
 
             // Graphique polaire par région
             const regions = (data["Tamba-Kédougou"] || []).filter(r => r.nomregion);
-            Logger.log('Tamba-Kédougou data:', regions); // Debug log
+            console.log('Tamba-Kédougou data:', regions); // Debug log
             if (regions.length > 0) {
                 window.chartManager.createPolarChart("rapportRegionPolarChart", {
                     labels: regions.map(r => r.nomregion),
@@ -719,7 +719,7 @@ class ProcasefDashboard {
                     }
                 });
             } else {
-                Logger.warn('Aucune donnée régionale valide, utilisation d\'un graphique donut');
+                console.warn('Aucune donnée régionale valide, utilisation d\'un graphique donut');
                 window.chartManager.createDoughnut("rapportRegionPolarChart", {
                     labels: ['Aucune donnée'],
                     datasets: [{
@@ -730,13 +730,13 @@ class ProcasefDashboard {
                 });
             }
         } catch (error) {
-            Logger.error('Erreur lors du rendu des graphiques de rapport:', error);
+            console.error('Erreur lors du rendu des graphiques de rapport:', error);
             this.showError('Erreur lors de l\'affichage des graphiques du rapport');
         }
     }
 
     renderStatsTopo() {
-        Logger.log('Rendu de la section Stats Topo');
+        console.log('Rendu de la section Stats Topo');
         try {
             this.applyTopoFilters();
             this.updateTopoKPIs();
@@ -744,13 +744,13 @@ class ProcasefDashboard {
             this.renderTopoTable();
             this.renderTopoTimeline();
         } catch (error) {
-            Logger.error('Erreur dans renderStatsTopo:', error);
+            console.error('Erreur dans renderStatsTopo:', error);
             this.showError('Erreur lors du rendu des statistiques topographiques');
         }
     }
 
     renderPostTraitement() {
-        Logger.log('Rendu de la section Post-Traitement');
+        console.log('Rendu de la section Post-Traitement');
         this.populatePostFilters();
         this.renderPostTraitementTable();
         this.createPostCharts();
@@ -764,21 +764,21 @@ class ProcasefDashboard {
      */
     async exportBothReports() {
         try {
-            Logger.log('Starting dual export (PDF and Word)...');
+            console.log('Starting dual export (PDF and Word)...');
 
-            Logger.log('Exporting PDF...');
+            console.log('Exporting PDF...');
             await this.exportGenreReport();
-            Logger.log('PDF export completed.');
+            console.log('PDF export completed.');
 
             await new Promise(resolve => setTimeout(resolve, 1000));
 
-            Logger.log('Exporting Word...');
+            console.log('Exporting Word...');
             await this.exportGenreWordReport();
-            Logger.log('Word export completed.');
+            console.log('Word export completed.');
 
             alert('✅ Les rapports PDF et Word ont été générés avec succès !');
         } catch (err) {
-            Logger.error('Error during dual export:', err);
+            console.error('Error during dual export:', err);
 
             // ✅ CORRECTION: Gestion sécurisée de l'erreur
             const errorMessage = err.message || String(err);
@@ -803,12 +803,12 @@ class ProcasefDashboard {
                 try {
                     await this.loadDataSafely('data/rapport_complet.json', 'rapportComplet');
                 } catch (error) {
-                    Logger.warn('Impossible de charger rapport_complet.json, utilisation des données existantes');
+                    console.warn('Impossible de charger rapport_complet.json, utilisation des données existantes');
                 }
             }
 
             const reportData = this.data?.rapportComplet || {};
-            Logger.log('Données du rapport:', reportData);
+            console.log('Données du rapport:', reportData);
 
             // Configurations des graphiques
             const chartConfigs = [
@@ -848,12 +848,12 @@ class ProcasefDashboard {
                             originalWidth: canvas.width,
                             originalHeight: canvas.height,
                         });
-                        Logger.log(`✅ Graphique capturé: ${config.id}`);
+                        console.log(`✅ Graphique capturé: ${config.id}`);
                     } else {
-                        Logger.warn(`⚠️ Échec capture: ${config.id}`);
+                        console.warn(`⚠️ Échec capture: ${config.id}`);
                     }
                 } else {
-                    Logger.warn(`⚠️ Canvas non trouvé: ${config.id}`);
+                    console.warn(`⚠️ Canvas non trouvé: ${config.id}`);
                 }
             }
 
@@ -861,7 +861,7 @@ class ProcasefDashboard {
             const pdfDoc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
 
             if (typeof pdfDoc.autoTable !== 'function') {
-                Logger.warn('autoTable non disponible, export simple...');
+                console.warn('autoTable non disponible, export simple...');
                 pdfDoc.setFontSize(20);
                 pdfDoc.text('Rapport Genre PROCASEF', 20, 30);
                 pdfDoc.save('rapport-genre-procasef.pdf');
@@ -1026,7 +1026,7 @@ class ProcasefDashboard {
             alert(`🎉 Rapport généré avec succès !\n\n📈 ${chartImages.length} graphiques inclus\n💾 Fichier: ${fileName}`);
 
         } catch (err) {
-            Logger.error('❌ Erreur export PDF:', err);
+            console.error('❌ Erreur export PDF:', err);
             let errorMsg = 'Échec de la génération du rapport PDF.\n\n';
             const errorMessage = err.message || String(err);
 
@@ -1052,7 +1052,7 @@ class ProcasefDashboard {
     async exportGenreWordReport() {
         try {
             if (typeof window.docx === 'undefined') {
-                Logger.warn('docx non disponible, export HTML...');
+                console.warn('docx non disponible, export HTML...');
                 const htmlContent = await this.generateHTMLReportWithCharts();
                 const blob = new Blob([htmlContent], { type: 'text/html' });
                 const url = URL.createObjectURL(blob);
@@ -1132,7 +1132,7 @@ class ProcasefDashboard {
                             height: 300  // ✅ CORRECTION: Taille fixe plus grande
                         };
                     } catch (error) {
-                        Logger.warn(`Erreur conversion image ${chart.title}:`, error);
+                        console.warn(`Erreur conversion image ${chart.title}:`, error);
                         return null;
                     }
                 })
@@ -1196,10 +1196,10 @@ class ProcasefDashboard {
             alert(`✅ Rapport Word généré avec succès !\n📊 ${validImages.length} graphiques inclus`);
 
         } catch (err) {
-            Logger.error('❌ Erreur export Word:', err);
+            console.error('❌ Erreur export Word:', err);
 
             // Fallback vers HTML
-            Logger.log('Fallback vers export HTML...');
+            console.log('Fallback vers export HTML...');
             try {
                 const htmlContent = await this.generateHTMLReportWithCharts();
                 const blob = new Blob([htmlContent], { type: 'text/html' });
@@ -1211,7 +1211,7 @@ class ProcasefDashboard {
                 URL.revokeObjectURL(url);
                 alert('⚠️ Export Word échoué, mais rapport HTML généré avec graphiques !');
             } catch (htmlError) {
-                Logger.error('❌ Erreur export HTML:', htmlError);
+                console.error('❌ Erreur export HTML:', htmlError);
                 alert('❌ Erreur lors de l\'exportation. Vérifiez la console.');
             }
         }
@@ -1261,15 +1261,15 @@ class ProcasefDashboard {
                             originalWidth: canvas.width,
                             originalHeight: canvas.height,
                         });
-                        Logger.log(`✅ Graphique capturé pour Word: ${config.id}`);
+                        console.log(`✅ Graphique capturé pour Word: ${config.id}`);
                     } else {
-                        Logger.warn(`⚠️ Échec capture Word: ${config.id}`);
+                        console.warn(`⚠️ Échec capture Word: ${config.id}`);
                     }
                 } catch (error) {
-                    Logger.error(`❌ Erreur capture ${config.id}:`, error);
+                    console.error(`❌ Erreur capture ${config.id}:`, error);
                 }
             } else {
-                Logger.warn(`⚠️ Canvas non trouvé: ${config.id}`);
+                console.warn(`⚠️ Canvas non trouvé: ${config.id}`);
             }
         }
 
@@ -1371,7 +1371,7 @@ class ProcasefDashboard {
                         })
                     );
                 } catch (imageError) {
-                    Logger.error(`❌ Erreur insertion image ${chartImage.title}:`, imageError);
+                    console.error(`❌ Erreur insertion image ${chartImage.title}:`, imageError);
                     children.push(
                         new window.docx.Paragraph({
                             children: [new window.docx.TextRun({
@@ -2571,8 +2571,8 @@ class ProcasefDashboard {
                 .filter(name => name !== '' && name.length > 1)
         )].sort();
 
-        Logger.log('Communes uniques trouvées:', communes.length);
-        Logger.log('Topographes uniques trouvés:', topographes.length);
+        console.log('Communes uniques trouvées:', communes.length);
+        console.log('Topographes uniques trouvés:', topographes.length);
 
         const communeSelect = document.getElementById('topoCommuneFilter');
         if (communeSelect) {
@@ -2588,11 +2588,11 @@ class ProcasefDashboard {
     }
 
     applyTopoFilters() {
-        Logger.log('Applying topo filters...');
-        Logger.log('Initial topoData:', this.data.topoData);
+        console.log('Applying topo filters...');
+        console.log('Initial topoData:', this.data.topoData);
 
         let filtered = Array.isArray(this.data.topoData) ? this.data.topoData : [];
-        Logger.log('After array check, filtered:', filtered);
+        console.log('After array check, filtered:', filtered);
 
         const communeFilter = document.getElementById('topoCommuneFilter')?.value;
         const topoFilter = document.getElementById('topoTopographeFilter')?.value;
@@ -2629,7 +2629,7 @@ class ProcasefDashboard {
 
         // Ensure filtered is always an array
         this.filteredTopoData = Array.isArray(filtered) ? filtered : [];
-        Logger.log('Final filteredTopoData:', this.filteredTopoData, 'Length:', this.filteredTopoData.length);
+        console.log('Final filteredTopoData:', this.filteredTopoData, 'Length:', this.filteredTopoData.length);
 
         if (this.currentSection === 'stats-topo') {
             this.updateTopoKPIs();
@@ -2648,9 +2648,9 @@ class ProcasefDashboard {
     }
 
     updateTopoKPIs() {
-        Logger.log('Updating topo KPIs...');
+        console.log('Updating topo KPIs...');
         const d = Array.isArray(this.filteredTopoData) ? this.filteredTopoData : [];
-        Logger.log('filteredTopoData in updateTopoKPIs:', d, 'Length:', d.length);
+        console.log('filteredTopoData in updateTopoKPIs:', d, 'Length:', d.length);
 
         const totalChamps = d.reduce((s, x) => s + (x.champs || 0), 0);
         const totalBatis = d.reduce((s, x) => s + (x.batis || 0), 0);
@@ -2706,7 +2706,7 @@ class ProcasefDashboard {
     createTopoCharts() {
         if (!window.chartManager) return;
 
-        Logger.log('📊 Création des graphiques topo avec données:', this.filteredTopoData.length, 'éléments');
+        console.log('📊 Création des graphiques topo avec données:', this.filteredTopoData.length, 'éléments');
 
         const cleanTopoStats = this.filteredTopoData.reduce((acc, x) => {
             const prenom = (x.prenom || '').trim();
@@ -2961,20 +2961,20 @@ class ProcasefDashboard {
     }
 
     initializeMap() {
-        Logger.log('Initialisation de la carte...');
+        console.log('Initialisation de la carte...');
         if (!this.mapManager) {
             this.mapManager = new MapManager();
         }
 
         if (this.mapManager.map) {
-            Logger.log('Carte déjà initialisée, mise à jour des marqueurs seulement');
+            console.log('Carte déjà initialisée, mise à jour des marqueurs seulement');
             this.updateMapMarkersFromStats();
             return this.mapManager.map;
         }
 
         const mapInstance = this.mapManager.initMap('mapContainer');
         if (mapInstance && this.communeStats) {
-            Logger.log('Ajout des marqueurs des communes...');
+            console.log('Ajout des marqueurs des communes...');
             this.updateMapMarkersFromStats();
             this.mapManager.fitToMarkers();
         }
@@ -2991,7 +2991,7 @@ class ProcasefDashboard {
     }
 
     applyFilters() {
-        Logger.log('Application des filtres');
+        console.log('Application des filtres');
         if (this.currentSection !== 'parcelles') {
             this.renderSection(this.currentSection);
             return;
@@ -3411,7 +3411,7 @@ class ProcasefDashboard {
 
     createTemporalChart(canvasId, temporalData) {
         if (!temporalData || !Array.isArray(temporalData) || !window.chartManager) {
-            Logger.warn('Données temporelles invalides');
+            console.warn('Données temporelles invalides');
             return;
         }
 
@@ -3805,7 +3805,7 @@ class ProcasefDashboard {
             doc.text('Rapport généré par l\'application PROCASEF Dashboard', 20, doc.lastAutoTable.finalY + 10);
             doc.save('Rapport_Parcelles_PROCASEF.pdf');
         } catch (error) {
-            Logger.error('Erreur lors de la génération du PDF:', error);
+            console.error('Erreur lors de la génération du PDF:', error);
             this.showError('Erreur lors de la génération du PDF. Le fichier HTML a été téléchargé.');
         }
     }
@@ -3862,7 +3862,7 @@ class ProcasefDashboard {
             doc.text('Rapport généré par l\'application PROCASEF Dashboard', 20, doc.lastAutoTable.finalY + 10);
             doc.save('Rapport_PostTraitement_PROCASEF.pdf');
         } catch (error) {
-            Logger.error('Erreur lors de la génération du PDF:', error);
+            console.error('Erreur lors de la génération du PDF:', error);
             this.showError('Erreur lors de la génération du PDF. Le fichier HTML a été téléchargé.');
         }
     }
@@ -3919,7 +3919,7 @@ class ProcasefDashboard {
             doc.text('Rapport généré par l\'application PROCASEF Dashboard', 20, doc.lastAutoTable.finalY + 10);
             doc.save('Rapport_Topographique_PROCASEF.pdf');
         } catch (error) {
-            Logger.error('Erreur lors de la génération du PDF:', error);
+            console.error('Erreur lors de la génération du PDF:', error);
             this.showError('Erreur lors de la génération du PDF. Le fichier HTML a été téléchargé.');
         }
     }
@@ -3946,7 +3946,7 @@ class ProcasefDashboard {
         if (window.chartManager && typeof window.chartManager.resizeAll === 'function') {
             window.chartManager.resizeAll();
         } else {
-            Logger.warn('chartManager.resizeAll is not available');
+            console.warn('chartManager.resizeAll is not available');
         }
         // Resize map if mapManager and map are initialized
         if (this.mapManager && this.mapManager.map) {
@@ -3957,7 +3957,7 @@ class ProcasefDashboard {
 
 // Initialisation de l'application
 document.addEventListener('DOMContentLoaded', () => {
-    Logger.log('DOM loaded, initializing PROCASEF application...');
+    console.log('DOM loaded, initializing PROCASEF application...');
 
     const dependencies = {
         jsPDF: typeof window.jspdf !== 'undefined' && typeof window.jspdf.jsPDF === 'function',
@@ -3965,36 +3965,36 @@ document.addEventListener('DOMContentLoaded', () => {
         Chart: typeof Chart !== 'undefined'
     };
 
-    Logger.log('Dependencies check:', dependencies);
+    console.log('Dependencies check:', dependencies);
 
     let hasWarnings = false;
 
     if (!dependencies.jsPDF) {
-        Logger.warn('jsPDF is not loaded. PDF export will be disabled.');
+        console.warn('jsPDF is not loaded. PDF export will be disabled.');
         hasWarnings = true;
     }
 
     if (!dependencies.docx) {
-        Logger.warn('docx is not loaded. Word export will be disabled.');
+        console.warn('docx is not loaded. Word export will be disabled.');
         hasWarnings = true;
     }
 
     if (!dependencies.Chart) {
-        Logger.warn('Chart.js is not loaded. Charts will be disabled.');
+        console.warn('Chart.js is not loaded. Charts will be disabled.');
         hasWarnings = true;
     }
 
     if (hasWarnings) {
-        Logger.warn('Some features will be limited due to missing dependencies.');
+        console.warn('Some features will be limited due to missing dependencies.');
         // Optional: Implement showDependencyWarning()
     }
 
     try {
         const dashboard = new ProcasefDashboard();
-        Logger.log('PROCASEF Dashboard initialized successfully');
+        console.log('PROCASEF Dashboard initialized successfully');
         window.procasefDashboard = dashboard;
     } catch (error) {
-        Logger.error('Failed to initialize PROCASEF Dashboard:', error);
+        console.error('Failed to initialize PROCASEF Dashboard:', error);
         // Optional: Implement showInitializationError(error)
     }
 });
