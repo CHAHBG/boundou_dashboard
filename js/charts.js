@@ -1,43 +1,48 @@
-// charts.js - Chart Management with error fixes and optimizations
 class ChartManager {
     constructor() {
         this.charts = {};
-        
-        // PROCASEF color palette (optimized for dark/light themes)
+
+        // PROCASEF color palette - Updated to match new design
         this.colors = {
-            primary: '#D4A574',    // Orange Gold Mat
-            secondary: '#1E3A8A',  // Bleu Navy
-            accent: '#B8860B',     // Dark Goldenrod
+            primary: '#1e3a5f',    // Navy Blue
+            secondary: '#8b2332',  // Burgundy Red
+            accent: '#2563a8',     // Royal Blue
             success: '#10B981',    // Green success
             warning: '#F59E0B',    // Orange warning
             error: '#EF4444',      // Red error
             info: '#3B82F6',       // Blue info
-            
+
             // Extended chart colors
             chartColors: [
-                '#D4A574', '#1E3A8A', '#B8860B', '#10B981', '#F59E0B', '#EF4444', 
-                '#3B82F6', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16', '#F97316', 
-                '#6366F1', '#14B8A6', '#F472B6', '#A855F7'
+                '#1e3a5f', // Navy Blue
+                '#8b2332', // Burgundy Red
+                '#2563a8', // Royal Blue
+                '#4a9fd8', // Sky Blue
+                '#ffc107', // Golden Yellow
+                '#7a9b4d', // Olive Green
+                '#6b4423', // Brown
+                '#8B5CF6', // Purple
+                '#EC4899', // Pink
+                '#06B6D4'  // Cyan
             ],
-            
+
             // State-specific colors
             stateColors: {
                 "Terminé": '#10B981',
                 "En cours": '#F59E0B',
                 "En cours ": '#F59E0B',
-                "Presque terminé": '#3B82F6',
+                "Presque terminé": '#4a9fd8',
                 "pas encore débuté": '#EF4444',
-                "Inventaires fonciers à partir du 23 Mai 2025": '#B8860B',
-                "Inventaires fonciers à partir du 02 Mai 2025": '#B8860B',
+                "Inventaires fonciers à partir du 23 Mai 2025": '#ffc107',
+                "Inventaires fonciers à partir du 02 Mai 2025": '#ffc107',
                 "Non débuté": '#EF4444',
                 "Planifié": '#8B5CF6'
             }
         };
-        
+
         // Default chart configuration
         this.defaultConfig = {
             responsive: true,
-            maintainAspectRatio: false,
             interaction: {
                 intersect: false,
                 mode: 'index'
@@ -82,7 +87,7 @@ class ChartManager {
             }
         };
     }
-    
+
     /**
      * Prepares a canvas element for chart rendering
      * @param {string} canvasId - ID of the canvas element
@@ -107,7 +112,7 @@ class ChartManager {
         console.log(`✅ Canvas prepared: ${canvasId}`);
         return canvas;
     }
-    
+
     /**
      * Destroys a single chart
      * @param {string} chartId - ID of the chart to destroy
@@ -125,7 +130,7 @@ class ChartManager {
             }
         }
     }
-    
+
     /**
      * Destroys all charts
      */
@@ -135,7 +140,7 @@ class ChartManager {
         this.charts = {};
         console.log('✅ All charts destroyed');
     }
-    
+
     /**
      * Resizes all charts (fixes resizeAll warning)
      */
@@ -152,7 +157,7 @@ class ChartManager {
         });
         console.log('✅ All charts resized');
     }
-    
+
     /**
      * Prepares datasets with appropriate styling based on chart type
      * @param {Array} datasets - Chart datasets
@@ -163,7 +168,7 @@ class ChartManager {
         return datasets.map((dataset, index) => {
             const baseColor = this.colors.chartColors[index % this.colors.chartColors.length];
             const preparedDataset = { ...dataset };
-            
+
             switch (type) {
                 case 'bar':
                     preparedDataset.backgroundColor = dataset.backgroundColor || baseColor;
@@ -172,7 +177,7 @@ class ChartManager {
                     preparedDataset.borderRadius = dataset.borderRadius || 6;
                     preparedDataset.borderSkipped = false;
                     break;
-                    
+
                 case 'line':
                     preparedDataset.borderColor = dataset.borderColor || baseColor;
                     preparedDataset.backgroundColor = dataset.backgroundColor || (baseColor + '15');
@@ -185,7 +190,7 @@ class ChartManager {
                     preparedDataset.pointRadius = 6;
                     preparedDataset.pointHoverRadius = 8;
                     break;
-                    
+
                 case 'doughnut':
                 case 'polarArea':
                     preparedDataset.backgroundColor = dataset.backgroundColor || this.colors.chartColors.slice(0, dataset.data?.length || 6);
@@ -194,11 +199,11 @@ class ChartManager {
                     preparedDataset.hoverBorderWidth = dataset.hoverBorderWidth || 5;
                     break;
             }
-            
+
             return preparedDataset;
         });
     }
-    
+
     /**
      * Creates a bar chart
      * @param {string} canvasId - Canvas ID
@@ -209,14 +214,14 @@ class ChartManager {
     createBar(canvasId, data, options = {}) {
         const canvas = this.prepareCanvas(canvasId);
         if (!canvas) return null;
-        
+
         const ctx = canvas.getContext('2d');
-        
+
         const preparedData = {
             ...data,
             datasets: this.prepareDatasets(data.datasets, 'bar')
         };
-        
+
         const config = {
             type: 'bar',
             data: preparedData,
@@ -248,7 +253,7 @@ class ChartManager {
                 ...options
             }
         };
-        
+
         try {
             this.charts[canvasId] = new Chart(ctx, config);
             console.log(`📊 Bar chart ${canvasId} created successfully`);
@@ -258,7 +263,7 @@ class ChartManager {
             return null;
         }
     }
-    
+
     /**
      * Creates a doughnut chart
      * @param {string} canvasId - Canvas ID
@@ -269,14 +274,14 @@ class ChartManager {
     createDoughnut(canvasId, data, options = {}) {
         const canvas = this.prepareCanvas(canvasId);
         if (!canvas) return null;
-        
+
         const ctx = canvas.getContext('2d');
-        
+
         const preparedData = {
             ...data,
             datasets: this.prepareDatasets(data.datasets, 'doughnut')
         };
-        
+
         const config = {
             type: 'doughnut',
             data: preparedData,
@@ -290,7 +295,7 @@ class ChartManager {
                         position: 'bottom',
                         labels: {
                             ...this.defaultConfig.plugins.legend.labels,
-                            generateLabels: function(chart) {
+                            generateLabels: function (chart) {
                                 const data = chart.data;
                                 if (data.labels.length && data.datasets.length) {
                                     return data.labels.map((label, i) => {
@@ -298,11 +303,11 @@ class ChartManager {
                                         const value = dataset.data[i];
                                         const total = dataset.data.reduce((sum, val) => sum + val, 0);
                                         const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
-                                        
+
                                         return {
                                             text: `${label} (${percentage}%)`,
-                                            fillStyle: Array.isArray(dataset.backgroundColor) 
-                                                ? dataset.backgroundColor[i] 
+                                            fillStyle: Array.isArray(dataset.backgroundColor)
+                                                ? dataset.backgroundColor[i]
                                                 : dataset.backgroundColor,
                                             strokeStyle: dataset.borderColor,
                                             lineWidth: dataset.borderWidth,
@@ -319,7 +324,7 @@ class ChartManager {
                 ...options
             }
         };
-        
+
         try {
             this.charts[canvasId] = new Chart(ctx, config);
             console.log(`🍩 Doughnut chart ${canvasId} created successfully`);
@@ -329,7 +334,7 @@ class ChartManager {
             return null;
         }
     }
-    
+
     /**
      * Creates a line chart
      * @param {string} canvasId - Canvas ID
@@ -340,14 +345,14 @@ class ChartManager {
     createLine(canvasId, data, options = {}) {
         const canvas = this.prepareCanvas(canvasId);
         if (!canvas) return null;
-        
+
         const ctx = canvas.getContext('2d');
-        
+
         const preparedData = {
             ...data,
             datasets: this.prepareDatasets(data.datasets, 'line')
         };
-        
+
         const config = {
             type: 'line',
             data: preparedData,
@@ -381,7 +386,7 @@ class ChartManager {
                 ...options
             }
         };
-        
+
         try {
             this.charts[canvasId] = new Chart(ctx, config);
             console.log(`📈 Line chart ${canvasId} created successfully`);
@@ -391,7 +396,7 @@ class ChartManager {
             return null;
         }
     }
-    
+
     /**
      * Creates a stacked bar chart
      * @param {string} canvasId - Canvas ID
@@ -427,7 +432,7 @@ class ChartManager {
                 }
             }
         };
-        
+
         return this.createBar(canvasId, data, stackedOptions);
     }
 
@@ -446,14 +451,14 @@ class ChartManager {
 
         const canvas = this.prepareCanvas(canvasId);
         if (!canvas) return null;
-        
+
         const ctx = canvas.getContext('2d');
-        
+
         const preparedData = {
             ...data,
             datasets: this.prepareDatasets(data.datasets, 'polarArea')
         };
-        
+
         const config = {
             type: 'polarArea',
             data: preparedData,
@@ -488,7 +493,7 @@ class ChartManager {
                 ...options
             }
         };
-        
+
         try {
             this.charts[canvasId] = new Chart(ctx, config);
             console.log(`🌟 Polar chart ${canvasId} created successfully`);
@@ -498,7 +503,7 @@ class ChartManager {
             return null;
         }
     }
-    
+
     /**
      * Creates a mixed bar/line chart for commune analysis
      * @param {string} canvasId - Canvas ID
@@ -522,9 +527,9 @@ class ChartManager {
 
         const canvas = this.prepareCanvas(canvasId);
         if (!canvas) return null;
-        
+
         const ctx = canvas.getContext('2d');
-        
+
         const config = {
             type: 'bar',
             data: {
@@ -576,7 +581,7 @@ class ChartManager {
                             color: 'rgba(212, 165, 116, 0.1)'
                         },
                         ticks: {
-                            callback: function(value) {
+                            callback: function (value) {
                                 return value.toLocaleString();
                             }
                         },
@@ -595,7 +600,7 @@ class ChartManager {
                         max: 35,
                         grid: { drawOnChartArea: false },
                         ticks: {
-                            callback: function(value) {
+                            callback: function (value) {
                                 return value + '%';
                             }
                         },
@@ -612,7 +617,7 @@ class ChartManager {
                 }
             }
         };
-        
+
         try {
             this.charts[canvasId] = new Chart(ctx, config);
             console.log(`📊 Mixed chart ${canvasId} created successfully`);
@@ -622,7 +627,7 @@ class ChartManager {
             return null;
         }
     }
-    
+
     /**
      * Creates a temporal line chart
      * @param {string} canvasId - Canvas ID
@@ -634,12 +639,12 @@ class ChartManager {
             console.error(`❌ Invalid temporal data for chart ${canvasId}`);
             return null;
         }
-    
+
         const canvas = this.prepareCanvas(canvasId);
         if (!canvas) return null;
-        
+
         const ctx = canvas.getContext('2d');
-        
+
         const config = {
             type: 'line',
             data: {
@@ -670,7 +675,7 @@ class ChartManager {
                 }
             }
         };
-        
+
         try {
             this.charts[canvasId] = new Chart(ctx, config);
             console.log(`📈 Temporal chart ${canvasId} created successfully`);
@@ -680,7 +685,7 @@ class ChartManager {
             return null;
         }
     }
-    
+
     /**
      * Creates a horizontal bar chart for commune state
      * @param {string} canvasId - Canvas ID
@@ -698,9 +703,9 @@ class ChartManager {
 
         const canvas = this.prepareCanvas(canvasId);
         if (!canvas) return null;
-        
+
         const ctx = canvas.getContext('2d');
-        
+
         const config = {
             type: 'bar',
             data: {
@@ -723,22 +728,22 @@ class ChartManager {
                     tooltip: {
                         ...this.defaultConfig.plugins.tooltip,
                         callbacks: {
-                            title: function(context) {
+                            title: function (context) {
                                 return context[0].label;
                             },
-                            label: function(context) {
+                            label: function (context) {
                                 return `État: ${etats[context.dataIndex]}`;
                             }
                         }
                     }
                 },
                 scales: {
-                    x: { 
+                    x: {
                         display: false,
                         beginAtZero: true,
                         max: 1.2
                     },
-                    y: { 
+                    y: {
                         beginAtZero: true,
                         grid: { display: false },
                         ticks: {
@@ -754,7 +759,7 @@ class ChartManager {
                 }
             }
         };
-        
+
         try {
             this.charts[canvasId] = new Chart(ctx, config);
             console.log(`📊 Commune state bar chart ${canvasId} created successfully`);
@@ -779,16 +784,16 @@ class ChartManager {
             return null;
         }
 
-        const colors = labels.map((label, index) => 
-            this.colors.stateColors[label?.toString().trim()] || 
+        const colors = labels.map((label, index) =>
+            this.colors.stateColors[label?.toString().trim()] ||
             this.colors.chartColors[index % this.colors.chartColors.length]
         );
-        
+
         const canvas = this.prepareCanvas(canvasId);
         if (!canvas) return null;
-        
+
         const ctx = canvas.getContext('2d');
-        
+
         const config = {
             type: 'doughnut',
             data: {
@@ -815,20 +820,20 @@ class ChartManager {
                             padding: 25,
                             usePointStyle: true,
                             pointStyle: 'circle',
-                            generateLabels: function(chart) {
+                            generateLabels: function (chart) {
                                 const data = chart.data;
                                 if (data.labels.length && data.datasets.length) {
                                     const dataset = data.datasets[0];
                                     const total = dataset.data.reduce((sum, val) => sum + val, 0);
-                                    
+
                                     return data.labels.map((label, i) => {
                                         const value = dataset.data[i];
                                         const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
-                                        
+
                                         return {
                                             text: `${label}: ${value} (${percentage}%)`,
-                                            fillStyle: Array.isArray(dataset.backgroundColor) 
-                                                ? dataset.backgroundColor[i] 
+                                            fillStyle: Array.isArray(dataset.backgroundColor)
+                                                ? dataset.backgroundColor[i]
                                                 : dataset.backgroundColor,
                                             strokeStyle: dataset.borderColor,
                                             lineWidth: dataset.borderWidth,
@@ -844,10 +849,10 @@ class ChartManager {
                     tooltip: {
                         ...this.defaultConfig.plugins.tooltip,
                         callbacks: {
-                            title: function(context) {
+                            title: function (context) {
                                 return context[0].label;
                             },
-                            label: function(context) {
+                            label: function (context) {
                                 const label = context.label || '';
                                 const value = context.raw;
                                 const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
@@ -861,7 +866,7 @@ class ChartManager {
                 ...options
             }
         };
-        
+
         try {
             this.charts[canvasId] = new Chart(ctx, config);
             console.log(`🍩 State donut chart ${canvasId} created successfully`);
@@ -902,8 +907,8 @@ class ChartManager {
         const config = {
             type: 'doughnut',
             data,
-            options: { 
-                ...this.defaultConfig, 
+            options: {
+                ...this.defaultConfig,
                 cutout: '65%',
                 plugins: {
                     ...this.defaultConfig.plugins,
@@ -926,7 +931,7 @@ class ChartManager {
             return null;
         }
     }
-    
+
     /**
      * Gets a single color from the chart palette
      * @param {number} index - Color index
@@ -935,7 +940,7 @@ class ChartManager {
     getColor(index) {
         return this.colors.chartColors[index % this.colors.chartColors.length];
     }
-    
+
     /**
      * Gets multiple colors from the chart palette
      * @param {number} count - Number of colors
@@ -944,7 +949,7 @@ class ChartManager {
     getColors(count) {
         return Array.from({ length: count }, (_, i) => this.getColor(i));
     }
-    
+
     /**
      * Gets a state-specific color
      * @param {string} state - State name
@@ -954,7 +959,7 @@ class ChartManager {
         const stateClean = state?.toString().trim();
         return this.colors.stateColors[stateClean] || '#6B7280';
     }
-    
+
     /**
      * Resizes a single chart (for backward compatibility)
      */
