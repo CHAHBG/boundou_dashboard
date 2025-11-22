@@ -271,8 +271,43 @@ class ProcasefDashboard {
 
     initTheme() {
         // Initialize theme settings
-        // Can be extended later for dark/light theme toggle
+        try {
+            const savedTheme = localStorage.getItem('procasef-theme') || 'light';
+            this.setTheme(savedTheme);
+        } catch (error) {
+            console.log('localStorage non disponible pour le thème');
+            this.setTheme('light');
+        }
         console.log('Theme initialized');
+    }
+
+    setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        this.currentTheme = theme;
+        
+        // Update theme toggle button icon
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            const moonIcon = themeToggle.querySelector('.fa-moon');
+            const sunIcon = themeToggle.querySelector('.fa-sun');
+            if (theme === 'dark') {
+                if (moonIcon) moonIcon.style.display = 'none';
+                if (sunIcon) sunIcon.style.display = 'inline-block';
+            } else {
+                if (moonIcon) moonIcon.style.display = 'inline-block';
+                if (sunIcon) sunIcon.style.display = 'none';
+            }
+        }
+    }
+
+    toggleTheme() {
+        const newTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
+        this.setTheme(newTheme);
+        try {
+            localStorage.setItem('procasef-theme', newTheme);
+        } catch (error) {
+            console.log('localStorage non disponible pour sauvegarder le thème');
+        }
     }
 
     setupEventListeners() {
@@ -290,6 +325,11 @@ class ProcasefDashboard {
         const sidebarToggle = document.getElementById('sidebarToggle');
         if (sidebarToggle) {
             sidebarToggle.addEventListener('click', () => this.toggleSidebar());
+        }
+
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => this.toggleTheme());
         }
 
         this.setupFontSizeControls();
@@ -643,12 +683,12 @@ class ProcasefDashboard {
                         {
                             label: "Hommes",
                             data: src.map(s => s.hommes || 0),
-                            backgroundColor: this.colors.secondary
+                            backgroundColor: this.colors.gender.men
                         },
                         {
                             label: "Femmes",
                             data: src.map(s => s.femmes || 0),
-                            backgroundColor: this.colors.primary
+                            backgroundColor: this.colors.gender.women
                         }
                     ]
                 });
@@ -3341,12 +3381,12 @@ class ProcasefDashboard {
             datasets: [{
                 label: 'Femmes',
                 data: this.data.genreTrimestre.map(g => g.femme),
-                backgroundColor: this.colors.primary,
+                backgroundColor: this.colors.gender.women,
                 borderRadius: 4
             }, {
                 label: 'Hommes',
                 data: this.data.genreTrimestre.map(g => g.homme),
-                backgroundColor: this.colors.secondary,
+                backgroundColor: this.colors.gender.men,
                 borderRadius: 4
             }]
         };
@@ -3383,12 +3423,12 @@ class ProcasefDashboard {
             datasets: [{
                 label: 'Femmes',
                 data: topCommunes.map(g => g.femme),
-                backgroundColor: this.colors.primary,
+                backgroundColor: this.colors.gender.women,
                 borderRadius: 4
             }, {
                 label: 'Hommes',
                 data: topCommunes.map(g => g.homme),
-                backgroundColor: this.colors.secondary,
+                backgroundColor: this.colors.gender.men,
                 borderRadius: 4
             }]
         };
@@ -3485,6 +3525,36 @@ class ProcasefDashboard {
         };
 
         window.chartManager.createLine(canvasId, chartData, options);
+    }
+
+    updateProgressBar() {
+        const dataArr = this.getFilteredEtatOperations();
+        if (!dataArr || dataArr.length === 0) {
+            const progressFill = document.getElementById('globalProgressFill');
+            const progressText = document.getElementById('globalProgressText');
+            if (progressFill) progressFill.style.width = '0%';
+            if (progressText) progressText.textContent = '0%';
+            return;
+        }
+
+        // Calculate completion based on états
+        const completed = dataArr.filter(x => 
+            x.etat_d_avancement?.toLowerCase().includes('terminé') || 
+            x.etat_d_avancement?.toLowerCase().includes('achevé')
+        ).length;
+        
+        const percentage = dataArr.length > 0 ? ((completed / dataArr.length) * 100).toFixed(1) : 0;
+        
+        const progressFill = document.getElementById('globalProgressFill');
+        const progressText = document.getElementById('globalProgressText');
+        
+        if (progressFill) {
+            progressFill.style.width = `${percentage}%`;
+            progressFill.setAttribute('aria-valuenow', percentage);
+        }
+        if (progressText) {
+            progressText.textContent = `${percentage}%`;
+        }
     }
 
     populateEtatAvancementFilters() {
