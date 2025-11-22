@@ -37,12 +37,19 @@ class ChartManager {
                 "Inventaires fonciers à partir du 02 Mai 2025": '#ffc107',
                 "Non débuté": '#EF4444',
                 "Planifié": '#8B5CF6'
+            },
+
+            // Gender colors
+            gender: {
+                men: '#3B82F6',   // Blue
+                women: '#EC4899'  // Pink
             }
         };
 
         // Default chart configuration
         this.defaultConfig = {
             responsive: true,
+            maintainAspectRatio: false,
             interaction: {
                 intersect: false,
                 mode: 'index'

@@ -110,101 +110,139 @@
             </div>
           </div>
           
-          <!-- KPI Grid -->
-          <div class="kpi-grid">
-            <div class="kpi-card">
-              <div class="kpi-header">
-                <h3>Total Parcelles</h3>
-                <i class="kpi-icon fas fa-map-marked-alt"></i>
+          <!-- Dashboard Bento Grid -->
+          <div class="dashboard-container">
+            
+            <!-- Hero Stats Row -->
+            <div class="dashboard-row hero-row">
+              <!-- Total Parcelles (Hero) -->
+              <div class="stat-card hero-card primary-hero">
+                <div class="stat-icon-wrapper">
+                  <i class="fas fa-map-marked-alt"></i>
+                </div>
+                <div class="stat-content">
+                  <h3 class="stat-label">Total Parcelles</h3>
+                  <div class="stat-value" id="totalParcelles">--</div>
+                  <div class="stat-subtitle">Parcelles identifiées</div>
+                </div>
               </div>
-              <div class="kpi-value" id="totalParcelles">31,302</div>
-              <div class="kpi-subtitle">Parcelles identifiées</div>
-            </div>
 
-
-            <div class="kpi-card">
-              <div class="kpi-header">
-                <h3>Parcelles NICAD</h3>
-                <i class="kpi-icon fas fa-check-circle"></i>
-              </div>
-              <div class="kpi-value text-success" id="parcellesNicad">17,146</div>
-              <div class="kpi-subtitle" id="percentageNicad">54.8% avec NICAD</div>
-            </div>
-
-            <div class="kpi-card">
-              <div class="kpi-header">
-                <h3>Parcelles CTASF</h3>
-                <i class="kpi-icon fas fa-certificate"></i>
-              </div>
-              <div class="kpi-value text-info" id="parcellesCtasf">0</div>
-              <div class="kpi-subtitle" id="percentageCtasf">0% au CTASF</div>
-            </div>
-
-            <div class="kpi-card">
-              <div class="kpi-header">
-                <h3>Parcelles Délibérées</h3>
-                <i class="kpi-icon fas fa-gavel"></i>
-              </div>
-              <div class="kpi-value" id="parcellesDeliberees">11,036</div>
-              <div class="kpi-subtitle" id="percentageDeliberees">35.3% délibérées</div>
-            </div>
-
-            <div class="kpi-card">
-              <div class="kpi-header">
-                <h3>Superficie Totale</h3>
-                <i class="kpi-icon fas fa-expand-arrows-alt"></i>
-              </div>
-              <div class="kpi-value" id="superficieTotale">67,934.12</div>
-              <div class="kpi-subtitle">M² avec NICAD</div>
-            </div>
-
-            <div class="kpi-card">
-              <div class="kpi-header">
-                <h3>Taux Réalisation</h3>
-                <i class="kpi-icon fas fa-chart-pie"></i>
-              </div>
-              <div class="kpi-value text-warning" id="tauxRealisation">47.80%</div>
-              <div class="kpi-subtitle">57 727 / 70,000</div>
-            </div>
-
-            <div class="kpi-card">
-              <div class="kpi-header">
-                <h3>Communes Actives</h3>
-                <i class="kpi-icon fas fa-city"></i>
-              </div>
-              <div class="kpi-value" id="communesActives">15/17</div>
-              <div class="kpi-subtitle">Zones d'intervention</div>
-            </div>
-          </div>
-
-          <!-- Charts Overview -->
-          <div class="charts-overview">
-            <div class="chart-card">
-              <div class="chart-header">
-                <h3>Top Communes par Parcelles</h3>
-              </div>
-              <div class="chart-content">
-                <canvas id="topCommunesChart"></canvas>
+              <!-- Taux Réalisation (Hero) -->
+              <div class="stat-card hero-card accent-hero">
+                <div class="stat-icon-wrapper">
+                  <i class="fas fa-chart-pie"></i>
+                </div>
+                <div class="stat-content">
+                  <h3 class="stat-label">Taux Réalisation</h3>
+                  <div class="stat-value text-warning" id="tauxRealisation">--%</div>
+                  <div class="stat-subtitle">Objectif: 70,000</div>
+                </div>
               </div>
             </div>
 
-            <div class="chart-card">
-              <div class="chart-header">
-                <h3>Projections Mensuelles 2025</h3>
+            <!-- Process Flow Row -->
+            <div class="dashboard-row process-row">
+              <!-- NICAD -->
+              <div class="stat-card process-card">
+                <div class="card-header-simple">
+                  <span class="status-dot success"></span>
+                  <h3>Parcelles NICAD</h3>
+                </div>
+                <div class="stat-value-medium text-success" id="parcellesNicad">--</div>
+                <div class="progress-mini">
+                  <div class="progress-bar-fill success" style="width: 0%"></div>
+                </div>
+                <div class="stat-subtitle" id="percentageNicad">--% avec NICAD</div>
               </div>
-              <div class="chart-content">
-                <canvas id="projectionsChart"></canvas>
+
+              <!-- CTASF -->
+              <div class="stat-card process-card">
+                <div class="card-header-simple">
+                  <span class="status-dot info"></span>
+                  <h3>Parcelles CTASF</h3>
+                </div>
+                <div class="stat-value-medium text-info" id="parcellesCtasf">--</div>
+                <div class="progress-mini">
+                  <div class="progress-bar-fill info" style="width: 0%"></div>
+                </div>
+                <div class="stat-subtitle" id="percentageCtasf">--% au CTASF</div>
+              </div>
+
+              <!-- Délibérées -->
+              <div class="stat-card process-card">
+                <div class="card-header-simple">
+                  <span class="status-dot warning"></span>
+                  <h3>Parcelles Délibérées</h3>
+                </div>
+                <div class="stat-value-medium" id="parcellesDeliberees">--</div>
+                <div class="progress-mini">
+                  <div class="progress-bar-fill warning" style="width: 0%"></div>
+                </div>
+                <div class="stat-subtitle" id="percentageDeliberees">--% délibérées</div>
               </div>
             </div>
 
-            <div class="chart-card">
-              <div class="chart-header">
-                <h3>Répartition Genre Global</h3>
+            <!-- Secondary Stats Row -->
+            <div class="dashboard-row secondary-row">
+              <div class="stat-card compact-card">
+                <div class="compact-flex">
+                  <div class="icon-box">
+                    <i class="fas fa-expand-arrows-alt"></i>
+                  </div>
+                  <div>
+                    <div class="stat-value-small" id="superficieTotale">--</div>
+                    <div class="stat-label-small">Superficie Totale (m²)</div>
+                  </div>
+                </div>
               </div>
-              <div class="chart-content">
-                <canvas id="genreGlobalChart"></canvas>
+
+              <div class="stat-card compact-card">
+                <div class="compact-flex">
+                  <div class="icon-box">
+                    <i class="fas fa-city"></i>
+                  </div>
+                  <div>
+                    <div class="stat-value-small" id="communesActives">--/17</div>
+                    <div class="stat-label-small">Communes Actives</div>
+                  </div>
+                </div>
               </div>
             </div>
+
+            <!-- Charts Grid -->
+            <div class="dashboard-grid-charts">
+              <!-- Main Chart -->
+              <div class="chart-card main-chart-area">
+                <div class="chart-header">
+                  <h3><i class="fas fa-chart-line me-2"></i>Projections Mensuelles 2025</h3>
+                </div>
+                <div class="chart-content large-chart">
+                  <canvas id="projectionsChart"></canvas>
+                </div>
+              </div>
+
+              <!-- Side Charts Container -->
+              <div class="side-charts-column">
+                <div class="chart-card side-chart">
+                  <div class="chart-header">
+                    <h3>Top Communes</h3>
+                  </div>
+                  <div class="chart-content">
+                    <canvas id="topCommunesChart"></canvas>
+                  </div>
+                </div>
+
+                <div class="chart-card side-chart">
+                  <div class="chart-header">
+                    <h3>Répartition Genre</h3>
+                  </div>
+                  <div class="chart-content">
+                    <canvas id="genreGlobalChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </section>
 

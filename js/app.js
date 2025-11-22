@@ -10,7 +10,11 @@ class ProcasefDashboard {
             warning: '#F59E0B',
             error: '#EF4444',
             info: '#3B82F6',
-            chartColors: ['#D4A574', '#1E3A8A', '#B8860B', '#10B981', '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6', '#EC4899', '#06B6D4']
+            chartColors: ['#D4A574', '#1E3A8A', '#B8860B', '#10B981', '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6', '#EC4899', '#06B6D4'],
+            gender: {
+                men: '#3B82F6',   // Blue
+                women: '#EC4899'  // Pink
+            }
         };
 
         // Constantes globales pour une meilleure maintenabilité
@@ -3179,7 +3183,7 @@ class ProcasefDashboard {
             labels: ['Hommes', 'Femmes'],
             datasets: [{
                 data: [hommes, femmes],
-                backgroundColor: [this.colors.secondary, this.colors.primary],
+                backgroundColor: [this.colors.gender.men, this.colors.gender.women],
                 borderWidth: 0
             }]
         };
@@ -3229,7 +3233,7 @@ class ProcasefDashboard {
             }
         };
 
-        window.chartManager.createDoughnut('regionChart', chartData, options);
+        window.chartManager.createPolarChart('regionChart', chartData, options);
     }
 
     createNicadChart() {
