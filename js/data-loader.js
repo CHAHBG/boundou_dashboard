@@ -12,17 +12,17 @@ class DataLoader {
     async loadData(url) {
         // Return cached data if available
         if (this.cache.has(url)) {
-            console.log(`Loading from cache: ${url}`);
+            Logger.log(`Loading from cache: ${url}`);
             return this.cache.get(url);
         }
 
         // Return existing loading promise if already in progress
         if (this.loadingPromises.has(url)) {
-            console.log(`Waiting for existing request: ${url}`);
+            Logger.log(`Waiting for existing request: ${url}`);
             return this.loadingPromises.get(url);
         }
 
-        console.log(`Fetching data from: ${url}`);
+        Logger.log(`Fetching data from: ${url}`);
         const loadPromise = this.fetchWithRetry(url)
             .then(data => {
                 // Store the raw data in cache
@@ -30,14 +30,14 @@ class DataLoader {
                 // Assign to this.data if the url matches rapport_complet.json
                 if (url.includes('rapport_complet.json')) {
                     this.data.rapportComplet = data; // Direct assignment to app's data
-                    console.log(`Assigned rapportComplet to app.data: ${Object.keys(data).length} sections`);
+                    Logger.log(`Assigned rapportComplet to app.data: ${Object.keys(data).length} sections`);
                 }
                 this.loadingPromises.delete(url);
                 return data;
             })
             .catch(error => {
                 this.loadingPromises.delete(url);
-                console.error(`Failed to load ${url}:`, error);
+                Logger.error(`Failed to load ${url}:`, error);
                 return this.getFallbackData(url);
             });
 
@@ -54,10 +54,10 @@ class DataLoader {
                 }
 
                 const data = await response.json();
-                console.log(`Successfully loaded: ${url} (attempt ${attempt})`);
+                Logger.log(`Successfully loaded: ${url} (attempt ${attempt})`);
                 return data;
             } catch (error) {
-                console.warn(`Attempt ${attempt}/${maxRetries} failed for ${url}:`, error.message);
+                Logger.warn(`Attempt ${attempt}/${maxRetries} failed for ${url}:`, error.message);
                 
                 if (attempt === maxRetries) {
                     throw error;
@@ -70,7 +70,7 @@ class DataLoader {
     }
 
     getFallbackData(url) {
-        console.log(`Generating fallback data for: ${url}`);
+        Logger.log(`Generating fallback data for: ${url}`);
 
         if (url.includes('parcelles.json')) {
             return this.generateParcelleFallbackData();
@@ -159,7 +159,7 @@ class DataLoader {
             totalGenerated += sampleSize;
         });
 
-        console.log(`Generated ${data.length} parcelle records as fallback data`);
+        Logger.log(`Generated ${data.length} parcelle records as fallback data`);
         return data;
     }
 
@@ -364,7 +364,7 @@ class DataLoader {
     // Cache management methods
     clearCache() {
         this.cache.clear();
-        console.log('Data cache cleared');
+        Logger.log('Data cache cleared');
     }
 
     getCacheSize() {
@@ -400,28 +400,28 @@ class DataLoader {
         
         try {
             await Promise.all(loadPromises);
-            console.log('Essential data preloaded successfully');
+            Logger.log('Essential data preloaded successfully');
         } catch (error) {
-            console.warn('Some essential data failed to preload:', error);
+            Logger.warn('Some essential data failed to preload:', error);
         }
     }
 
     // Chargement des données topographiques
     async loadTopoData() {
-        console.log('Chargement des données topographiques...');
+        Logger.log('Chargement des données topographiques...');
         try {
             const data = await this.loadData('data/Rapports_Topo_nettoyee.json');
-            console.log('Données topo chargées:', data?.length || 0, 'enregistrements');
+            Logger.log('Données topo chargées:', data?.length || 0, 'enregistrements');
             return Array.isArray(data) ? data : [];
         } catch (error) {
-            console.error('Erreur lors du chargement des données topo:', error);
+            Logger.error('Erreur lors du chargement des données topo:', error);
             return this.generateTopoFallbackData();
         }
     }
 
     // Génération de données de fallback pour les stats topo
     generateTopoFallbackData() {
-        console.log('Génération de données de fallback pour Stats Topo');
+        Logger.log('Génération de données de fallback pour Stats Topo');
         
         const communes = ['NDOGA BABACAR', 'BANDAFASSI', 'DIMBOLI', 'MISSIRAH', 'NETTEBOULOU'];
         const villages = ['Medina coly', 'Sare souna', 'Soutouba peulh', 'Village Nord', 'Village Sud'];
@@ -467,7 +467,7 @@ class DataLoader {
             }
         }
         
-        console.log(`Généré ${fallbackData.length} enregistrements de fallback pour Stats Topo`);
+        Logger.log(`Généré ${fallbackData.length} enregistrements de fallback pour Stats Topo`);
         return fallbackData;
     }
 

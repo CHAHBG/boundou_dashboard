@@ -48,12 +48,12 @@ class MapManager {
 
     // 🔴 CORRECTION CRITIQUE: Méthode de destruction complète
     destroyMap() {
-        console.log('🗑️ Destruction complète de la carte...');
+        Logger.log('🗑️ Destruction complète de la carte...');
         
         try {
             // Nettoyer les marqueurs individuels
             if (this.markers && this.markers.length > 0) {
-                console.log(`Suppression de ${this.markers.length} marqueurs`);
+                Logger.log(`Suppression de ${this.markers.length} marqueurs`);
                 this.markers.forEach(marker => {
                     if (marker && typeof marker.remove === 'function') {
                         marker.remove();
@@ -64,21 +64,21 @@ class MapManager {
 
             // Nettoyer le cluster de marqueurs
             if (this.markerClusterGroup) {
-                console.log('Nettoyage du cluster de marqueurs');
+                Logger.log('Nettoyage du cluster de marqueurs');
                 try {
                     this.markerClusterGroup.clearLayers();
                     if (this.map && this.map.hasLayer(this.markerClusterGroup)) {
                         this.map.removeLayer(this.markerClusterGroup);
                     }
                 } catch (error) {
-                    console.warn('Erreur lors du nettoyage du cluster:', error);
+                    Logger.warn('Erreur lors du nettoyage du cluster:', error);
                 }
                 this.markerClusterGroup = null;
             }
 
             // Détruire la carte principale
             if (this.map) {
-                console.log('Destruction de l\'instance de carte Leaflet');
+                Logger.log('Destruction de l\'instance de carte Leaflet');
                 try {
                     // Supprimer tous les event listeners
                     this.map.off();
@@ -86,50 +86,50 @@ class MapManager {
                     // Détruire la carte
                     this.map.remove();
                 } catch (error) {
-                    console.warn('Erreur lors de la destruction de la carte:', error);
+                    Logger.warn('Erreur lors de la destruction de la carte:', error);
                 }
                 this.map = null;
             }
 
-            console.log('✅ Carte détruite avec succès');
+            Logger.log('✅ Carte détruite avec succès');
             
         } catch (error) {
-            console.error('❌ Erreur lors de la destruction de la carte:', error);
+            Logger.error('❌ Erreur lors de la destruction de la carte:', error);
         }
     }
 
     // 🔴 CORRECTION CRITIQUE: Initialisation sécurisée de la carte
     initMap(containerId = 'mapContainer') {
-        console.log(`🗺️ Initialisation de la carte sur: ${containerId}`);
+        Logger.log(`🗺️ Initialisation de la carte sur: ${containerId}`);
         
         const container = document.getElementById(containerId);
         if (!container) {
-            console.error(`❌ Conteneur de carte non trouvé: ${containerId}`);
+            Logger.error(`❌ Conteneur de carte non trouvé: ${containerId}`);
             return null;
         }
 
         // 🔴 CORRECTION: Détruire l'instance existante en premier
         if (this.map) {
-            console.log('🧹 Nettoyage de l\'instance existante...');
+            Logger.log('🧹 Nettoyage de l\'instance existante...');
             this.destroyMap();
         }
 
         // 🔴 CORRECTION: Nettoyer l'ID Leaflet du conteneur DOM
         const domContainer = L.DomUtil.get(containerId);
         if (domContainer && domContainer._leaflet_id != null) {
-            console.log('🧹 Nettoyage de l\'ID Leaflet du conteneur DOM');
+            Logger.log('🧹 Nettoyage de l\'ID Leaflet du conteneur DOM');
             domContainer._leaflet_id = null;
         }
 
         // 🔴 CORRECTION: Nettoyer le contenu HTML si nécessaire
         if (container.hasChildNodes()) {
-            console.log('🧹 Nettoyage du contenu HTML du conteneur');
+            Logger.log('🧹 Nettoyage du contenu HTML du conteneur');
             container.innerHTML = '';
         }
 
         try {
             // Création sécurisée de la nouvelle carte
-            console.log('📍 Création de la nouvelle instance de carte...');
+            Logger.log('📍 Création de la nouvelle instance de carte...');
             this.map = L.map(containerId, {
                 center: this.mapConfig.center,
                 zoom: this.mapConfig.zoom,
@@ -153,11 +153,11 @@ class MapManager {
             // Ajout d'un marqueur pour Boundou (centre)
             this.addBoundouMarker();
 
-            console.log('✅ Carte initialisée avec succès');
+            Logger.log('✅ Carte initialisée avec succès');
             return this.map;
 
         } catch (error) {
-            console.error('❌ Erreur lors de l\'initialisation de la carte:', error);
+            Logger.error('❌ Erreur lors de l\'initialisation de la carte:', error);
             return null;
         }
     }
@@ -250,7 +250,7 @@ class MapManager {
     // 🔴 CORRECTION: Ajout de marqueurs pour les communes - méthode complètement réécrite
     addCommuneMarker(communeName, stats) {
         if (!this.map || !this.communeCoords[communeName]) {
-            console.warn(`Coordonnées non trouvées pour la commune: ${communeName}`);
+            Logger.warn(`Coordonnées non trouvées pour la commune: ${communeName}`);
             return;
         }
 
@@ -340,11 +340,11 @@ class MapManager {
     // 🔴 CORRECTION: Ajout des marqueurs topographiques - méthode au niveau racine
     addTopoMarkers(topoData) {
         if (!this.map || !Array.isArray(topoData) || topoData.length === 0) {
-            console.warn('Impossible d\'ajouter les marqueurs topo');
+            Logger.warn('Impossible d\'ajouter les marqueurs topo');
             return;
         }
 
-        console.log('Ajout des marqueurs topographiques:', topoData.length, 'points');
+        Logger.log('Ajout des marqueurs topographiques:', topoData.length, 'points');
 
         // Grouper les données par commune
         const communeGroups = this.groupTopoDataByCommune(topoData);
@@ -352,7 +352,7 @@ class MapManager {
         Object.entries(communeGroups).forEach(([commune, data]) => {
             const coords = this.communeCoords[commune];
             if (!coords) {
-                console.warn(`Coordonnées non trouvées pour la commune: ${commune}`);
+                Logger.warn(`Coordonnées non trouvées pour la commune: ${commune}`);
                 return;
             }
 
@@ -419,7 +419,7 @@ class MapManager {
             this.map.fitBounds(this.markerClusterGroup.getBounds(), { padding: [20, 20] });
         }
 
-        console.log(`${this.markers.length} marqueurs topographiques ajoutés`);
+        Logger.log(`${this.markers.length} marqueurs topographiques ajoutés`);
     }
 
     // 🔴 CORRECTION: Grouper les données topo par commune - méthode au niveau racine
@@ -522,7 +522,7 @@ class MapManager {
         });
         
         this.markers = [];
-        console.log('Marqueurs topographiques nettoyés');
+        Logger.log('Marqueurs topographiques nettoyés');
     }
 
     // 🔴 CORRECTION: Mise à jour des marqueurs topo avec nouvelles données - méthode au niveau racine
@@ -582,7 +582,7 @@ class MapManager {
         this.markers = [];
         this.markerClusterGroup = null;
         this.currentFilter = '';
-        console.log('✅ MapManager nettoyé complètement');
+        Logger.log('✅ MapManager nettoyé complètement');
     }
 }
 
