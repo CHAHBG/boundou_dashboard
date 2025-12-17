@@ -1701,6 +1701,16 @@ body {
   box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
 }
 
+.status-dot.primary {
+  background-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.2);
+}
+
+.status-dot.danger {
+  background-color: var(--color-error);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
 .stat-value-medium {
   font-size: 28px;
   font-weight: 700;
@@ -1731,6 +1741,51 @@ body {
 
 .progress-bar-fill.warning {
   background-color: var(--color-accent-gold);
+}
+
+.progress-bar-fill.primary {
+  background-color: var(--color-primary);
+}
+
+.progress-bar-fill.danger {
+  background-color: var(--color-error);
+}
+
+/* Loss Rate Row */
+.loss-rate-row {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.loss-card {
+  background: linear-gradient(135deg, #fff5f5 0%, #fef2f2 100%);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.loss-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--color-error), #f87171);
+}
+
+.loss-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-error);
+}
+
+[data-theme="dark"] .loss-card {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
 /* Secondary Row */

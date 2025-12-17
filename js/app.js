@@ -54,7 +54,8 @@ class ProcasefDashboard {
             parcellesTerrain: null,
             urmTerrain: null,
             rapportComplet: null,
-            topoData: null
+            topoData: null,
+            parcellesPostTraitees: null
         };
 
         this.currentSection = 'accueil';
@@ -177,7 +178,8 @@ class ProcasefDashboard {
         const loadPromises = [
             this.loadDataSafely('data/parcelles.json', 'parcelles'),
             this.loadDataSafely('data/Projections_2025.json', 'projections'),
-            this.loadDataSafely('data/Repartition_genre.json', 'repartitionGenre')
+            this.loadDataSafely('data/Repartition_genre.json', 'repartitionGenre'),
+            this.loadDataSafely('data/parcelles_Post_traitees.json', 'parcellesPostTraitees')
         ];
         await Promise.allSettled(loadPromises);
     }
@@ -597,6 +599,7 @@ class ProcasefDashboard {
         this.initializeMap();
         this.createRegionChart();
         this.createNicadChart();
+        this.createPostTraiteesChart();
         this.renderParcellesTable();
     }
 
@@ -3108,6 +3111,47 @@ class ProcasefDashboard {
         const OBJECTIF = 70000;
         const tauxRealisation = ((this.stats.total / OBJECTIF) * 100).toFixed(1);
         this.updateElement('tauxRealisation', `${tauxRealisation}%`);
+
+        // Update Parcelles Post Traitées KPI
+        const totalPostTraitees = this.getTotalPostTraitees();
+        this.updateElement('totalPostTraitees', totalPostTraitees.toLocaleString());
+        const postTraiteesPct = this.stats.total > 0 ? ((totalPostTraitees / this.stats.total) * 100).toFixed(1) : 0;
+        this.updateElement('percentagePostTraitees', `${postTraiteesPct}% du total`);
+
+        // Update Post Traitées Progress Bar
+        const postTraiteesBar = document.querySelector('.process-card:nth-child(4) .progress-bar-fill');
+        if (postTraiteesBar) postTraiteesBar.style.width = `${postTraiteesPct}%`;
+
+        // Calculate and Update Loss Rate KPIs
+        const lossVsTotal = this.stats.total > 0 ? this.stats.total - totalPostTraitees : 0;
+        const lossRateTotal = this.stats.total > 0 ? ((lossVsTotal / this.stats.total) * 100).toFixed(1) : 0;
+        
+        const lossVsNicad = this.stats.nicad_oui > 0 ? this.stats.nicad_oui - totalPostTraitees : 0;
+        const lossRateNicad = this.stats.nicad_oui > 0 ? ((lossVsNicad / this.stats.nicad_oui) * 100).toFixed(1) : 0;
+
+        this.updateElement('tauxPerteTotal', `${lossRateTotal}%`);
+        this.updateElement('perteVsTotal', `${lossVsTotal.toLocaleString()} parcelles`);
+        this.updateElement('tauxPerteNicad', `${lossRateNicad}%`);
+        this.updateElement('perteVsNicad', `${Math.abs(lossVsNicad).toLocaleString()} parcelles`);
+    }
+
+    getTotalPostTraitees() {
+        if (!this.data.parcellesPostTraitees || !Array.isArray(this.data.parcellesPostTraitees)) {
+            return 0;
+        }
+        return this.data.parcellesPostTraitees.reduce((sum, item) => sum + (item.parcel_count || 0), 0);
+    }
+
+    getPostTraiteesForCommune(communeName) {
+        if (!this.data.parcellesPostTraitees || !Array.isArray(this.data.parcellesPostTraitees)) {
+            return 0;
+        }
+        // Normalize commune name for comparison (case insensitive)
+        const normalizedName = communeName.toLowerCase().trim();
+        const found = this.data.parcellesPostTraitees.find(item => 
+            item.commune && item.commune.toLowerCase().trim() === normalizedName
+        );
+        return found ? found.parcel_count : 0;
     }
 
     updateProjectionsKPIs() {
@@ -3327,6 +3371,83 @@ class ProcasefDashboard {
         };
 
         window.chartManager.createBar('nicadChart', chartData, options);
+    }
+
+    createPostTraiteesChart() {
+        if (!this.data.parcellesPostTraitees || !Array.isArray(this.data.parcellesPostTraitees) || !window.chartManager) {
+            console.log('Post Traitées data not available for chart');
+            return;
+        }
+
+        // Sort by parcel count and take top 10
+        const sortedData = [...this.data.parcellesPostTraitees]
+            .sort((a, b) => (b.parcel_count || 0) - (a.parcel_count || 0))
+            .slice(0, 10);
+
+        const chartData = {
+            labels: sortedData.map(d => d.commune ? d.commune.substring(0, 15) : 'N/A'),
+            datasets: [{
+                label: 'Parcelles Post Traitées',
+                data: sortedData.map(d => d.parcel_count || 0),
+                backgroundColor: sortedData.map((d, i) => {
+                    // Create a gradient effect using different colors
+                    const colors = [
+                        this.colors.primary,
+                        this.colors.secondary,
+                        this.colors.accent,
+                        this.colors.success,
+                        this.colors.info,
+                        this.colors.warning,
+                        '#8B5CF6',
+                        '#EC4899',
+                        '#06B6D4',
+                        '#84CC16'
+                    ];
+                    return colors[i % colors.length];
+                }),
+                borderRadius: 6,
+                borderWidth: 0
+            }]
+        };
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.parsed.x.toLocaleString()} parcelles`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    grid: {
+                        display: true,
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString();
+                        }
+                    }
+                },
+                y: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        };
+
+        window.chartManager.createBar('postTraiteesChart', chartData, options);
     }
 
     createObjectifsChart() {
@@ -3641,6 +3762,9 @@ class ProcasefDashboard {
             const ctasf_pct = item.total > 0 ? ((item.ctasf_oui / item.total) * 100).toFixed(1) : '0.0';
             // Calculate % du total
             const pctTotal = totalParcellesGlobal > 0 ? ((item.total / totalParcellesGlobal) * 100).toFixed(1) : '0.0';
+            // Get Post Traitées for this commune
+            const postTraitees = this.getPostTraiteesForCommune(item.commune);
+            const postTraiteesPct = item.total > 0 ? ((postTraitees / item.total) * 100).toFixed(1) : '0.0';
             row.innerHTML = `
                 <td>${item.commune}</td>
                 <td>${region}</td>
@@ -3665,6 +3789,13 @@ class ProcasefDashboard {
                     <span class="badge ${parseFloat(item.delib_pct) >= 30 ? 'bg-success' :
                     parseFloat(item.delib_pct) >= 15 ? 'bg-warning' : 'bg-danger'}">
                         ${item.delib_pct}%
+                    </span>
+                </td>
+                <td class="text-end">${postTraitees.toLocaleString()}</td>
+                <td class="text-end">
+                    <span class="badge ${parseFloat(postTraiteesPct) >= 80 ? 'bg-success' :
+                    parseFloat(postTraiteesPct) >= 50 ? 'bg-warning' : 'bg-danger'}">
+                        ${postTraiteesPct}%
                     </span>
                 </td>
                 <td class="text-end">${item.superficie.toFixed(2)} m²</td>
