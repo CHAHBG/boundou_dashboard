@@ -104,6 +104,24 @@ class ProcasefDashboard {
         }
     }
 
+    async updateLastCommitDate() {
+        try {
+            const response = await fetch('https://api.github.com/repos/CHAHBG/boundou_dashboard/commits/main');
+            if (response.ok) {
+                const data = await response.json();
+                const commitDate = new Date(data.commit.committer.date);
+                const options = { day: 'numeric', month: 'long', year: 'numeric' };
+                const formattedDate = commitDate.toLocaleDateString('fr-FR', options);
+                const dateElement = document.querySelector('.update-date');
+                if (dateElement) {
+                    dateElement.textContent = `Mis à jour le ${formattedDate}`;
+                }
+            }
+        } catch (error) {
+            console.log('Could not fetch last commit date:', error);
+        }
+    }
+
     toggleSidebar() {
         console.log('Toggling sidebar...'); // Debug log
         const sidebar = document.querySelector('.sidebar');
@@ -135,6 +153,9 @@ class ProcasefDashboard {
         try {
             // Set global app reference
             window.app = this;
+
+            // Update last commit date from GitHub
+            this.updateLastCommitDate();
 
             // Setup event listeners
             this.setupEventListeners();
@@ -3129,10 +3150,10 @@ class ProcasefDashboard {
         const lossVsNicad = this.stats.nicad_oui > 0 ? this.stats.nicad_oui - totalPostTraitees : 0;
         const lossRateNicad = this.stats.nicad_oui > 0 ? ((lossVsNicad / this.stats.nicad_oui) * 100).toFixed(1) : 0;
 
-        this.updateElement('tauxPerteTotal', `${lossRateTotal}%`);
-        this.updateElement('perteVsTotal', `${lossVsTotal.toLocaleString()} parcelles`);
-        this.updateElement('tauxPerteNicad', `${lossRateNicad}%`);
-        this.updateElement('perteVsNicad', `${Math.abs(lossVsNicad).toLocaleString()} parcelles`);
+        this.updateElement('tauxPerteTotal', `${Math.abs(lossRateTotal)}%`);
+        this.updateElement('perteVsTotal', `- ${Math.abs(lossVsTotal).toLocaleString()} parcelles`);
+        this.updateElement('tauxPerteNicad', `${Math.abs(lossRateNicad)}%`);
+        this.updateElement('perteVsNicad', `- ${Math.abs(lossVsNicad).toLocaleString()} parcelles`);
     }
 
     getTotalPostTraitees() {
