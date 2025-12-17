@@ -3116,10 +3116,11 @@ class ProcasefDashboard {
         this.updateElement('percentageCtasf', `${ctasfPct}% avec CTASF`);
         this.updateElement('percentageDeliberees', `${delibPct}% délibérées`);
 
-        // Update Progress Bars
-        const nicadBar = document.querySelector('.process-card:nth-child(1) .progress-bar-fill');
-        const ctasfBar = document.querySelector('.process-card:nth-child(2) .progress-bar-fill');
-        const delibBar = document.querySelector('.process-card:nth-child(3) .progress-bar-fill');
+        // Update Progress Bars (new order: Post Traitées, NICAD, CTASF, Délibérées)
+        const postTraiteesBar = document.querySelector('.process-card:nth-child(1) .progress-bar-fill');
+        const nicadBar = document.querySelector('.process-card:nth-child(2) .progress-bar-fill');
+        const ctasfBar = document.querySelector('.process-card:nth-child(3) .progress-bar-fill');
+        const delibBar = document.querySelector('.process-card:nth-child(4) .progress-bar-fill');
 
         if (nicadBar) nicadBar.style.width = `${nicadPct}%`;
         if (ctasfBar) ctasfBar.style.width = `${ctasfPct}%`;
@@ -3140,7 +3141,6 @@ class ProcasefDashboard {
         this.updateElement('percentagePostTraitees', `${postTraiteesPct}% du total`);
 
         // Update Post Traitées Progress Bar
-        const postTraiteesBar = document.querySelector('.process-card:nth-child(4) .progress-bar-fill');
         if (postTraiteesBar) postTraiteesBar.style.width = `${postTraiteesPct}%`;
 
         // Calculate and Update Loss Rate KPIs
