@@ -499,6 +499,135 @@ class DataLoader {
             return true;
         });
     }
+
+    // Load CSV data from Google Sheets
+    async loadCSVFromGoogleSheets(url) {
+        const cacheKey = `gsheet_${url}`;
+        
+        // Return cached data if available
+        if (this.cache.has(cacheKey)) {
+            console.log(`Loading Google Sheet from cache`);
+            return this.cache.get(cacheKey);
+        }
+
+        console.log(`Fetching Google Sheet CSV from: ${url}`);
+        
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const csvText = await response.text();
+            const data = this.parseCSV(csvText);
+            
+            this.cache.set(cacheKey, data);
+            console.log(`Successfully loaded ${data.length} rows from Google Sheet`);
+            return data;
+        } catch (error) {
+            console.error('Error loading Google Sheet CSV:', error);
+            return this.generateProductionTitresFallbackData();
+        }
+    }
+
+    // Parse CSV text to array of objects
+    parseCSV(csvText) {
+        const lines = csvText.split('\n').filter(line => line.trim());
+        if (lines.length < 2) return [];
+        
+        // Parse header row
+        const headers = this.parseCSVLine(lines[0]);
+        
+        // Parse data rows
+        const data = [];
+        for (let i = 1; i < lines.length; i++) {
+            const values = this.parseCSVLine(lines[i]);
+            if (values.length >= headers.length) {
+                const row = {};
+                headers.forEach((header, index) => {
+                    // Clean header name and normalize
+                    const cleanHeader = header.trim().toLowerCase()
+                        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                        .replace(/\s+/g, '_');
+                    
+                    let value = values[index]?.trim() || '';
+                    
+                    // Try to convert to number if it looks like one
+                    if (/^\d+$/.test(value)) {
+                        value = parseInt(value, 10);
+                    } else if (/^\d+[.,]\d+$/.test(value)) {
+                        value = parseFloat(value.replace(',', '.'));
+                    }
+                    
+                    row[cleanHeader] = value;
+                });
+                data.push(row);
+            }
+        }
+        
+        return data;
+    }
+
+    // Parse a single CSV line handling quoted fields
+    parseCSVLine(line) {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                result.push(current);
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        result.push(current);
+        
+        return result.map(field => field.replace(/^"|"$/g, '').trim());
+    }
+
+    // Load Production de Titres data
+    async loadProductionTitresData() {
+        const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS4GsB4fTJs7ywc42QBEgmB66eQx4VClo7zkKeP9ETafJh9c28nPpCuho7RJ07jYmihoTw_nPIxRb8_/pub?output=csv';
+        
+        try {
+            const data = await this.loadCSVFromGoogleSheets(GOOGLE_SHEET_CSV_URL);
+            console.log('Production Titres data loaded:', data);
+            return data;
+        } catch (error) {
+            console.error('Error loading Production Titres data:', error);
+            return this.generateProductionTitresFallbackData();
+        }
+    }
+
+    // Generate fallback data for Production de Titres
+    generateProductionTitresFallbackData() {
+        console.log('Generating fallback data for Production Titres');
+        return [
+            { commune: 'Ndoga Babacar', nombre_parcelles: 1210, plans_de_delimitation: 1210, plan_de_cic: 1210, extrait_de_deliberation: 1210, signature_plan: 1210, signature_cic: 1210, observations: 'realisés' },
+            { commune: 'Netteboulou', nombre_parcelles: 2856, plans_de_delimitation: 839, plan_de_cic: 839, extrait_de_deliberation: 839, signature_plan: 839, signature_cic: 839, observations: '839 deliberation phase 1' },
+            { commune: 'Missirah', nombre_parcelles: 6570, plans_de_delimitation: 1428, plan_de_cic: 1428, extrait_de_deliberation: 1428, signature_plan: 1428, signature_cic: 0, observations: '1428 deliberation phase 1' },
+            { commune: 'Bandafassi', nombre_parcelles: 2793, plans_de_delimitation: 25, plan_de_cic: 25, extrait_de_deliberation: 25, signature_plan: 25, signature_cic: 25, observations: '25 parcelles par OF' },
+            { commune: 'Fongolimbi', nombre_parcelles: 1320, plans_de_delimitation: 0, plan_de_cic: 0, extrait_de_deliberation: 1320, signature_plan: 0, signature_cic: 0, observations: 'par Cadastre Kedougou' },
+            { commune: 'Dimboli', nombre_parcelles: 1426, plans_de_delimitation: 0, plan_de_cic: 0, extrait_de_deliberation: 1426, signature_plan: 0, signature_cic: 0, observations: 'par Cadastre Kedougou' },
+            { commune: 'Bembou', nombre_parcelles: 1796, plans_de_delimitation: 0, plan_de_cic: 0, extrait_de_deliberation: 1800, signature_plan: 0, signature_cic: 0, observations: 'par Cadastre Kedougou' },
+            { commune: 'Bala', nombre_parcelles: 1161, plans_de_delimitation: 0, plan_de_cic: 0, extrait_de_deliberation: 0, signature_plan: 0, signature_cic: 0, observations: '' },
+            { commune: 'Koar', nombre_parcelles: 0, plans_de_delimitation: 0, plan_de_cic: 0, extrait_de_deliberation: 0, signature_plan: 0, signature_cic: 0, observations: '' },
+            { commune: 'Dindefelo', nombre_parcelles: 1690, plans_de_delimitation: 0, plan_de_cic: 0, extrait_de_deliberation: 1600, signature_plan: 0, signature_cic: 0, observations: 'par Cadastre Kedougou' },
+            { commune: 'Ballou', nombre_parcelles: 0, plans_de_delimitation: 0, plan_de_cic: 0, extrait_de_deliberation: 0, signature_plan: 0, signature_cic: 0, observations: '' },
+            { commune: 'Gabou', nombre_parcelles: 1612, plans_de_delimitation: 0, plan_de_cic: 0, extrait_de_deliberation: 1600, signature_plan: 0, signature_cic: 0, observations: '' },
+            { commune: 'Moudery', nombre_parcelles: 1022, plans_de_delimitation: 0, plan_de_cic: 0, extrait_de_deliberation: 1023, signature_plan: 0, signature_cic: 0, observations: '' },
+            { commune: 'Tomboronkoto', nombre_parcelles: 7170, plans_de_delimitation: 0, plan_de_cic: 0, extrait_de_deliberation: 7018, signature_plan: 0, signature_cic: 0, observations: 'par Cadastre Kedougou' },
+            { commune: 'Sinthiou Malem', nombre_parcelles: 7973, plans_de_delimitation: 0, plan_de_cic: 0, extrait_de_deliberation: 0, signature_plan: 0, signature_cic: 0, observations: '' },
+            { commune: 'Sabadola', nombre_parcelles: 0, plans_de_delimitation: 0, plan_de_cic: 0, extrait_de_deliberation: 0, signature_plan: 0, signature_cic: 0, observations: '' },
+            { commune: 'Médina Baffé', nombre_parcelles: 0, plans_de_delimitation: 0, plan_de_cic: 0, extrait_de_deliberation: 0, signature_plan: 0, signature_cic: 0, observations: '' }
+        ];
+    }
 }
 
 // Export for use in other modules

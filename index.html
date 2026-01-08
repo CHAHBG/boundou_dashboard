@@ -61,6 +61,10 @@
           <i class="nav-icon fas fa-ruler-combined"></i>
           <span class="nav-text">Stats Topo</span>
         </a>
+        <a href="#" class="nav-item" data-section="production-titres">
+          <i class="nav-icon fas fa-file-signature"></i>
+          <span class="nav-text">Production de Titres</span>
+        </a>
       </nav>
     </aside>
 
@@ -141,118 +145,171 @@
               <!-- Taux Réalisation (Hero) -->
               <div class="stat-card hero-card accent-hero">
                 <div class="stat-icon-wrapper">
-                  <i class="fas fa-chart-pie"></i>
+                  <i class="fas fa-bullseye"></i>
                 </div>
                 <div class="stat-content">
                   <h3 class="stat-label">Taux Réalisation</h3>
-                  <div class="stat-value text-warning" id="tauxRealisation">--%</div>
+                  <div class="stat-value" id="tauxRealisation">--%</div>
                   <div class="stat-subtitle">Objectif: 70,000</div>
                 </div>
               </div>
             </div>
 
-            <!-- Process Flow Row -->
+            <!-- Pipeline Section Title -->
+            <div class="section-divider">
+              <span class="divider-icon"><i class="fas fa-project-diagram"></i></span>
+              <span class="divider-text">Pipeline de Traitement</span>
+            </div>
+
+            <!-- Process Flow Row - Blue Theme -->
             <div class="dashboard-row process-row">
               <!-- Post Traitées -->
-              <div class="stat-card process-card">
+              <div class="stat-card process-card pipeline-card">
                 <div class="card-header-simple">
-                  <span class="status-dot primary"></span>
-                  <h3>Parcelles Post Traitées</h3>
+                  <span class="pipeline-step">1</span>
+                  <h3>Post Traitées</h3>
                 </div>
-                <div class="stat-value-medium text-primary" id="totalPostTraitees">--</div>
+                <div class="stat-value-medium text-pipeline-1" id="totalPostTraitees">--</div>
                 <div class="progress-mini">
-                  <div class="progress-bar-fill primary" style="width: 0%"></div>
+                  <div class="progress-bar-fill pipeline-1" id="postTraiteesProgressBar" style="width: 0%"></div>
                 </div>
                 <div class="stat-subtitle" id="percentagePostTraitees">--% du total</div>
               </div>
 
               <!-- NICAD -->
-              <div class="stat-card process-card">
+              <div class="stat-card process-card pipeline-card">
                 <div class="card-header-simple">
-                  <span class="status-dot success"></span>
+                  <span class="pipeline-step">2</span>
                   <h3>Parcelles NICAD</h3>
                 </div>
-                <div class="stat-value-medium text-success" id="parcellesNicad">--</div>
+                <div class="stat-value-medium text-pipeline-2" id="parcellesNicad">--</div>
                 <div class="progress-mini">
-                  <div class="progress-bar-fill success" style="width: 0%"></div>
+                  <div class="progress-bar-fill pipeline-2" id="nicadProgressBar" style="width: 0%"></div>
                 </div>
                 <div class="stat-subtitle" id="percentageNicad">--% avec NICAD</div>
               </div>
 
               <!-- CTASF -->
-              <div class="stat-card process-card">
+              <div class="stat-card process-card pipeline-card">
                 <div class="card-header-simple">
-                  <span class="status-dot info"></span>
+                  <span class="pipeline-step">3</span>
                   <h3>Parcelles CTASF</h3>
                 </div>
-                <div class="stat-value-medium text-info" id="parcellesCtasf">--</div>
+                <div class="stat-value-medium text-pipeline-3" id="parcellesCtasf">--</div>
                 <div class="progress-mini">
-                  <div class="progress-bar-fill info" style="width: 0%"></div>
+                  <div class="progress-bar-fill pipeline-3" id="ctasfProgressBar" style="width: 0%"></div>
                 </div>
                 <div class="stat-subtitle" id="percentageCtasf">--% au CTASF</div>
               </div>
 
               <!-- Délibérées -->
-              <div class="stat-card process-card">
+              <div class="stat-card process-card pipeline-card">
                 <div class="card-header-simple">
-                  <span class="status-dot warning"></span>
-                  <h3>Parcelles Délibérées</h3>
+                  <span class="pipeline-step">4</span>
+                  <h3>Délibérées</h3>
                 </div>
-                <div class="stat-value-medium" id="parcellesDeliberees">--</div>
+                <div class="stat-value-medium text-pipeline-4" id="parcellesDeliberees">--</div>
                 <div class="progress-mini">
-                  <div class="progress-bar-fill warning" style="width: 0%"></div>
+                  <div class="progress-bar-fill pipeline-4" id="delibereesProgressBar" style="width: 0%"></div>
                 </div>
                 <div class="stat-subtitle" id="percentageDeliberees">--% délibérées</div>
               </div>
             </div>
 
-            <!-- Loss Rate Row -->
-            <div class="dashboard-row loss-rate-row">
+            <!-- Production de Titres Section -->
+            <div class="section-divider">
+              <span class="divider-icon"><i class="fas fa-file-signature"></i></span>
+              <span class="divider-text">Production de Titres</span>
+            </div>
+
+            <!-- Extraits de Délibération Row - Green Theme -->
+            <div class="dashboard-row titres-row">
+              <!-- Total Extraits -->
+              <div class="stat-card titres-card">
+                <div class="card-header-simple">
+                  <span class="titres-icon"><i class="fas fa-file-alt"></i></span>
+                  <h3>Extraits de Délibération</h3>
+                </div>
+                <div class="stat-value-medium text-titres" id="accueilExtraitsTotal">--</div>
+                <div class="progress-mini">
+                  <div class="progress-bar-fill titres" id="accueilExtraitsProgressBar" style="width: 0%"></div>
+                </div>
+                <div class="stat-subtitle" id="accueilExtraitsPct">--% des parcelles</div>
+              </div>
+
+              <!-- Plans de Délimitation -->
+              <div class="stat-card titres-card">
+                <div class="card-header-simple">
+                  <span class="titres-icon"><i class="fas fa-drafting-compass"></i></span>
+                  <h3>Plans de Délimitation</h3>
+                </div>
+                <div class="stat-value-medium text-titres" id="accueilPlansDelim">--</div>
+                <div class="progress-mini">
+                  <div class="progress-bar-fill titres" id="accueilPlansDelimProgressBar" style="width: 0%"></div>
+                </div>
+                <div class="stat-subtitle" id="accueilPlansDelimPct">--% des parcelles</div>
+              </div>
+
+              <!-- Signatures Complètes -->
+              <div class="stat-card titres-card">
+                <div class="card-header-simple">
+                  <span class="titres-icon"><i class="fas fa-pen-fancy"></i></span>
+                  <h3>Titres Signés (CIC)</h3>
+                </div>
+                <div class="stat-value-medium text-titres" id="accueilSignaturesCIC">--</div>
+                <div class="progress-mini">
+                  <div class="progress-bar-fill titres" id="accueilSignaturesCICProgressBar" style="width: 0%"></div>
+                </div>
+                <div class="stat-subtitle" id="accueilSignaturesCICPct">--% des extraits</div>
+              </div>
+            </div>
+
+            <!-- Loss & Stats Section -->
+            <div class="section-divider">
+              <span class="divider-icon"><i class="fas fa-chart-bar"></i></span>
+              <span class="divider-text">Pertes & Statistiques</span>
+            </div>
+
+            <!-- Mixed Stats Row -->
+            <div class="dashboard-row stats-row">
               <!-- Taux de Perte vs Total -->
               <div class="stat-card loss-card">
                 <div class="card-header-simple">
-                  <span class="status-dot danger"></span>
-                  <h3>Taux de Perte (vs Total)</h3>
+                  <span class="loss-icon"><i class="fas fa-exclamation-triangle"></i></span>
+                  <h3>Perte (vs Total)</h3>
                 </div>
                 <div class="stat-value-medium text-danger" id="tauxPerteTotal">--%</div>
-                <div class="stat-subtitle" id="perteVsTotal">-- parcelles</div>
+                <div class="stat-subtitle" id="perteVsTotal">-- parcelles perdues</div>
               </div>
 
               <!-- Taux de Perte vs NICAD -->
               <div class="stat-card loss-card">
                 <div class="card-header-simple">
-                  <span class="status-dot danger"></span>
-                  <h3>Taux de Perte (vs NICAD)</h3>
+                  <span class="loss-icon"><i class="fas fa-exclamation-circle"></i></span>
+                  <h3>Perte (vs NICAD)</h3>
                 </div>
                 <div class="stat-value-medium text-danger" id="tauxPerteNicad">--%</div>
-                <div class="stat-subtitle" id="perteVsNicad">-- parcelles</div>
-              </div>
-            </div>
-
-            <!-- Secondary Stats Row -->
-            <div class="dashboard-row secondary-row">
-              <div class="stat-card compact-card">
-                <div class="compact-flex">
-                  <div class="icon-box">
-                    <i class="fas fa-expand-arrows-alt"></i>
-                  </div>
-                  <div>
-                    <div class="stat-value-small" id="superficieTotale">--</div>
-                    <div class="stat-label-small">Superficie Totale (m²)</div>
-                  </div>
-                </div>
+                <div class="stat-subtitle" id="perteVsNicad">-- parcelles perdues</div>
               </div>
 
-              <div class="stat-card compact-card">
-                <div class="compact-flex">
-                  <div class="icon-box">
-                    <i class="fas fa-city"></i>
-                  </div>
-                  <div>
-                    <div class="stat-value-small" id="communesActives">--/17</div>
-                    <div class="stat-label-small">Communes Actives</div>
-                  </div>
+              <!-- Superficie -->
+              <div class="stat-card info-card">
+                <div class="card-header-simple">
+                  <span class="info-icon"><i class="fas fa-expand-arrows-alt"></i></span>
+                  <h3>Superficie Totale</h3>
                 </div>
+                <div class="stat-value-medium text-info-card" id="superficieTotale">--</div>
+                <div class="stat-subtitle">mètres carrés</div>
+              </div>
+
+              <!-- Communes -->
+              <div class="stat-card info-card">
+                <div class="card-header-simple">
+                  <span class="info-icon"><i class="fas fa-city"></i></span>
+                  <h3>Communes Actives</h3>
+                </div>
+                <div class="stat-value-medium text-info-card" id="communesActives">--/17</div>
+                <div class="stat-subtitle">communes couvertes</div>
               </div>
             </div>
 
@@ -703,6 +760,149 @@
                 <tbody id="topoTableBody">
                   <!-- Dynamic content -->
                 </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section Production de Titres -->
+        <section id="production-titres-section" class="content-section">
+          <div class="section-header">
+            <div>
+              <h2>📜 Production de Titres</h2>
+              <p class="section-description">Suivi des extraits de délibération et production des titres fonciers</p>
+            </div>
+            <div class="filter-panel">
+              <button id="refreshTitresBtn" class="btn btn-outline-primary">
+                <i class="fas fa-sync-alt"></i> Actualiser
+              </button>
+              <button id="exportTitresBtn" class="btn btn-primary">
+                <i class="fas fa-download"></i> Exporter
+              </button>
+            </div>
+          </div>
+
+          <!-- KPIs Row -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <h3>Total Parcelles</h3>
+                <i class="kpi-icon fas fa-map-marked-alt"></i>
+              </div>
+              <div class="kpi-value text-primary" id="titresNombreParcellesKPI">--</div>
+              <div class="kpi-subtitle">Parcelles référencées</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <h3>Extraits de Délibération</h3>
+                <i class="kpi-icon fas fa-file-alt"></i>
+              </div>
+              <div class="kpi-value text-success" id="titresExtraitsKPI">--</div>
+              <div class="kpi-subtitle" id="titresExtraitsPct">--% du total</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <h3>Plans de Délimitation</h3>
+                <i class="kpi-icon fas fa-drafting-compass"></i>
+              </div>
+              <div class="kpi-value text-info" id="titresPlansDelimKPI">--</div>
+              <div class="kpi-subtitle" id="titresPlansDelimPct">--% du total</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <h3>Plans CIC</h3>
+                <i class="kpi-icon fas fa-clipboard-check"></i>
+              </div>
+              <div class="kpi-value text-warning" id="titresPlansCICKPI">--</div>
+              <div class="kpi-subtitle" id="titresPlansCICPct">--% du total</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <h3>Signatures Plan</h3>
+                <i class="kpi-icon fas fa-pen-fancy"></i>
+              </div>
+              <div class="kpi-value" id="titresSignPlanKPI">--</div>
+              <div class="kpi-subtitle" id="titresSignPlanPct">--% du total</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <h3>Signatures CIC</h3>
+                <i class="kpi-icon fas fa-file-signature"></i>
+              </div>
+              <div class="kpi-value" id="titresSignCICKPI">--</div>
+              <div class="kpi-subtitle" id="titresSignCICPct">--% du total</div>
+            </div>
+          </div>
+
+          <!-- Charts Grid -->
+          <div class="charts-grid">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Extraits de Délibération par Commune</h3>
+              </div>
+              <div class="chart-content">
+                <canvas id="extraitsParCommuneChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Progression du Processus</h3>
+              </div>
+              <div class="chart-content">
+                <canvas id="processusProgressChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Comparaison Parcelles vs Extraits</h3>
+              </div>
+              <div class="chart-content">
+                <canvas id="parcellesVsExtraitsChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Taux de Complétion par Commune</h3>
+              </div>
+              <div class="chart-content">
+                <canvas id="completionParCommuneChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Table -->
+          <div class="table-container">
+            <div class="table-header">
+              <h3>Détail par Commune</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-striped" id="titresTable">
+                <thead>
+                  <tr>
+                    <th>Commune</th>
+                    <th>Nb Parcelles</th>
+                    <th>Plans Délim.</th>
+                    <th>Plans CIC</th>
+                    <th>Extraits Délib.</th>
+                    <th>Sign. Plan</th>
+                    <th>Sign. CIC</th>
+                    <th>Observations</th>
+                  </tr>
+                </thead>
+                <tbody id="titresTableBody">
+                  <!-- Dynamic content -->
+                </tbody>
+                <tfoot id="titresTableFooter">
+                  <!-- Dynamic total row -->
+                </tfoot>
               </table>
             </div>
           </div>

@@ -55,7 +55,8 @@ class ProcasefDashboard {
             urmTerrain: null,
             rapportComplet: null,
             topoData: null,
-            parcellesPostTraitees: null
+            parcellesPostTraitees: null,
+            productionTitres: null
         };
 
         this.currentSection = 'accueil';
@@ -200,9 +201,22 @@ class ProcasefDashboard {
             this.loadDataSafely('data/parcelles.json', 'parcelles'),
             this.loadDataSafely('data/Projections_2025.json', 'projections'),
             this.loadDataSafely('data/Repartition_genre.json', 'repartitionGenre'),
-            this.loadDataSafely('data/parcelles_Post_traitees.json', 'parcellesPostTraitees')
+            this.loadDataSafely('data/parcelles_Post_traitees.json', 'parcellesPostTraitees'),
+            this.loadProductionTitresData()
         ];
         await Promise.allSettled(loadPromises);
+    }
+
+    async loadProductionTitresData() {
+        try {
+            console.log('Chargement des données Production Titres depuis Google Sheets...');
+            const data = await this.dataLoader.loadProductionTitresData();
+            this.data.productionTitres = Array.isArray(data) ? data : [];
+            console.log(`✅ productionTitres chargé avec succès:`, this.data.productionTitres.length, 'éléments');
+        } catch (error) {
+            console.error('❌ Échec chargement productionTitres:', error);
+            this.data.productionTitres = [];
+        }
     }
 
     async loadDataSafely(path, key) {
@@ -516,7 +530,8 @@ class ProcasefDashboard {
             'genre': 'Répartition par Genre',
             'rapport': 'Répartition du Genre',
             'stats-topo': 'Statistiques Topographiques',
-            'post-traitement': 'Post-Traitement'
+            'post-traitement': 'Post-Traitement',
+            'production-titres': 'Production de Titres'
         };
         const pageTitle = document.getElementById('pageTitle');
         if (pageTitle) pageTitle.textContent = titles[sectionId] || titles.accueil;
@@ -537,7 +552,8 @@ class ProcasefDashboard {
                 { path: 'data/Repartition_genre.json', key: 'repartitionGenre' }
             ],
             'rapport': { path: 'data/rapport_complet.json', key: 'rapportComplet' },
-            'stats-topo': { path: 'data/Rapports_Topo_nettoyee.json', key: 'topoData' }
+            'stats-topo': { path: 'data/Rapports_Topo_nettoyee.json', key: 'topoData' },
+            'production-titres': { path: 'gsheet', key: 'productionTitres', isGoogleSheet: true }
         };
 
         const config = dataConfigs[sec];
@@ -548,6 +564,11 @@ class ProcasefDashboard {
             if (Array.isArray(config)) {
                 const promises = config.map(c => this.loadDataSafely(c.path, c.key));
                 await Promise.allSettled(promises);
+            } else if (config.isGoogleSheet) {
+                // Load from Google Sheets if not already loaded
+                if (!this.data[config.key] || this.data[config.key].length === 0) {
+                    await this.loadProductionTitresData();
+                }
             } else {
                 if (!this.data[config.key] || this.data[config.key].length === 0) {
                     await this.loadDataSafely(config.path, config.key);
@@ -589,7 +610,8 @@ class ProcasefDashboard {
                     }
                 },
                 'stats-topo': () => this.renderStatsTopo(),
-                'post-traitement': () => this.renderPostTraitement()
+                'post-traitement': () => this.renderPostTraitement(),
+                'production-titres': () => this.renderProductionTitres()
             };
 
             const renderMethod = renderMethods[sec];
@@ -609,9 +631,69 @@ class ProcasefDashboard {
     renderAccueil() {
         console.log('Rendu de la section Accueil');
         this.updateKPIs();
+        this.updateAccueilProductionTitresKPIs();
         this.createTopCommunesChart();
         this.createProjectionsChart();
         this.createGenreGlobalChart();
+    }
+
+    updateAccueilProductionTitresKPIs() {
+        const data = this.data.productionTitres || [];
+        if (data.length === 0) {
+            console.log('Pas de données Production Titres disponibles pour l\'accueil');
+            return;
+        }
+
+        // Calculate totals - handle different possible column name formats
+        let totalParcelles = 0;
+        let totalExtraits = 0;
+        let totalPlansDelim = 0;
+        let totalSignaturesCIC = 0;
+
+        data.forEach(row => {
+            // Skip Total and Pourcentage rows
+            const commune = this.getProductionTitresString(row, 'commune');
+            if (!commune || 
+                commune.toLowerCase() === 'total' || 
+                commune.toLowerCase().includes('pourcentage') ||
+                commune.trim() === '') {
+                return;
+            }
+
+            // Handle different possible column names from CSV parsing
+            const parcelles = row.nombre_parcelles || row['nombre parcelles'] || row.nombreparcelles || 0;
+            const extraits = row.extrait_de_deliberation || row['extrait de deliberation'] || row.extraitdedeliberation || 0;
+            const plansDelim = row.plans_de_delimitation || row['plans de delimitation'] || row.plansdedelimitation || 0;
+            const signCIC = row.signature_cic || row['signature cic'] || row.signaturecic || 0;
+
+            totalParcelles += parseInt(parcelles) || 0;
+            totalExtraits += parseInt(extraits) || 0;
+            totalPlansDelim += parseInt(plansDelim) || 0;
+            totalSignaturesCIC += parseInt(signCIC) || 0;
+        });
+
+        // Update KPI elements
+        this.updateElement('accueilExtraitsTotal', totalExtraits.toLocaleString('fr-FR'));
+        this.updateElement('accueilPlansDelim', totalPlansDelim.toLocaleString('fr-FR'));
+        this.updateElement('accueilSignaturesCIC', totalSignaturesCIC.toLocaleString('fr-FR'));
+
+        // Calculate percentages
+        const extraitsPct = totalParcelles > 0 ? ((totalExtraits / totalParcelles) * 100).toFixed(1) : 0;
+        const plansDelimPct = totalParcelles > 0 ? ((totalPlansDelim / totalParcelles) * 100).toFixed(1) : 0;
+        const signCICPct = totalExtraits > 0 ? ((totalSignaturesCIC / totalExtraits) * 100).toFixed(1) : 0;
+
+        this.updateElement('accueilExtraitsPct', `${extraitsPct}% des parcelles`);
+        this.updateElement('accueilPlansDelimPct', `${plansDelimPct}% des parcelles`);
+        this.updateElement('accueilSignaturesCICPct', `${signCICPct}% des extraits`);
+
+        // Update progress bars
+        const extraitsProgressBar = document.getElementById('accueilExtraitsProgressBar');
+        const plansDelimProgressBar = document.getElementById('accueilPlansDelimProgressBar');
+        const signCICProgressBar = document.getElementById('accueilSignaturesCICProgressBar');
+
+        if (extraitsProgressBar) extraitsProgressBar.style.width = `${Math.min(extraitsPct, 100)}%`;
+        if (plansDelimProgressBar) plansDelimProgressBar.style.width = `${Math.min(plansDelimPct, 100)}%`;
+        if (signCICProgressBar) signCICProgressBar.style.width = `${Math.min(signCICPct, 100)}%`;
     }
 
     renderParcelles() {
@@ -817,6 +899,509 @@ class ProcasefDashboard {
             console.error('Erreur dans renderStatsTopo:', error);
             this.showError('Erreur lors du rendu des statistiques topographiques');
         }
+    }
+
+    renderProductionTitres() {
+        console.log('Rendu de la section Production Titres');
+        try {
+            this.updateProductionTitresKPIs();
+            this.createProductionTitresCharts();
+            this.renderProductionTitresTable();
+            this.setupProductionTitresEventListeners();
+        } catch (error) {
+            console.error('Erreur dans renderProductionTitres:', error);
+            this.showError('Erreur lors du rendu de la section Production de Titres');
+        }
+    }
+
+    setupProductionTitresEventListeners() {
+        const refreshBtn = document.getElementById('refreshTitresBtn');
+        const exportBtn = document.getElementById('exportTitresBtn');
+
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', async () => {
+                this.showLoading();
+                try {
+                    // Clear cache and reload
+                    this.dataLoader.cache.delete('gsheet_https://docs.google.com/spreadsheets/d/e/2PACX-1vS4GsB4fTJs7ywc42QBEgmB66eQx4VClo7zkKeP9ETafJh9c28nPpCuho7RJ07jYmihoTw_nPIxRb8_/pub?output=csv');
+                    await this.loadProductionTitresData();
+                    this.renderProductionTitres();
+                } catch (error) {
+                    console.error('Erreur lors du rafraîchissement:', error);
+                    this.showError('Erreur lors du rafraîchissement des données');
+                }
+                this.hideLoading();
+            });
+        }
+
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => this.exportProductionTitresData());
+        }
+    }
+
+    getProductionTitresValue(row, ...keys) {
+        for (const key of keys) {
+            if (row[key] !== undefined && row[key] !== null && row[key] !== '') {
+                return parseInt(row[key]) || 0;
+            }
+        }
+        return 0;
+    }
+
+    getProductionTitresString(row, ...keys) {
+        for (const key of keys) {
+            if (row[key] !== undefined && row[key] !== null && row[key] !== '') {
+                return String(row[key]);
+            }
+        }
+        return '';
+    }
+
+    updateProductionTitresKPIs() {
+        const data = this.data.productionTitres || [];
+        if (data.length === 0) {
+            console.warn('Pas de données Production Titres disponibles');
+            return;
+        }
+
+        let totalParcelles = 0;
+        let totalExtraits = 0;
+        let totalPlansDelim = 0;
+        let totalPlansCIC = 0;
+        let totalSignPlan = 0;
+        let totalSignCIC = 0;
+
+        data.forEach(row => {
+            // Skip Total and Pourcentage rows
+            const commune = this.getProductionTitresString(row, 'commune');
+            if (!commune || 
+                commune.toLowerCase() === 'total' || 
+                commune.toLowerCase().includes('pourcentage') ||
+                commune.trim() === '') {
+                return;
+            }
+
+            totalParcelles += this.getProductionTitresValue(row, 'nombre_parcelles', 'nombre parcelles', 'nombreparcelles');
+            totalExtraits += this.getProductionTitresValue(row, 'extrait_de_deliberation', 'extrait de deliberation', 'extraitdedeliberation');
+            totalPlansDelim += this.getProductionTitresValue(row, 'plans_de_delimitation', 'plans de delimitation', 'plansdedelimitation');
+            totalPlansCIC += this.getProductionTitresValue(row, 'plan_de_cic', 'plan de cic', 'plandecic');
+            totalSignPlan += this.getProductionTitresValue(row, 'signature_plan', 'signature plan', 'signatureplan');
+            totalSignCIC += this.getProductionTitresValue(row, 'signature_cic', 'signature cic', 'signaturecic');
+        });
+
+        // Update KPI elements
+        this.updateElement('titresNombreParcellesKPI', totalParcelles.toLocaleString('fr-FR'));
+        this.updateElement('titresExtraitsKPI', totalExtraits.toLocaleString('fr-FR'));
+        this.updateElement('titresPlansDelimKPI', totalPlansDelim.toLocaleString('fr-FR'));
+        this.updateElement('titresPlansCICKPI', totalPlansCIC.toLocaleString('fr-FR'));
+        this.updateElement('titresSignPlanKPI', totalSignPlan.toLocaleString('fr-FR'));
+        this.updateElement('titresSignCICKPI', totalSignCIC.toLocaleString('fr-FR'));
+
+        // Calculate percentages
+        const extraitsPct = totalParcelles > 0 ? ((totalExtraits / totalParcelles) * 100).toFixed(1) : 0;
+        const plansDelimPct = totalParcelles > 0 ? ((totalPlansDelim / totalParcelles) * 100).toFixed(1) : 0;
+        const plansCICPct = totalParcelles > 0 ? ((totalPlansCIC / totalParcelles) * 100).toFixed(1) : 0;
+        const signPlanPct = totalParcelles > 0 ? ((totalSignPlan / totalParcelles) * 100).toFixed(1) : 0;
+        const signCICPct = totalParcelles > 0 ? ((totalSignCIC / totalParcelles) * 100).toFixed(1) : 0;
+
+        this.updateElement('titresExtraitsPct', `${extraitsPct}% du total`);
+        this.updateElement('titresPlansDelimPct', `${plansDelimPct}% du total`);
+        this.updateElement('titresPlansCICPct', `${plansCICPct}% du total`);
+        this.updateElement('titresSignPlanPct', `${signPlanPct}% du total`);
+        this.updateElement('titresSignCICPct', `${signCICPct}% du total`);
+    }
+
+    createProductionTitresCharts() {
+        const data = this.data.productionTitres || [];
+        if (data.length === 0 || !window.chartManager) {
+            console.warn('Pas de données ou chartManager non disponible');
+            return;
+        }
+
+        // Filter out rows with no data (Total row, Pourcentage row, or empty)
+        const filteredData = data.filter(row => {
+            const commune = this.getProductionTitresString(row, 'commune');
+            return commune && 
+                   commune.toLowerCase() !== 'total' && 
+                   !commune.toLowerCase().includes('pourcentage') &&
+                   commune.trim() !== '';
+        });
+
+        // Sort by extraits de deliberation descending
+        const sortedData = [...filteredData].sort((a, b) => {
+            const aVal = this.getProductionTitresValue(a, 'extrait_de_deliberation', 'extrait de deliberation', 'extraitdedeliberation');
+            const bVal = this.getProductionTitresValue(b, 'extrait_de_deliberation', 'extrait de deliberation', 'extraitdedeliberation');
+            return bVal - aVal;
+        });
+
+        // Chart 1: Extraits par Commune (Horizontal Bar)
+        const communes = sortedData.map(row => this.getProductionTitresString(row, 'commune'));
+        const extraits = sortedData.map(row => this.getProductionTitresValue(row, 'extrait_de_deliberation', 'extrait de deliberation', 'extraitdedeliberation'));
+
+        this.createExtraitsParCommuneChart(communes, extraits);
+
+        // Chart 2: Processus Progress (Doughnut)
+        this.createProcessusProgressChart();
+
+        // Chart 3: Parcelles vs Extraits (Grouped Bar)
+        this.createParcellesVsExtraitsChart(sortedData);
+
+        // Chart 4: Completion Rate by Commune (Horizontal Bar)
+        this.createCompletionParCommuneChart(sortedData);
+    }
+
+    createExtraitsParCommuneChart(communes, extraits) {
+        const canvas = document.getElementById('extraitsParCommuneChart');
+        if (!canvas) return;
+
+        if (this.charts['extraitsParCommuneChart']) {
+            this.charts['extraitsParCommuneChart'].destroy();
+        }
+
+        const ctx = canvas.getContext('2d');
+        this.charts['extraitsParCommuneChart'] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: communes,
+                datasets: [{
+                    label: 'Extraits de Délibération',
+                    data: extraits,
+                    backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => `${context.parsed.x.toLocaleString('fr-FR')} extraits`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: (value) => value.toLocaleString('fr-FR')
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    createProcessusProgressChart() {
+        const canvas = document.getElementById('processusProgressChart');
+        if (!canvas) return;
+
+        if (this.charts['processusProgressChart']) {
+            this.charts['processusProgressChart'].destroy();
+        }
+
+        const data = this.data.productionTitres || [];
+        let totalParcelles = 0, totalExtraits = 0, totalPlansDelim = 0, totalPlansCIC = 0, totalSignCIC = 0;
+
+        data.forEach(row => {
+            // Skip Total and Pourcentage rows
+            const commune = this.getProductionTitresString(row, 'commune');
+            if (!commune || 
+                commune.toLowerCase() === 'total' || 
+                commune.toLowerCase().includes('pourcentage') ||
+                commune.trim() === '') {
+                return;
+            }
+
+            totalParcelles += this.getProductionTitresValue(row, 'nombre_parcelles', 'nombre parcelles', 'nombreparcelles');
+            totalExtraits += this.getProductionTitresValue(row, 'extrait_de_deliberation', 'extrait de deliberation', 'extraitdedeliberation');
+            totalPlansDelim += this.getProductionTitresValue(row, 'plans_de_delimitation', 'plans de delimitation', 'plansdedelimitation');
+            totalPlansCIC += this.getProductionTitresValue(row, 'plan_de_cic', 'plan de cic', 'plandecic');
+            totalSignCIC += this.getProductionTitresValue(row, 'signature_cic', 'signature cic', 'signaturecic');
+        });
+
+        const ctx = canvas.getContext('2d');
+        this.charts['processusProgressChart'] = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Extraits Délib.', 'Plans Délim.', 'Plans CIC', 'Signatures CIC'],
+                datasets: [{
+                    data: [totalExtraits, totalPlansDelim, totalPlansCIC, totalSignCIC],
+                    backgroundColor: [
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(245, 158, 11, 0.8)',
+                        'rgba(139, 92, 246, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(16, 185, 129, 1)',
+                        'rgba(59, 130, 246, 1)',
+                        'rgba(245, 158, 11, 1)',
+                        'rgba(139, 92, 246, 1)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => {
+                                const value = context.parsed;
+                                const pct = totalParcelles > 0 ? ((value / totalParcelles) * 100).toFixed(1) : 0;
+                                return `${context.label}: ${value.toLocaleString('fr-FR')} (${pct}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    createParcellesVsExtraitsChart(sortedData) {
+        const canvas = document.getElementById('parcellesVsExtraitsChart');
+        if (!canvas) return;
+
+        if (this.charts['parcellesVsExtraitsChart']) {
+            this.charts['parcellesVsExtraitsChart'].destroy();
+        }
+
+        // Take top 10
+        const top10 = sortedData.slice(0, 10);
+        const communes = top10.map(row => this.getProductionTitresString(row, 'commune'));
+        const parcelles = top10.map(row => this.getProductionTitresValue(row, 'nombre_parcelles', 'nombre parcelles', 'nombreparcelles'));
+        const extraits = top10.map(row => this.getProductionTitresValue(row, 'extrait_de_deliberation', 'extrait de deliberation', 'extraitdedeliberation'));
+
+        const ctx = canvas.getContext('2d');
+        this.charts['parcellesVsExtraitsChart'] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: communes,
+                datasets: [
+                    {
+                        label: 'Nombre Parcelles',
+                        data: parcelles,
+                        backgroundColor: 'rgba(30, 58, 138, 0.8)',
+                        borderColor: 'rgba(30, 58, 138, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Extraits Délib.',
+                        data: extraits,
+                        backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: (value) => value.toLocaleString('fr-FR')
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    createCompletionParCommuneChart(sortedData) {
+        const canvas = document.getElementById('completionParCommuneChart');
+        if (!canvas) return;
+
+        if (this.charts['completionParCommuneChart']) {
+            this.charts['completionParCommuneChart'].destroy();
+        }
+
+        // Calculate completion rate (extraits / parcelles) for each commune
+        const completionData = sortedData
+            .map(row => {
+                const commune = this.getProductionTitresString(row, 'commune');
+                const parcelles = this.getProductionTitresValue(row, 'nombre_parcelles', 'nombre parcelles', 'nombreparcelles');
+                const extraits = this.getProductionTitresValue(row, 'extrait_de_deliberation', 'extrait de deliberation', 'extraitdedeliberation');
+                const rate = parcelles > 0 ? (extraits / parcelles) * 100 : 0;
+                return { commune, rate, parcelles, extraits };
+            })
+            .filter(d => d.parcelles > 0)
+            .sort((a, b) => b.rate - a.rate);
+
+        const communes = completionData.map(d => d.commune);
+        const rates = completionData.map(d => d.rate);
+
+        const ctx = canvas.getContext('2d');
+        this.charts['completionParCommuneChart'] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: communes,
+                datasets: [{
+                    label: 'Taux de Complétion (%)',
+                    data: rates,
+                    backgroundColor: rates.map(r => {
+                        if (r >= 80) return 'rgba(16, 185, 129, 0.8)';
+                        if (r >= 50) return 'rgba(245, 158, 11, 0.8)';
+                        return 'rgba(239, 68, 68, 0.8)';
+                    }),
+                    borderColor: rates.map(r => {
+                        if (r >= 80) return 'rgba(16, 185, 129, 1)';
+                        if (r >= 50) return 'rgba(245, 158, 11, 1)';
+                        return 'rgba(239, 68, 68, 1)';
+                    }),
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => `${context.parsed.x.toFixed(1)}% complété`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: (value) => `${value}%`
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    renderProductionTitresTable() {
+        const tableBody = document.getElementById('titresTableBody');
+        const tableFooter = document.getElementById('titresTableFooter');
+        if (!tableBody) return;
+
+        const data = this.data.productionTitres || [];
+        
+        // Clear existing content
+        tableBody.innerHTML = '';
+        if (tableFooter) tableFooter.innerHTML = '';
+
+        let totalParcelles = 0, totalPlansDelim = 0, totalPlansCIC = 0;
+        let totalExtraits = 0, totalSignPlan = 0, totalSignCIC = 0;
+
+        data.forEach(row => {
+            const commune = this.getProductionTitresString(row, 'commune');
+            if (!commune || commune.toLowerCase() === 'total') return;
+
+            const parcelles = this.getProductionTitresValue(row, 'nombre_parcelles', 'nombre parcelles', 'nombreparcelles');
+            const plansDelim = this.getProductionTitresValue(row, 'plans_de_delimitation', 'plans de delimitation', 'plansdedelimitation');
+            const plansCIC = this.getProductionTitresValue(row, 'plan_de_cic', 'plan de cic', 'plandecic');
+            const extraits = this.getProductionTitresValue(row, 'extrait_de_deliberation', 'extrait de deliberation', 'extraitdedeliberation');
+            const signPlan = this.getProductionTitresValue(row, 'signature_plan', 'signature plan', 'signatureplan');
+            const signCIC = this.getProductionTitresValue(row, 'signature_cic', 'signature cic', 'signaturecic');
+            const observations = this.getProductionTitresString(row, 'observations');
+
+            // Accumulate totals
+            totalParcelles += parcelles;
+            totalPlansDelim += plansDelim;
+            totalPlansCIC += plansCIC;
+            totalExtraits += extraits;
+            totalSignPlan += signPlan;
+            totalSignCIC += signCIC;
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${commune}</strong></td>
+                <td>${parcelles.toLocaleString('fr-FR')}</td>
+                <td>${plansDelim.toLocaleString('fr-FR')}</td>
+                <td>${plansCIC.toLocaleString('fr-FR')}</td>
+                <td class="text-success"><strong>${extraits.toLocaleString('fr-FR')}</strong></td>
+                <td>${signPlan.toLocaleString('fr-FR')}</td>
+                <td>${signCIC.toLocaleString('fr-FR')}</td>
+                <td><small>${observations}</small></td>
+            `;
+            tableBody.appendChild(tr);
+        });
+
+        // Add total row to footer
+        if (tableFooter) {
+            const totalRow = document.createElement('tr');
+            totalRow.className = 'table-dark';
+            totalRow.innerHTML = `
+                <td><strong>TOTAL</strong></td>
+                <td><strong>${totalParcelles.toLocaleString('fr-FR')}</strong></td>
+                <td><strong>${totalPlansDelim.toLocaleString('fr-FR')}</strong></td>
+                <td><strong>${totalPlansCIC.toLocaleString('fr-FR')}</strong></td>
+                <td class="text-success"><strong>${totalExtraits.toLocaleString('fr-FR')}</strong></td>
+                <td><strong>${totalSignPlan.toLocaleString('fr-FR')}</strong></td>
+                <td><strong>${totalSignCIC.toLocaleString('fr-FR')}</strong></td>
+                <td></td>
+            `;
+            tableFooter.appendChild(totalRow);
+        }
+    }
+
+    exportProductionTitresData() {
+        const data = this.data.productionTitres || [];
+        if (data.length === 0) {
+            this.showError('Aucune donnée à exporter');
+            return;
+        }
+
+        // Create CSV content
+        const headers = ['Commune', 'Nombre Parcelles', 'Plans Délimitation', 'Plans CIC', 'Extraits Délibération', 'Signature Plan', 'Signature CIC', 'Observations'];
+        const rows = data
+            .filter(row => {
+                const commune = this.getProductionTitresString(row, 'commune');
+                return commune && commune.toLowerCase() !== 'total';
+            })
+            .map(row => [
+                this.getProductionTitresString(row, 'commune'),
+                this.getProductionTitresValue(row, 'nombre_parcelles', 'nombre parcelles', 'nombreparcelles'),
+                this.getProductionTitresValue(row, 'plans_de_delimitation', 'plans de delimitation', 'plansdedelimitation'),
+                this.getProductionTitresValue(row, 'plan_de_cic', 'plan de cic', 'plandecic'),
+                this.getProductionTitresValue(row, 'extrait_de_deliberation', 'extrait de deliberation', 'extraitdedeliberation'),
+                this.getProductionTitresValue(row, 'signature_plan', 'signature plan', 'signatureplan'),
+                this.getProductionTitresValue(row, 'signature_cic', 'signature cic', 'signaturecic'),
+                this.getProductionTitresString(row, 'observations')
+            ]);
+
+        const csvContent = [
+            headers.join(';'),
+            ...rows.map(row => row.join(';'))
+        ].join('\n');
+
+        // Download file
+        const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `production_titres_${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+        URL.revokeObjectURL(link.href);
     }
 
     renderPostTraitement() {
@@ -3113,18 +3698,18 @@ class ProcasefDashboard {
         const delibPct = this.stats.total > 0 ? ((this.stats.deliberees_oui / this.stats.total) * 100).toFixed(1) : 0;
 
         this.updateElement('percentageNicad', `${nicadPct}% avec NICAD`);
-        this.updateElement('percentageCtasf', `${ctasfPct}% avec CTASF`);
+        this.updateElement('percentageCtasf', `${ctasfPct}% au CTASF`);
         this.updateElement('percentageDeliberees', `${delibPct}% délibérées`);
 
-        // Update Progress Bars (new order: Post Traitées, NICAD, CTASF, Délibérées)
-        const postTraiteesBar = document.querySelector('.process-card:nth-child(1) .progress-bar-fill');
-        const nicadBar = document.querySelector('.process-card:nth-child(2) .progress-bar-fill');
-        const ctasfBar = document.querySelector('.process-card:nth-child(3) .progress-bar-fill');
-        const delibBar = document.querySelector('.process-card:nth-child(4) .progress-bar-fill');
+        // Update Progress Bars with specific IDs
+        const postTraiteesBar = document.getElementById('postTraiteesProgressBar');
+        const nicadBar = document.getElementById('nicadProgressBar');
+        const ctasfBar = document.getElementById('ctasfProgressBar');
+        const delibBar = document.getElementById('delibereesProgressBar');
 
-        if (nicadBar) nicadBar.style.width = `${nicadPct}%`;
-        if (ctasfBar) ctasfBar.style.width = `${ctasfPct}%`;
-        if (delibBar) delibBar.style.width = `${delibPct}%`;
+        if (nicadBar) nicadBar.style.width = `${Math.min(nicadPct, 100)}%`;
+        if (ctasfBar) ctasfBar.style.width = `${Math.min(ctasfPct, 100)}%`;
+        if (delibBar) delibBar.style.width = `${Math.min(delibPct, 100)}%`;
 
         // Update Communes Actives
         const activeCommunesCount = this.communeStats ? Object.keys(this.communeStats).length : 0;
@@ -3141,7 +3726,7 @@ class ProcasefDashboard {
         this.updateElement('percentagePostTraitees', `${postTraiteesPct}% du total`);
 
         // Update Post Traitées Progress Bar
-        if (postTraiteesBar) postTraiteesBar.style.width = `${postTraiteesPct}%`;
+        if (postTraiteesBar) postTraiteesBar.style.width = `${Math.min(postTraiteesPct, 100)}%`;
 
         // Calculate and Update Loss Rate KPIs
         const lossVsTotal = this.stats.total > 0 ? this.stats.total - totalPostTraitees : 0;
@@ -3151,9 +3736,9 @@ class ProcasefDashboard {
         const lossRateNicad = this.stats.nicad_oui > 0 ? ((lossVsNicad / this.stats.nicad_oui) * 100).toFixed(1) : 0;
 
         this.updateElement('tauxPerteTotal', `${Math.abs(lossRateTotal)}%`);
-        this.updateElement('perteVsTotal', `- ${Math.abs(lossVsTotal).toLocaleString()} parcelles`);
+        this.updateElement('perteVsTotal', `${Math.abs(lossVsTotal).toLocaleString()} parcelles perdues`);
         this.updateElement('tauxPerteNicad', `${Math.abs(lossRateNicad)}%`);
-        this.updateElement('perteVsNicad', `- ${Math.abs(lossVsNicad).toLocaleString()} parcelles`);
+        this.updateElement('perteVsNicad', `${Math.abs(lossVsNicad).toLocaleString()} parcelles perdues`);
     }
 
     getTotalPostTraitees() {
@@ -4160,10 +4745,6 @@ class ProcasefDashboard {
             const chart = this.charts[chartId];
             if (chart && typeof chart.destroy === 'function') {
                 chart.destroy();
-                // Nettoyer le DOM
-                if (hiddenCanvas.parentNode) {
-                    hiddenCanvas.parentNode.removeChild(hiddenCanvas);
-                }
             }
         });
         this.charts = {};
