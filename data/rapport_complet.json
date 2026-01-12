@@ -2,171 +2,179 @@
   "Synthèse Globale": [
     {
       "indicateur": "Total Personnes",
-      "valeur": 103096
+      "valeur": 105026
     },
     {
       "indicateur": "Hommes",
-      "valeur": 83193
+      "valeur": 84671
     },
     {
       "indicateur": "Femmes",
-      "valeur": 19903
+      "valeur": 20355
     },
     {
       "indicateur": "Pourcentage Hommes",
-      "valeur": "80.7%"
+      "valeur": "80.6%"
     },
     {
       "indicateur": "Pourcentage Femmes",
-      "valeur": "19.3%"
+      "valeur": "19.4%"
     }
   ],
   "Détail par Source": [
     {
       "source": "Individuel",
-      "hommes": 37559,
-      "femmes": 11051,
-      "total": 48610,
-      "hommes_1": 77.3,
-      "femmes_1": 22.7
+      "hommes": 38659,
+      "femmes": 11431,
+      "total": 50090,
+      "hommes_1": 77.2,
+      "femmes_1": 22.8
     },
     {
       "source": "Collectif",
-      "hommes": 45634,
-      "femmes": 8852,
-      "total": 54486,
+      "hommes": 46012,
+      "femmes": 8924,
+      "total": 54936,
       "hommes_1": 83.8,
       "femmes_1": 16.2
     }
   ],
   "Analyse par Commune": [
     {
+      "communesenegal": null,
+      "femme": 8924,
+      "homme": 46012,
+      "total": 54936,
+      "femme_pourcentage": 16.24435707004514,
+      "homme_pourcentage": 83.75564292995486
+    },
+    {
       "communesenegal": "BALA",
-      "femme": 372,
-      "homme": 2019,
-      "total": 2391,
-      "femme_pourcentage": 15.55834378920954,
-      "homme_pourcentage": 84.44165621079046
+      "femme": 177,
+      "homme": 1070,
+      "total": 1247,
+      "femme_pourcentage": 14.19406575781877,
+      "homme_pourcentage": 85.80593424218124
     },
     {
       "communesenegal": "BALLOU",
-      "femme": 450,
-      "homme": 5060,
-      "total": 5510,
-      "femme_pourcentage": 8.166969147005444,
-      "homme_pourcentage": 91.83303085299455
+      "femme": 36,
+      "homme": 430,
+      "total": 466,
+      "femme_pourcentage": 7.725321888412018,
+      "homme_pourcentage": 92.27467811158799
     },
     {
       "communesenegal": "BANDAFASSI",
-      "femme": 2375,
-      "homme": 5777,
-      "total": 8152,
-      "femme_pourcentage": 29.13395485770363,
-      "homme_pourcentage": 70.86604514229637
+      "femme": 507,
+      "homme": 2093,
+      "total": 2600,
+      "femme_pourcentage": 19.5,
+      "homme_pourcentage": 80.5
     },
     {
       "communesenegal": "BEMBOU",
-      "femme": 1267,
-      "homme": 3638,
-      "total": 4905,
-      "femme_pourcentage": 25.83078491335372,
-      "homme_pourcentage": 74.16921508664628
+      "femme": 791,
+      "homme": 1746,
+      "total": 2537,
+      "femme_pourcentage": 31.17855735120221,
+      "homme_pourcentage": 68.8214426487978
     },
     {
       "communesenegal": "DIMBOLI",
-      "femme": 1348,
-      "homme": 3496,
-      "total": 4844,
-      "femme_pourcentage": 27.82824112303881,
-      "homme_pourcentage": 72.17175887696119
+      "femme": 585,
+      "homme": 1827,
+      "total": 2412,
+      "femme_pourcentage": 24.25373134328358,
+      "homme_pourcentage": 75.74626865671642
     },
     {
       "communesenegal": "DINDEFELO",
-      "femme": 670,
-      "homme": 2106,
-      "total": 2776,
-      "femme_pourcentage": 24.13544668587896,
-      "homme_pourcentage": 75.86455331412104
+      "femme": 289,
+      "homme": 1152,
+      "total": 1441,
+      "femme_pourcentage": 20.05551700208189,
+      "homme_pourcentage": 79.94448299791812
     },
     {
       "communesenegal": "FONGOLIMBI",
-      "femme": 1344,
-      "homme": 3037,
-      "total": 4381,
-      "femme_pourcentage": 30.67792741383246,
-      "homme_pourcentage": 69.32207258616754
+      "femme": 171,
+      "homme": 643,
+      "total": 814,
+      "femme_pourcentage": 21.00737100737101,
+      "homme_pourcentage": 78.992628992629
     },
     {
       "communesenegal": "GABOU",
-      "femme": 200,
-      "homme": 3815,
-      "total": 4015,
-      "femme_pourcentage": 4.9813200498132,
-      "homme_pourcentage": 95.01867995018681
+      "femme": 84,
+      "homme": 863,
+      "total": 947,
+      "femme_pourcentage": 8.870116156282998,
+      "homme_pourcentage": 91.129883843717
     },
     {
       "communesenegal": "KOAR",
-      "femme": 437,
-      "homme": 1767,
-      "total": 2204,
-      "femme_pourcentage": 19.82758620689655,
-      "homme_pourcentage": 80.17241379310344
+      "femme": 526,
+      "homme": 1744,
+      "total": 2270,
+      "femme_pourcentage": 23.17180616740088,
+      "homme_pourcentage": 76.82819383259913
     },
     {
       "communesenegal": "MEDINA BAFFE",
-      "femme": 146,
-      "homme": 511,
-      "total": 657,
-      "femme_pourcentage": 22.22222222222222,
-      "homme_pourcentage": 77.77777777777779
+      "femme": 201,
+      "homme": 493,
+      "total": 694,
+      "femme_pourcentage": 28.96253602305475,
+      "homme_pourcentage": 71.03746397694525
     },
     {
       "communesenegal": "MISSIRAH",
-      "femme": 1838,
-      "homme": 12048,
-      "total": 13886,
-      "femme_pourcentage": 13.23635316145758,
-      "homme_pourcentage": 86.76364683854241
+      "femme": 842,
+      "homme": 5416,
+      "total": 6258,
+      "femme_pourcentage": 13.45477788430809,
+      "homme_pourcentage": 86.54522211569191
     },
     {
       "communesenegal": "MOUDERY",
-      "femme": 105,
-      "homme": 3020,
-      "total": 3125,
-      "femme_pourcentage": 3.36,
-      "homme_pourcentage": 96.64
+      "femme": 52,
+      "homme": 401,
+      "total": 453,
+      "femme_pourcentage": 11.47902869757174,
+      "homme_pourcentage": 88.52097130242825
     },
     {
       "communesenegal": "NDOGA BABACAR",
-      "femme": 1202,
-      "homme": 6160,
-      "total": 7362,
-      "femme_pourcentage": 16.32708503124151,
-      "homme_pourcentage": 83.67291496875849
+      "femme": 874,
+      "homme": 3428,
+      "total": 4302,
+      "femme_pourcentage": 20.3161320316132,
+      "homme_pourcentage": 79.6838679683868
     },
     {
       "communesenegal": "NETTEBOULOU",
-      "femme": 715,
-      "homme": 8639,
-      "total": 9354,
-      "femme_pourcentage": 7.64378875347445,
-      "homme_pourcentage": 92.35621124652556
+      "femme": 248,
+      "homme": 2138,
+      "total": 2386,
+      "femme_pourcentage": 10.39396479463537,
+      "homme_pourcentage": 89.60603520536463
     },
     {
       "communesenegal": "SINTHIOU MALEME",
-      "femme": 4855,
-      "homme": 13411,
-      "total": 18266,
-      "femme_pourcentage": 26.57943720573744,
-      "homme_pourcentage": 73.42056279426257
+      "femme": 3860,
+      "homme": 8888,
+      "total": 12748,
+      "femme_pourcentage": 30.27925949168497,
+      "homme_pourcentage": 69.72074050831503
     },
     {
       "communesenegal": "TOMBORONKOTO",
-      "femme": 2579,
-      "homme": 8678,
-      "total": 11257,
-      "femme_pourcentage": 22.91018921559918,
-      "homme_pourcentage": 77.08981078440081
+      "femme": 2188,
+      "homme": 6326,
+      "total": 8514,
+      "femme_pourcentage": 25.69884895466291,
+      "homme_pourcentage": 74.3011510453371
     }
   ],
   "Analyse Temporelle": [
@@ -204,37 +212,37 @@
     },
     {
       "periode": "2025-T4",
-      "femme": 3640,
-      "homme": 11794,
-      "total": 15434,
-      "homme_pourcentage": 76.41570558507192,
-      "femme_pourcentage": 23.58429441492808
+      "femme": 3652,
+      "homme": 11853,
+      "total": 15505,
+      "homme_pourcentage": 76.44630764269591,
+      "femme_pourcentage": 23.5536923573041
     },
     {
       "periode": "2026-T1",
-      "femme": 48,
-      "homme": 208,
-      "total": 256,
-      "homme_pourcentage": 81.25,
-      "femme_pourcentage": 18.75
+      "femme": 488,
+      "homme": 1627,
+      "total": 2115,
+      "homme_pourcentage": 76.92671394799055,
+      "femme_pourcentage": 23.07328605200946
     }
   ],
   "Tamba-Kédougou": [
     {
       "nomregion": "Kédougou",
-      "femme": 19460,
-      "homme": 54512,
-      "total": 73972,
-      "homme_pourcentage": 73.69274860758125,
-      "femme_pourcentage": 26.30725139241875
+      "femme": 19710,
+      "homme": 55164,
+      "total": 74874,
+      "homme_pourcentage": 73.67577530250821,
+      "femme_pourcentage": 26.32422469749179
     },
     {
       "nomregion": "Tambacounda",
-      "femme": 20346,
-      "homme": 111872,
-      "total": 132218,
-      "homme_pourcentage": 84.61177751894598,
-      "femme_pourcentage": 15.38822248105402
+      "femme": 21000,
+      "homme": 114176,
+      "total": 135176,
+      "homme_pourcentage": 84.46469787536249,
+      "femme_pourcentage": 15.53530212463751
     }
   ]
 }
