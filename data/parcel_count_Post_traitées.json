@@ -1,7 +1,7 @@
 [
   {
     "commune": "Sinthiou Maleme",
-    "parcel_count": 12541
+    "parcel_count": 12641
   },
   {
     "commune": "Tomboronkoto",
@@ -9,7 +9,7 @@
   },
   {
     "commune": "Ndoga Babacar",
-    "parcel_count": 7503
+    "parcel_count": 7563
   },
   {
     "commune": "Missirah",
@@ -29,7 +29,7 @@
   },
   {
     "commune": "Bembou",
-    "parcel_count": 2778
+    "parcel_count": 2851
   },
   {
     "commune": "Gabou",
@@ -48,6 +48,10 @@
     "parcel_count": 1263
   },
   {
+    "commune": "Koar",
+    "parcel_count": 1039
+  },
+  {
     "commune": "Moudery",
     "parcel_count": 1004
   },
@@ -56,11 +60,7 @@
     "parcel_count": 997
   },
   {
-    "commune": "Koar",
-    "parcel_count": 923
-  },
-  {
     "commune": "Medina Baffe",
-    "parcel_count": 121
+    "parcel_count": 412
   }
 ]
