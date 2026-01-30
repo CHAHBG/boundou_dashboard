@@ -13,7 +13,7 @@
   },
   {
     "commune": "Missirah",
-    "parcel_count": 7062
+    "parcel_count": 7304
   },
   {
     "commune": "Bandafassi",
@@ -37,7 +37,7 @@
   },
   {
     "commune": "Dindefello",
-    "parcel_count": 1483
+    "parcel_count": 1752
   },
   {
     "commune": "Fongolembi",
@@ -45,11 +45,11 @@
   },
   {
     "commune": "Bala",
-    "parcel_count": 1333
+    "parcel_count": 1697
   },
   {
     "commune": "Koar",
-    "parcel_count": 2051
+    "parcel_count": 2123
   },
   {
     "commune": "Moudery",
@@ -61,6 +61,10 @@
   },
   {
     "commune": "Medina Baffe",
-    "parcel_count": 1564
+    "parcel_count": 1599
+  },
+  {
+    "commune": "Sabodola",
+    "parcel_count": 461
   }
 ]
