@@ -25,7 +25,7 @@
   },
   {
     "commune": "Dimboli",
-    "parcel_count": 2869
+    "parcel_count": 3156
   },
   {
     "commune": "Bembou",
@@ -37,7 +37,7 @@
   },
   {
     "commune": "Dindefello",
-    "parcel_count": 1752
+    "parcel_count": 1971
   },
   {
     "commune": "Fongolembi",
@@ -45,7 +45,7 @@
   },
   {
     "commune": "Bala",
-    "parcel_count": 1697
+    "parcel_count": 1733
   },
   {
     "commune": "Koar",
@@ -53,7 +53,7 @@
   },
   {
     "commune": "Moudery",
-    "parcel_count": 1004
+    "parcel_count": 1299
   },
   {
     "commune": "Ballou",
@@ -65,6 +65,6 @@
   },
   {
     "commune": "Sabodala",
-    "parcel_count": 461
+    "parcel_count": 682
   }
 ]
